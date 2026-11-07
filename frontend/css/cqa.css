@@ -784,6 +784,7 @@ button.cqa-card__old { cursor: pointer; }
   .cqa-ce-foot__hint { display: none; }
   .cqa-ce-foot .cqa-btn--primary { flex: 1; }
   .cqa-chk-cell--title { flex-basis: calc(100% - 112px); }
+}
 /* ---------- Плеер записи звонка (audio-player.js) и связь с транскриптом ---------- */
 .cqa-card__col--call { display: flex; flex-direction: column; overflow: hidden; padding-right: 0; }
 .cqa-card__col--call > * + * { margin-top: 0; }
