@@ -1,8 +1,10 @@
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[2]
+TEAM_NAME = "Data Mage"  # Q-17: название команды, подтверждено Лидой
 
 
 class Settings(BaseSettings):
@@ -35,10 +37,15 @@ class Settings(BaseSettings):
     pii_masking: bool = True
 
     # Сдача результатов (docs/task/results-format.md)
-    team_name: str = ""
+    team_name: str = TEAM_NAME  # пустой TEAM_NAME в .env (так было в старом шаблоне) не стирает название
     model_mode: str = "external_api"  # local | external_api | hybrid
 
     database_url: str = f"sqlite:///{ROOT / 'data' / 'cqa.db'}"
+
+    @field_validator("team_name")
+    @classmethod
+    def _team_name(cls, v: str) -> str:
+        return v.strip() or TEAM_NAME
 
 
 settings = Settings()
