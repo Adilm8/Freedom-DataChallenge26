@@ -23,6 +23,9 @@ ORGANIZER_CRITERIA: dict[str, set] = {
     "contact": _B, "discovery": _BN, "identification": _BN, "consultation": {0, 5, 10, 15, 20, None},
     "empathy": _B, "dialogue": {0, 4, 7, 10}, "closure": _BN, "critical": _B,
 }
+# Веса из приложения организаторов: итог в файле сдачи их независимая проверка пересчитывает с этими весами.
+ORGANIZER_WEIGHTS = {"contact": 10, "discovery": 15, "identification": 20, "consultation": 20, "empathy": 15,
+                     "dialogue": 15, "closure": 5}
 _MSG_RE = re.compile(r"^m(\d+)$")
 RATIONALE_MAX = 600
 
@@ -52,6 +55,9 @@ def format_issues(cl: Checklist) -> list[str]:
         if code not in ORGANIZER_CRITERIA:
             out.append(f"{c.key}: код «{code}» не из формата сдачи (нужны {', '.join(ORGANIZER_CRITERIA)})")
             continue
+        if code in ORGANIZER_WEIGHTS and c.type != "flag" and c.weight != ORGANIZER_WEIGHTS[code]:
+            out.append(f"{c.key} → {code}: вес {c.weight:g}, в формате сдачи {ORGANIZER_WEIGHTS[code]} — "
+                       f"final_score не совпадёт с пересчётом по формату")
         bad = [v for v in (export_value(c, a) for a in c.allowed_answers()) if not _value_ok(code, v)]
         if bad:
             allowed = ", ".join(sorted((_show(v) for v in ORGANIZER_CRITERIA[code]), key=str))
@@ -60,6 +66,8 @@ def format_issues(cl: Checklist) -> list[str]:
     for code, keys in by_code.items():
         if len(keys) > 1:
             out.append(f"код «{code}» у нескольких включённых критериев: {', '.join(keys)}")
+    if cl.settings.critical_policy != "flag":
+        out.append(f"critical_policy «{cl.settings.critical_policy}»: в формате сдачи грубая ошибка не обнуляет итог")
     missing = [code for code in ORGANIZER_CRITERIA if code not in by_code]
     if missing:
         out.append(f"в файле сдачи не будет кодов: {', '.join(missing)}")

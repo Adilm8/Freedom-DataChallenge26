@@ -142,6 +142,8 @@ class Criterion(BaseModel):
                 raise ValueError(f"критерий {self.key}: ступени шкалы повторяются")
             if max(values) <= 0:
                 raise ValueError(f"критерий {self.key}: максимальная ступень шкалы должна быть больше 0")
+            if min(values) == max(values):
+                raise ValueError(f"критерий {self.key}: у шкалы должны быть разные ступени")
             if min(values) < 0:
                 raise ValueError(f"критерий {self.key}: ступени шкалы не могут быть отрицательными")
         if self.na_allowed and not (self.na_when or "").strip():
@@ -151,6 +153,15 @@ class Criterion(BaseModel):
     @property
     def max_step(self) -> int | None:
         return max(s.value for s in self.scale) if self.type == "scale" and self.scale else None
+
+    @property
+    def min_step(self) -> int | None:
+        return min(s.value for s in self.scale) if self.type == "scale" and self.scale else None
+
+    def scale_fraction(self, ans) -> float:
+        """Доля веса за ступень: нижняя ступень — 0, верхняя — 1 (шкала 1–5 даёт за «1» ноль, а не 20 %)."""
+        lo, hi = self.min_step, self.max_step
+        return (int(ans) - lo) / (hi - lo)
 
     def allowed_answers(self) -> list[Answer]:
         """Ответы, которые допускает критерий (в БД и API: "yes" / "no" / "na" / int)."""

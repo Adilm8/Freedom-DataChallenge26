@@ -32,7 +32,7 @@ def _pct(c: Criterion, ans: str) -> float | None:
     if c.type == "binary":
         return 100.0 if ans == "yes" else 0.0
     try:
-        return int(ans) / c.max_step * 100
+        return c.scale_fraction(ans) * 100
     except (TypeError, ValueError, ZeroDivisionError):
         return None
 

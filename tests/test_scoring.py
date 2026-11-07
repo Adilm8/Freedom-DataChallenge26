@@ -101,11 +101,11 @@ def test_total_rounds_half_up():
         "sections": [{"id": "s", "title": "S"}],
         "criteria": [
             {"key": "a", "title": "A", "section": "s", "type": "scale", "weight": 4, "definition": "d",
-             "scale": [{"value": 8, "label": "max"}, {"value": 1, "label": "low"}]},
+             "scale": [{"value": 8, "label": "max"}, {"value": 1, "label": "low"}, {"value": 0, "label": "zero"}]},
             {"key": "b", "title": "B", "section": "s", "type": "binary", "weight": 396, "definition": "d"},
         ],
     })
-    r = compute(cl, {"a": 1, "b": "no"})          # 0.5 / 400 × 100 = 0.125
+    r = compute(cl, {"a": 1, "b": "no"})          # 4 × 1/8 = 0.5 → 0.5 / 400 × 100 = 0.125
     assert r.total == 0.13
 
 
@@ -166,3 +166,15 @@ def test_checklist_validation_errors():
     for criteria in bad:
         with pytest.raises(ValidationError):
             Checklist.model_validate(base | {"criteria": criteria})
+
+
+def test_scale_not_starting_at_zero():
+    """Шкала 1–5: нижняя ступень — 0 баллов, верхняя — полный вес (а не 1/5 веса за «1»)."""
+    cl = Checklist.model_validate({
+        "key": "t", "name": "t", "sections": [{"id": "s", "title": "S"}],
+        "criteria": [{"key": "a", "title": "A", "section": "s", "type": "scale", "weight": 10, "definition": "d",
+                      "scale": [{"value": v, "label": str(v)} for v in (1, 2, 3, 4, 5)]}],
+    })
+    assert compute(cl, {"a": 1}).total == 0.0
+    assert compute(cl, {"a": 3}).total == 50.0
+    assert compute(cl, {"a": 5}).total == 100.0

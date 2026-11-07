@@ -6,6 +6,7 @@
 Использование: python scripts/validate_results.py results/prod/results.json prod   (или dev)
 """
 import json
+import os
 import sys
 from decimal import ROUND_HALF_UP, Decimal
 
@@ -66,7 +67,7 @@ def main(path, kind):
             crit[k] = c.get("value")
             if not c.get("rationale"): warns.append(f"{cid}/{k}: пустой rationale")
             et = c.get("evidence_turns")
-            if not isinstance(et, list) or not all(isinstance(x, int) and x >= 1 for x in et):
+            if not isinstance(et, list) or not all(isinstance(x, int) and not isinstance(x, bool) and x >= 1 for x in et):
                 errs.append(f"{cid}/{k}: evidence_turns — список целых >= 1")
         if set(crit) != set(SPEC):
             errs.append(f"{cid}: нужны ровно 8 критериев, есть {sorted(crit)}"); continue
@@ -90,4 +91,11 @@ def main(path, kind):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None)
+    if len(sys.argv) < 2:
+        sys.exit("python scripts/validate_results.py results/<dev|prod>/results.json [dev|prod]")
+    path = sys.argv[1]
+    kind = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] in ("dev", "prod") else None
+    if kind is None:  # results/prod/results.json → prod: число записей проверяется и без второго аргумента
+        parent = os.path.basename(os.path.dirname(os.path.abspath(path)))
+        kind = parent if parent in ("dev", "prod") else None
+    main(path, kind)

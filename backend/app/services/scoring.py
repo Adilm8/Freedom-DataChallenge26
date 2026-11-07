@@ -59,7 +59,7 @@ def compute(checklist: Checklist, answers: Mapping[str, Answer | None]) -> Score
         if c.type == "binary":
             pts = w if ans == "yes" else Decimal(0)
         else:  # scale
-            pts = w * _dec(ans) / _dec(c.max_step)
+            pts = w * (_dec(ans) - _dec(c.min_step)) / (_dec(c.max_step) - _dec(c.min_step))
 
         applicable_weight += w
         points_sum += pts

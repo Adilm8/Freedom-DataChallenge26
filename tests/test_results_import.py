@@ -80,3 +80,25 @@ def test_autoload(env, tmp_path):  # noqa: F811
             assert results_import.autoload(s, tmp_path)[0]["imported"] == 0
     finally:
         results_import.AUTOLOAD = old
+
+
+def test_import_fills_code_facts_and_overview(env, monkeypatch):  # noqa: F811
+    from backend.app.services import evaluator
+    monkeypatch.setattr(evaluator, "_facts", lambda conv, cl: ({"greeting": {"value": True}}, "", {}))
+    upload(env, payload())
+    ov = {"t-chat-1": {"summary": "s", "topic": "t", "resolved": "yes"}}
+    with Session(db.engine) as s:
+        results_import.import_results(s, _doc(), "T", overviews=ov)
+        ev = s.exec(select(Evaluation)).one()
+        assert ev.facts == {"greeting": {"value": True}}, "факты кода считаются и для оценок из файла"
+        assert ev.overview == ov["t-chat-1"]
+
+
+def test_load_overviews(tmp_path):
+    assert results_import.load_overviews(tmp_path, "dev") == {}
+    p = results_import.overview_path(tmp_path, "dev")
+    p.parent.mkdir(parents=True)
+    p.write_text(json.dumps({"overviews": {"a": {"resolved": "no"}, "b": "bad"}}), encoding="utf-8")
+    assert results_import.load_overviews(tmp_path, "dev") == {"a": {"resolved": "no"}}
+    p.write_text("{broken", encoding="utf-8")
+    assert results_import.load_overviews(tmp_path, "dev") == {}
