@@ -858,6 +858,7 @@ button.cqa-card__old { cursor: pointer; }
 .cqa-ap__top { display: flex; align-items: baseline; gap: 8px; min-width: 0; font-size: var(--cqa-text-xs); }
 .cqa-ap__title { font-weight: 700; font-size: var(--cqa-text-sm); white-space: nowrap; }
 .cqa-ap__now { color: var(--cqa-muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cqa-ap__demo { flex: none; color: var(--cqa-warn); background: var(--cqa-warn-bg); border-color: var(--cqa-warn-bd); }
 .cqa-ap__now--flash { color: var(--cqa-accent-2); font-weight: 600; }
 .cqa-ap__fixchip { flex: none; font-family: var(--cqa-mono); color: var(--cqa-warn); background: var(--cqa-warn-bg); border-color: var(--cqa-warn-bd); }
 .cqa-ap__time { margin-left: auto; flex: none; font-family: var(--cqa-mono); font-variant-numeric: tabular-nums; color: var(--cqa-text); font-weight: 600; }
