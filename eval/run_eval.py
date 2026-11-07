@@ -28,7 +28,7 @@ from backend.app.providers import get_provider  # noqa: E402
 from backend.app.services.evaluator import evaluate_conversation  # noqa: E402
 from backend.app.services.normalize import normalize  # noqa: E402
 from backend.app.services.prompt_builder import prompt_version  # noqa: E402
-from eval.metrics import calibration, compare, stability  # noqa: E402
+from eval.metrics import bootstrap_ci, calibration, compare, stability  # noqa: E402
 
 GOLD_DIR = ROOT / "data" / "gold"
 RUNS_DIR = ROOT / "eval" / "runs"
@@ -86,6 +86,9 @@ def print_report(m: dict) -> None:
     t = m["total"]
     print(f"\nДиалогов: {m['dialogs']} · среднее согласие: {m['mean_agreement']} · MAE итога: {t['mae']} · "
           f"в пределах ±5: {t['within_5']} · ±10: {t['within_10']}")
+    ci = m.get("ci95") or {}
+    if ci.get("mean_agreement") or ci.get("mae"):
+        print(f"95% ДИ (бутстреп, {ci['n_resamples']} выборок): согласие {ci.get('mean_agreement')} · MAE {ci.get('mae')}")
     for k, r in m["criteria"].items():
         extra = " ".join(f"{a}={r[a]}" for a in ("within_1_step", "recall", "precision") if a in r)
         print(f"  {k}: {r['exact']:.2f} (n={r['n']}) {extra}")
@@ -105,7 +108,9 @@ def main() -> None:
     ap.add_argument("--use-drafts", action="store_true")
     ap.add_argument("--snapshot", default=str(ROOT / "data/raw/DEV.json"))
     ap.add_argument("--approved", help="кто и когда разрешил платный прогон")
-    ap.add_argument("--metrics-only")
+    ap.add_argument("--metrics-only", help="пересчитать метрики сохранённого прогона без вызовов модели")
+    ap.add_argument("--update", action="store_true",
+                    help="с --metrics-only: записать пересчитанные метрики (с интервалами) обратно в файл прогона")
     args = ap.parse_args()
 
     cl = Checklist.model_validate(json.loads((ROOT / "data/checklists/default.json").read_text(encoding="utf-8")))
@@ -114,7 +119,14 @@ def main() -> None:
     if args.metrics_only:
         saved = json.loads(Path(args.metrics_only).read_text(encoding="utf-8"))
         m = compare(saved["pred"][0], gold, saved["meta"], criteria_meta(cl))
+        m["ci95"] = bootstrap_ci(saved["pred"][0], gold, saved["meta"], criteria_meta(cl))
         print_report(m)
+        if args.update:
+            # обновляем только метрики эталона; стоимость, стабильность и калибровка остаются как были
+            saved["metrics"] = {**saved.get("metrics", {}), **m}
+            Path(args.metrics_only).write_text(json.dumps(saved, ensure_ascii=False, indent=2, default=str),
+                                               encoding="utf-8")
+            print(f"Обновлено: {args.metrics_only}")
         return
 
     if not gold:
@@ -159,6 +171,7 @@ def main() -> None:
 
     metrics = compare(preds[0], gold, meta, criteria_meta(cl))
     metrics["calibration"] = calibration(preds[0], gold)
+    metrics["ci95"] = bootstrap_ci(preds[0], gold, meta, criteria_meta(cl))
     if len(preds) > 1:
         metrics["stability"] = stability(preds[0], preds[1])
     cost = sum(d["cost_usd"] for ds in details_all for d in ds.values())

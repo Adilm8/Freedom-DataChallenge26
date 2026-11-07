@@ -1,6 +1,6 @@
 """Метрики близости к gold (eval/metrics.py): чистые функции без сети."""
 
-from eval.metrics import calibration, compare, stability
+from eval.metrics import bootstrap_ci, calibration, compare, stability
 
 CRIT = {"01": {"type": "binary", "scale": None}, "04": {"type": "scale", "scale": [20, 15, 10, 5, 0]},
         "08": {"type": "flag", "scale": None}}
@@ -36,3 +36,13 @@ def test_calibration_and_stability():
              "b": PRED["b"]}
     st = stability(PRED, other)
     assert st["answers"] == 6 and st["changed_share"] == round(1 / 6, 4) and st["mean_total_delta"] == 2.0
+
+
+def test_bootstrap_ci_brackets_point_estimate_and_is_reproducible():
+    ci = bootstrap_ci(PRED, GOLD, META, CRIT, n=500)
+    point = compare(PRED, GOLD, META, CRIT)
+    lo, hi = ci["mean_agreement"]
+    assert lo <= point["mean_agreement"] <= hi and 0.0 <= lo <= hi <= 1.0
+    assert ci["mae"][0] <= point["total"]["mae"] <= ci["mae"][1]
+    assert ci == bootstrap_ci(PRED, GOLD, META, CRIT, n=500)        # seed фиксирован
+    assert bootstrap_ci({"a": PRED["a"]}, GOLD, META, CRIT) == {}   # один диалог — интервал не считаем
