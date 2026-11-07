@@ -2,7 +2,7 @@
 name: backend-dev
 description: Реализует код в backend/ (FastAPI, SQLModel, импорт данных, эндпоинты, апелляции) по готовому контракту из docs/CONTRACTS.md. Используй для любой реализации на Python в рамках существующей архитектуры.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: sonnet
+model: opus
 effort: medium
 ---
 
