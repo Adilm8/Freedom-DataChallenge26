@@ -69,3 +69,16 @@ def test_error_entry_format():
     assert results_export.validate(doc, CL, expected_ids=["a"], expected_count=1) == []
     doc["results"][0]["score"] = {"final_score": 0}
     assert results_export.validate(doc, CL)
+
+
+def test_run_sync_then_export(env):
+    from backend.app.services import runs
+
+    c = env
+    upload(c, payload())
+    with Session(db.engine) as s:
+        pks = list(range(1, 3))
+        rid = runs.run_sync(s, pks, group_id="T", provider="openrouter", model="fake/m", strategy="grouped")
+        doc = results_export.build(s, "T", team_name="Команда")
+    assert c.get(f"/api/runs/{rid}").json()["status"] == "done"
+    assert [r["status"] for r in doc["results"]] == ["ok", "ok"]

@@ -56,6 +56,25 @@ def _execute(run_id: int, conv_pks: list[int], version_id: int, provider: str, m
         s.commit()
 
 
+def create_run(session: Session, conv_pks: list[int], *, group_id: str, version_id: int | None, provider: str,
+               model: str, strategy: str) -> int:
+    run = EvaluationRun(group_id=group_id, checklist_version_id=version_id, provider=provider, model=model,
+                        strategy=strategy, status="queued", total=len(conv_pks))
+    session.add(run)
+    session.commit()
+    return run.id
+
+
+def run_sync(session: Session, conv_pks: list[int], *, group_id: str = "", checklist_version_id: int | None = None,
+             provider: str, model: str, strategy: str, reuse: str = "none") -> int:
+    """То же, что фоновый прогон, но в текущем потоке (скрипт контроля, тесты)."""
+    version_id = checklist_version_id or active_version_id(session)
+    run_id = create_run(session, conv_pks, group_id=group_id, version_id=version_id, provider=provider, model=model,
+                        strategy=strategy)
+    _execute(run_id, list(conv_pks), version_id, provider, model, strategy, reuse)
+    return run_id
+
+
 def start_run(
     session: Session,
     conv_pks: list[int],
@@ -68,11 +87,8 @@ def start_run(
     reuse: str = "none",
 ) -> int:
     version_id = checklist_version_id or active_version_id(session)
-    run = EvaluationRun(group_id=group_id, checklist_version_id=version_id, provider=provider, model=model,
-                        strategy=strategy, status="queued", total=len(conv_pks))
-    session.add(run)
-    session.commit()
-    run_id = run.id
+    run_id = create_run(session, conv_pks, group_id=group_id, version_id=version_id, provider=provider, model=model,
+                        strategy=strategy)
     threading.Thread(target=_execute, args=(run_id, list(conv_pks), version_id, provider, model, strategy, reuse),
                      daemon=True).start()
     return run_id
