@@ -82,8 +82,9 @@ export function answerBadge(c, answer, opts = {}) {
   // когда баллы стоят рядом (карточка), иначе «15 из 20».
   const max = Number(c.scale_max ?? c.weight), v = Number(answer);
   if (!Number.isFinite(max) || !Number.isFinite(v) || max <= 0) return h('span', { class: 'cqa-badge cqa-badge--step' }, String(answer));
-  const tone = v >= max ? 'yes' : v <= 0 ? 'no' : 'warn';
-  const text = opts.words ? (v >= max ? 'Полностью' : v <= 0 ? 'Нет' : 'Частично') : `${+v.toFixed(2)} из ${+max.toFixed(2)}`;
+  const min = Array.isArray(c.scale) && c.scale.length ? Math.min(...c.scale.map((s) => Number(s.value))) : 0;
+  const tone = v >= max ? 'yes' : v <= min ? 'no' : 'warn';
+  const text = opts.words ? (v >= max ? 'Полностью' : v <= min ? 'Нет' : 'Частично') : `${+v.toFixed(2)} из ${+max.toFixed(2)}`;
   return h('span', { class: `cqa-badge cqa-badge--${tone} cqa-badge--scale`, title: `Шкала: ${+v.toFixed(2)} из ${+max.toFixed(2)}` }, text);
 }
 

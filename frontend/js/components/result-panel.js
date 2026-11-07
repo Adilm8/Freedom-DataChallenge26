@@ -80,7 +80,8 @@ export function mount(el, params = {}) {
     const state = flagged ? 'flag' : answerState(c); // полоса слева: грубая ошибка > не выполнен > частично
     const body = [];
     if (c.reasoning) body.push(h('div', { class: 'cqa-crit__why' }, c.reasoning));
-    if (c.final_answer === 'na' || c.ai_answer === 'na') {
+    // Причина N/A отдельной строкой, только если она есть; иначе её объясняет обоснование выше.
+    if ((c.final_answer === 'na' || c.ai_answer === 'na') && (c.na_reason || !c.reasoning)) {
       body.push(h('div', { class: 'cqa-nareason' }, h('b', null, 'Почему N/A: '), c.na_reason || h('span', { class: 'cqa-faint' }, 'причина не указана')));
     }
     if (c.evidence?.length || c.checked_range) {
@@ -202,6 +203,7 @@ export function mount(el, params = {}) {
     const both = changed || ev.criteria.some((c) => (c.appeal_history || []).some((a) => a.status !== 'open'));
     const parts = [h('h3', { class: 'cqa-sum__title' }, 'Оценка качества')];
     // Слева — кольцо с финальным итогом, справа — баллы по каждому критерию (как в макете Freedom).
+    const totalWeight = ev.criteria.filter((c) => c.type !== 'flag').reduce((s, c) => s + (Number(c.weight) || 0), 0);
     const rows = ev.criteria.filter((c) => c.final_answer != null || c.ai_answer != null).map((c) => {
       const flag = c.type === 'flag';
       const na = c.final_answer === 'na';
@@ -222,7 +224,7 @@ export function mount(el, params = {}) {
         h('div', { class: 'cqa-sum__note', id: both ? 'cqa-sum-final' : 'cqa-sum-ai' },
           both ? [h('span', null, `AI: ${fmtScore(ai.total)}`), changed ? h('span', { class: 'cqa-delta' }, `${fin.total - ai.total > 0 ? '+' : ''}${(fin.total - ai.total).toFixed(2)} после апелляций`) : h('span', null, 'апелляции итог не изменили')]
             : h('span', null, 'оценка AI'),
-          h('span', null, `применимый вес ${fin.applicable_weight ?? 0} из 100`))),
+          h('span', null, `применимый вес ${fmtNum(fin.applicable_weight ?? 0)} из ${fmtNum(totalWeight)}`))),
       h('div', { class: 'cqa-sumrows' }, rows)));
     const ov = overview(true);
     if (ov) parts.push(ov);
