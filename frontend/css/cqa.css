@@ -1814,3 +1814,10 @@ button.cqa-kpi { transition: border-color .12s, box-shadow .15s, transform .15s;
 .cqa-list-table tbody tr { transition: background .12s; }
 .cqa-list-table tbody tr:focus-visible { outline: none; box-shadow: inset 3px 0 0 var(--cqa-accent); background: var(--cqa-accent-soft); }
 @media (prefers-reduced-motion: reduce) { .cqa-route { animation: none; } .cqa-ring__arc { transition: none; } button.cqa-kpi:hover { transform: none; } }
+/* Телефон: в списке остаются id, итог и полоска критериев; язык, канал и тема — в карточке. */
+@media (max-width: 560px) {
+  .cqa-list-table .cqa-list__narrow, .cqa-list-table .cqa-list__topic, .cqa-list-table .cqa-list__tags, .cqa-list-table .cqa-list__ap { display: none; }
+  .cqa-heat { gap: 2px; } .cqa-heat__c { width: 9px; height: 18px; }
+  .cqa-list-table td, .cqa-list-table th { padding-left: 6px; padding-right: 6px; }
+  .cqa-list-table .cqa-th-sort { white-space: normal; }
+}
