@@ -661,7 +661,7 @@ export function mount(el, params = {}) {
         h('b', null, 'Несохранённые изменения'), counts.length ? h('span', { class: 'cqa-chk-savebar__counts' }, counts.join(' · ')) : h('span', { class: 'cqa-faint' }, 'только форматирование'),
         diffView(d, { compact: true }),
         fileWarn.length ? h('div', { class: 'cqa-banner cqa-banner--warn cqa-chk-savebar__warn', id: 'cqa-chk-filewarn' }, h('span', { class: 'cqa-banner__icon' }, '!'),
-          h('div', null, h('div', { class: 'cqa-banner__title' }, 'Файл сдачи по этой версии не пройдёт проверку формата'),
+          h('div', null, h('div', { class: 'cqa-banner__title' }, 'Оценивать по этой версии можно; файл сдачи results.json по ней не пройдёт проверку формата организаторов'),
             h('ul', { class: 'cqa-errlist' }, fileWarn.map((w) => h('li', null, w.replace(/^файл сдачи: /, '')))))) : null),
       h('div', { class: 'cqa-chk-savebar__acts' },
         note,
