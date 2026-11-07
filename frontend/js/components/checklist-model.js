@@ -227,7 +227,9 @@ export function autoNote(d) {
   const rem = d.removed.filter((c) => !repFrom.has(c.key));
   if (rem.length) parts.push(`удалён ${rem.map((c) => c.key).join(', ')}`);
   const ch = d.changed.filter((x) => !repFrom.has(x.key));
-  if (ch.length) parts.push(ch.slice(0, 4).map((x) => `${x.key}: ${x.fields.map((f) => FIELD_LABEL[f.field].toLowerCase().replace(/[«»]/g, '')).join(', ')}`).join('; '));
+  // «Включён» — подпись поля, а не значение: при выключении в заметке должно стоять «выключен».
+  const fieldNote = (x, f) => (f.field === 'enabled' ? (x.after?.enabled === false ? 'выключен' : 'включён') : FIELD_LABEL[f.field].toLowerCase().replace(/[«»]/g, ''));
+  if (ch.length) parts.push(ch.slice(0, 4).map((x) => `${x.key}: ${x.fields.map((f) => fieldNote(x, f)).join(', ')}`).join('; '));
   if (d.reordered) parts.push('порядок');
   if (d.settings.length) parts.push(`настройки: ${d.settings.map((s) => s.label.toLowerCase()).join(', ')}`);
   if (d.sections.length) parts.push('секции');

@@ -1,13 +1,18 @@
 // Таблица диалогов: фильтры, сортировка по итогу, выбор строк и запуск оценки, экспорт (FR-EXP-01), импорт набора, новый диалог.
 // Параметры: group, appeal ('open' | 'any' | 'none' — фильтр апелляций по последней оценке).
 import { h, clear, emit, channelBadge, langChip, score, skeletonRows, errorState, emptyState, toast } from '../ui.js';
-import { listConversations, downloadExport } from '../api.js';
+import { listConversations, downloadExport, getAnalytics, getReviewQueue } from '../api.js';
 
 const APPEAL_FILTER = [['', 'Апелляции: все'], ['open', 'Есть открытые'], ['any', 'Были апелляции'], ['none', 'Без апелляций']];
+// Короткие подписи причин из очереди проверки: вместо одинаковой метки «Требует проверки» на 70% строк — почему именно.
+const WHY = { failed: 'нет оценки', missing: 'нет ответа', appeal: 'апелляция', guard: 'противоречие фактам', validator: 'цитата не найдена', low_confidence: 'низк. увер.' };
+const WHY_ORDER = ['failed', 'missing', 'appeal', 'guard', 'validator', 'low_confidence'];
 
 export function mount(el, params = {}) {
   let p = { ...params };
   let rows = [];
+  let topics = new Map(); // id диалога → тема (из обзора последней оценки, GET /analytics)
+  let why = new Map(); // id диалога → {причина: [коды критериев]} (GET /review-queue)
   const st = { q: '', lang: '', channel: '', flag: false, review: false, appeal: '', sort: null, selected: new Set() };
   // Фильтры из адреса (переход с дашборда): ?lang=kz&channel=voice%20call&flag=1&review=1&appeal=open или ?ids=1,2&label=…
   const on = (v) => v === '1' || v === 'true';
@@ -108,12 +113,12 @@ export function mount(el, params = {}) {
     const sortBtn = h('button', { type: 'button', class: 'cqa-th-sort', 'data-dir': st.sort || null, 'aria-label': 'Сортировка по итогу',
       onclick: () => { st.sort = st.sort === null ? 'desc' : st.sort === 'desc' ? 'asc' : null; renderTable(); } },
       'Итог AI / финальный', st.sort === 'desc' ? '↓' : st.sort === 'asc' ? '↑' : '↕');
-    return h('table', { class: 'cqa-table' },
+    return h('table', { class: 'cqa-table cqa-list-table' },
       h('thead', null, h('tr', null,
         h('th', { style: 'width:36px' }, h('input', { type: 'checkbox', class: 'cqa-check', checked: allOn, 'aria-label': 'Выбрать все',
           onchange: (e) => { list.forEach((r) => (e.target.checked ? st.selected.add(r.id) : st.selected.delete(r.id))); renderTable(); } })),
-        h('th', null, 'Диалог'), h('th', null, 'Канал'), h('th', null, 'Язык'),
-        h('th', { class: 'cqa-num' }, sortBtn), h('th', null, 'Метки'), h('th', { class: 'cqa-num' }, 'Апелляции'))),
+        h('th', null, 'Диалог'), h('th', { class: 'cqa-num' }, sortBtn), h('th', { class: 'cqa-list__narrow' }, 'Язык'), h('th', { class: 'cqa-list__narrow' }, 'Канал'),
+        h('th', { class: 'cqa-list__topic' }, 'Тема'), h('th', null, 'Метки'), h('th', { class: 'cqa-num' }, 'Апелляции'))),
       h('tbody', null, list.map((r) => {
         const l = r.latest;
         const tr = h('tr', { tabindex: 0, 'aria-selected': st.selected.has(r.id) ? 'true' : 'false',
@@ -122,18 +127,26 @@ export function mount(el, params = {}) {
           h('td', null, h('input', { type: 'checkbox', class: 'cqa-check', checked: st.selected.has(r.id), 'aria-label': `Выбрать ${r.conversation_id}`,
             onchange: (e) => { e.target.checked ? st.selected.add(r.id) : st.selected.delete(r.id); renderTable(); } })),
           h('td', null, h('span', { class: 'cqa-row-id' }, r.conversation_id)),
-          h('td', null, channelBadge(r.channel)), h('td', null, langChip(r.language)),
           h('td', { class: 'cqa-num' }, l
             ? h('span', { style: 'display:inline-flex;gap:10px;align-items:baseline' },
               score(l.ai_total, l.ai_total === l.final_total ? '' : 'cqa-faint'),
               l.ai_total !== l.final_total ? [h('span', { class: 'cqa-faint' }, '→'), score(l.final_total)] : null)
             : h('span', { class: 'cqa-badge cqa-badge--muted' }, 'Не оценён')),
+          h('td', { class: 'cqa-list__narrow' }, langChip(r.language)), h('td', { class: 'cqa-list__narrow' }, channelBadge(r.channel)),
+          h('td', { class: 'cqa-list__topic' }, topics.get(r.id) ? h('span', { class: 'cqa-list__topictext', title: topics.get(r.id) }, topics.get(r.id)) : h('span', { class: 'cqa-faint' }, '—')),
           h('td', null, h('div', { class: 'cqa-tags' },
             l?.critical ? h('span', { class: 'cqa-badge cqa-badge--flag' }, 'Грубая ошибка') : null,
-            l?.needs_review ? h('span', { class: 'cqa-badge cqa-badge--warn' }, 'Требует проверки') : null)),
+            l?.needs_review ? reviewWhy(r.id) : null)),
           h('td', { class: 'cqa-num' }, appealCell(l)));
         return tr;
       })));
+  }
+
+  function reviewWhy(id) {
+    const w = why.get(id);
+    if (!w) return h('span', { class: 'cqa-list__why', title: 'Требует проверки' }, 'проверить');
+    const parts = WHY_ORDER.filter((r) => w[r]).map((r) => `${WHY[r]}${w[r].length ? `: ${w[r].join(', ')}` : ''}`);
+    return h('span', { class: 'cqa-list__why', title: `Требует проверки — ${parts.join('; ')}` }, parts.join(' · '));
   }
 
   function appealCell(l) {
@@ -167,7 +180,7 @@ export function mount(el, params = {}) {
   }
   function exportBar() {
     const b = (id, text, title, path, params) => {
-      const btn = h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', id, title, onclick: () => exportFile(path, params, btn) }, text);
+      const btn = h('button', { type: 'button', class: 'cqa-btn', id, title, onclick: () => exportFile(path, params, btn) }, text);
       return btn;
     };
     return h('div', { class: 'cqa-export', role: 'group', 'aria-label': 'Экспорт результатов группы' },
@@ -185,10 +198,32 @@ export function mount(el, params = {}) {
       const known = new Set(rows.map((r) => r.id));
       for (const id of [...st.selected]) if (!known.has(id)) st.selected.delete(id);
       renderTable();
+      loadExtras();
     } catch (e) {
       clear(body).append(errorState(e, load));
     }
   }
+  // Тема и причины проверки — дополнительные запросы: таблица видна сразу, колонки дополняются, когда ответы придут.
+  let extrasToken = 0;
+  async function loadExtras() {
+    const my = ++extrasToken;
+    const g = p.group || 'DEV';
+    const [a, q] = await Promise.all([getAnalytics({ group_id: g }).catch(() => null), getReviewQueue({ group_id: g }).catch(() => null)]);
+    if (my !== extrasToken) return;
+    topics = new Map();
+    for (const t of a?.topics || []) for (const id of t.ids || []) topics.set(Number(id), t.topic);
+    why = new Map();
+    for (const it of q || []) {
+      const w = why.get(it.conversation_id) || {};
+      for (const r of it.reasons || [it.reason]) {
+        w[r] ||= [];
+        if (it.criterion_key && !w[r].includes(it.criterion_key)) w[r].push(it.criterion_key);
+      }
+      why.set(it.conversation_id, w);
+    }
+    if (rows.length) refreshTable();
+  }
+
   // После прогона оценки оболочка шлёт cqa:refresh: перечитываем итоги без мигания и с тем же выбором.
   const onRefresh = () => load({ quiet: true });
   el.addEventListener('cqa:refresh', onRefresh);
@@ -199,7 +234,7 @@ export function mount(el, params = {}) {
       h('div', { class: 'cqa-pagehead__actions cqa-list__actions' }, exportBar(),
         h('button', { type: 'button', class: 'cqa-btn', id: 'cqa-list-import', title: 'Набор диалогов по group_id из API организаторов или из JSON-файла',
           onclick: () => emit(root, 'cqa:import-request', {}) }, 'Импорт набора'),
-        h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-list-new', title: 'Вставить переписку и оценить её сразу', onclick: () => emit(root, 'cqa:navigate', { to: '#/new' }) }, '+ Новый диалог'))),
+        h('button', { type: 'button', class: 'cqa-btn', id: 'cqa-list-new', title: 'Вставить переписку и оценить её сразу', onclick: () => emit(root, 'cqa:navigate', { to: '#/new' }) }, '+ Новый диалог'))),
     h('div', { class: 'cqa-panel' }, body));
   load();
 

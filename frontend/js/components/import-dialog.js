@@ -4,7 +4,7 @@
 // Доступность API — GET /health (organizer_api); импорт — POST /datasets/import, файл — POST /datasets/upload;
 // после успеха — GET /conversations?group_id, чтобы показать состав группы и число диалогов для оценки.
 // Наружу: «Открыть группу» — cqa:groups-changed {select, to: '#/conversations'};
-// «Оценить группу» — то же и cqa:run-request {ids: [], group, rows} (форма detail, как у списка и дашборда).
+// «Оценить группу» — то же с run: {ids: [], group, rows} (форма detail cqa:run-request, как у списка и дашборда).
 import { h, clear, emit, toast, skeletonRows } from '../ui.js';
 import { getHealth, importDataset, uploadDataset, listConversations, isMock } from '../api.js';
 import { plural } from './run-dialog.js';
@@ -286,7 +286,8 @@ export function openImportDialog(host, opts = {}) {
     inline: false, onClose: close, notify: (t) => toast(host, t),
     actions: {
       openGroup: (g) => { close(); toGroup(g); },
-      evaluate: (g, rows) => { close(); toGroup(g); emit(host, 'cqa:run-request', { ids: [], group: g, rows: rows || undefined }); },
+      // Окно запуска открывает оболочка уже после перехода к списку: смена экрана закрыла бы его.
+      evaluate: (g, rows) => { close(); emit(host, 'cqa:groups-changed', { select: g, to: '#/conversations', run: { ids: [], group: g, rows: rows || undefined } }); },
     },
   });
 

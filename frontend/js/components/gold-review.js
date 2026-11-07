@@ -47,7 +47,7 @@ function listView(root) {
     clear(page);
     if (!rows.length) {
       page.append(h('div', { class: 'cqa-panel' }, emptyState({
-        title: 'Выборка для gold ещё не готова',
+        title: 'Выборка для эталона ещё не готова',
         text: 'Нет файла data/gold/selection.json. Он появится, когда будут подобраны диалоги и подготовлены черновики разметки.',
         icon: '☰' })));
       return;
@@ -56,7 +56,7 @@ function listView(root) {
     const done = rows.filter((r) => r.reviewed).length;
     const next = ready.find((r) => !r.reviewed && r.conversation_pk);
     page.append(h('div', { class: 'cqa-pagehead' },
-      h('div', null, h('h1', { class: 'cqa-h1' }, 'Проверка gold'),
+      h('div', null, h('h1', { class: 'cqa-h1' }, 'Проверка эталона'),
         h('div', { class: 'cqa-pagehead__sub' }, `Проверено ${done} из ${rows.length}. Черновиков готово: ${ready.length}.`)),
       h('div', { class: 'cqa-pagehead__actions' },
         h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', disabled: !next,
@@ -300,7 +300,7 @@ function detailView(root, convId) {
     const right = h('div', { class: 'cqa-card__col' }, critEl, h('div', { class: 'cqa-panel cqa-gold__notes-box' }, notesEl));
     wrap.append(headEl, keysEl, h('div', { class: 'cqa-card__cols' }, left, right));
     const evidence = crit.map((c) => ({ key: c.key, flag: c.type === 'flag' && dCrit(c.key)?.answer === 'yes', msg_ids: dCrit(c.key)?.evidence || [] })).filter((e) => e.msg_ids.length);
-    const tr = mountTranscript(trEl, { messages: conv.messages, evidence });
+    const tr = mountTranscript(trEl, { messages: conv.messages, evidence, foldBot: false }); // для разметки эталона нужен весь диалог
     kids = [tr];
     trEl.addEventListener('cqa:criterion-click', (e) => { const i = crit.findIndex((c) => c.key === e.detail?.key); if (i >= 0) select(i); });
     wrap.dataset.channel = conv.channel;

@@ -53,7 +53,7 @@ function parseHash() {
 
 function buildHeader() {
   const nav = h('nav', { class: 'cqa-nav', 'aria-label': 'Разделы' },
-    [...NAV, ['gold', 'Gold']].map(([id, label]) => h('a', { class: 'cqa-nav__link', href: `#/${id}`, dataset: { nav: id }, hidden: id === 'gold' && settings.group !== 'DEV', title: id === 'gold' ? 'Проверка эталонной разметки (gold)' : null }, label,
+    [...NAV, ['gold', 'Эталон']].map(([id, label]) => h('a', { class: 'cqa-nav__link', href: `#/${id}`, dataset: { nav: id }, hidden: id === 'gold' && !goldVisible(), title: id === 'gold' ? 'Проверка эталонной разметки, по которой меряем точность' : null }, label,
       COUNTED[id] ? h('span', { class: 'cqa-nav__count', hidden: true, title: COUNTED[id] }) : null)));
   // Группы — из реальных данных (loadGroups); до ответа сервера — только текущая.
   groupSel = h('select', { class: 'cqa-select', 'aria-label': 'Группа данных',
@@ -73,13 +73,28 @@ function buildHeader() {
     nav, h('div', { class: 'cqa-header__tools' }, healthEl, groupSel, modeSeg, demo, themeBtn));
 }
 
+// Иконки темы — inline SVG (юникод ☾/☀ в разных шрифтах обрезается и прыгает по базовой линии).
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function themeIcon(dark) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  for (const [k, v] of Object.entries({ viewBox: '0 0 24 24', width: '18', height: '18', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' })) svg.setAttribute(k, v);
+  const add = (tag, attrs) => { const el = document.createElementNS(SVG_NS, tag); for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v); svg.append(el); };
+  if (dark) { // солнце: переключить на светлую
+    add('circle', { cx: '12', cy: '12', r: '4' });
+    for (const d of ['M12 2v2', 'M12 20v2', 'M4.93 4.93l1.41 1.41', 'M17.66 17.66l1.41 1.41', 'M2 12h2', 'M20 12h2', 'M6.34 17.66l-1.41 1.41', 'M19.07 4.93l-1.41 1.41']) add('path', { d });
+  } else add('path', { d: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z' }); // луна
+  return svg;
+}
+// Эталон размечаем только для DEV; в режиме «Демо» пункт скрыт (это рабочий инструмент команды, а не экран для жюри).
+const goldVisible = () => settings.group === 'DEV' && !settings.demo;
+
 function syncHeader() {
   appEl.classList.toggle('cqa-demo', settings.demo);
   appEl.dataset.theme = isDark() ? 'dark' : 'light';
   const tb = appEl.querySelector('#cqa-theme');
-  if (tb) { tb.textContent = isDark() ? '☀' : '☾'; tb.title = isDark() ? 'Светлая тема' : 'Тёмная тема'; tb.setAttribute('aria-label', tb.title); }
-  const goldLink = appEl.querySelector('.cqa-nav__link[data-nav="gold"]'); // gold размечаем только для DEV
-  if (goldLink) goldLink.hidden = settings.group !== 'DEV';
+  if (tb) { tb.replaceChildren(themeIcon(isDark())); tb.title = isDark() ? 'Светлая тема' : 'Тёмная тема'; tb.setAttribute('aria-label', tb.title); }
+  const goldLink = appEl.querySelector('.cqa-nav__link[data-nav="gold"]');
+  if (goldLink) goldLink.hidden = !goldVisible();
   appEl.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === settings.mode)));
 }
 function markNav(name) {
@@ -92,12 +107,17 @@ async function checkHealth() {
   try {
     const hl = await getHealth();
     if (isMock()) set('mock', 'демо-данные');
-    else set('ok', `бэкенд: ${hl.provider || 'ok'}`);
+    else {
+      // Короткое имя модели («claude-sonnet-4.5» из «anthropic/claude-sonnet-4.5»), полное — в подсказке.
+      const short = hl.model ? String(hl.model).split('/').pop() : null;
+      set('ok', short ? `модель: ${short}` : 'сервер на связи');
+      healthEl.title = `Сервер на связи · ${hl.provider || '—'} · ${hl.model || 'модель не задана'}`;
+    }
   } catch { set('bad', 'бэкенд недоступен'); }
 }
 
 // ---------- Группы и счётчики в меню ----------
-const COUNTED = { review: 'Критериев, которые стоит проверить', appeals: 'Открытых апелляций' };
+const COUNTED = { review: 'Пунктов в очереди проверки (критерий или оценка целиком); диалогов меньше — см. дашборд', appeals: 'Открытых апелляций' };
 /** Список групп из данных; select — сделать группу текущей (после нового диалога). true — текущая группа сменилась. */
 async function loadGroups(select) {
   let groups;
@@ -167,11 +187,13 @@ function onAppEvent(e) {
       } });
   } else if (e.type === 'cqa:counts-changed') refreshCounts();
   else if (e.type === 'cqa:groups-changed') {
-    // select — сделать группу текущей; to — после этого открыть экран (без to экран остаётся).
-    const to = e.detail?.to;
+    // select — сделать группу текущей; to — после этого открыть экран (без to экран остаётся);
+    // run — затем открыть окно запуска (detail как у cqa:run-request). Переход через pushState: hashchange закрыл бы окно.
+    const { to, run } = e.detail || {};
     loadGroups(e.detail?.select).then(() => {
       refreshCounts();
-      if (to) { if (location.hash === to) route(); else location.hash = to; }
+      if (to) { if (location.hash !== to) history.pushState(null, '', to); route(); }
+      if (run) onAppEvent(new CustomEvent('cqa:run-request', { detail: run }));
     });
   }
   else if (e.type === 'cqa:mode' && e.detail?.mode) { settings.mode = e.detail.mode; store.set('mode', settings.mode); syncHeader(); route(); }
