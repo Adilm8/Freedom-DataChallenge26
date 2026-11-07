@@ -22,6 +22,7 @@ const ROUTES = {
   appeals: { nav: 'appeals', load: () => import('./components/appeal-review.js') },
   review: { nav: 'review', load: () => import('./components/review-queue.js') },
   new: { nav: 'conversations', load: () => import('./components/new-dialog.js') },
+  coaching: { nav: 'conversations', load: () => import('./components/coaching-report.js') }, // #/coaching?id=<диалог>[&eval=<оценка>]
   compare: { nav: 'conversations', load: () => import('./components/evaluation-compare.js') }, // #/compare?conversation=&a=&b= или #/compare/<id>?a=&b=
 };
 const PLACEHOLDERS = {};
