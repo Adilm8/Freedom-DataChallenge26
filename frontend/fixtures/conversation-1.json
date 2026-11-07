@@ -1,0 +1,131 @@
+{
+ "id": 1,
+ "conversation_id": "p1-ru-014",
+ "group_id": "DEV",
+ "channel": "chat",
+ "language": "ru",
+ "audio_url": null,
+ "duration_sec": null,
+ "transcript": [
+  {
+   "msg_id": "m0",
+   "role": "bot",
+   "text": "Здравствуйте! Я виртуальный помощник Freedom Broker. Чем могу помочь?",
+   "t_sec": 0,
+   "time": "00:00",
+   "internal": false
+  },
+  {
+   "msg_id": "m1",
+   "role": "client",
+   "text": "Здравствуйте, хочу вывести деньги с брокерского счёта на карту. Как это сделать?",
+   "t_sec": 12,
+   "time": "00:12",
+   "internal": false
+  },
+  {
+   "msg_id": "m2",
+   "role": "bot",
+   "text": "Я не могу выполнять операции по счёту. Перевожу вас на оператора.",
+   "t_sec": 18,
+   "time": "00:18",
+   "internal": false
+  },
+  {
+   "msg_id": "m3",
+   "role": "system",
+   "text": "Эскалация на оператора.",
+   "t_sec": 25,
+   "time": "00:25",
+   "internal": false
+  },
+  {
+   "msg_id": "m4",
+   "role": "operator",
+   "text": "Здравствуйте! Меня зовут Айгерим, я помогу вам с выводом средств.",
+   "t_sec": 48,
+   "time": "00:48",
+   "internal": false
+  },
+  {
+   "msg_id": "m5",
+   "role": "operator",
+   "text": "Для начала подтвердите, пожалуйста, ваше ФИО и кодовое слово.",
+   "t_sec": 55,
+   "time": "00:55",
+   "internal": false
+  },
+  {
+   "msg_id": "m6",
+   "role": "client",
+   "text": "Иванов Пётр Сергеевич, кодовое слово «Орион».",
+   "t_sec": 80,
+   "time": "01:20",
+   "internal": false
+  },
+  {
+   "msg_id": "m7",
+   "role": "system",
+   "text": "Личность клиента подтверждена.",
+   "t_sec": 82,
+   "time": "01:22",
+   "internal": false
+  },
+  {
+   "msg_id": "m8",
+   "role": "operator",
+   "text": "Спасибо, Пётр Сергеевич. Вывод доступен в приложении: раздел «Счета», кнопка «Вывести». Средства поступят на карту в течение одного рабочего дня.",
+   "t_sec": 110,
+   "time": "01:50",
+   "internal": false
+  },
+  {
+   "msg_id": "m9",
+   "role": "client",
+   "text": "Понял. А комиссия за вывод есть?",
+   "t_sec": 125,
+   "time": "02:05",
+   "internal": false
+  },
+  {
+   "msg_id": "m10",
+   "role": "operator",
+   "text": "Вывод на карту казахстанского банка бесплатный, на карту иностранного банка комиссию берёт банк-получатель по своему тарифу. Спасибо, что уточнили заранее.",
+   "t_sec": 140,
+   "time": "02:20",
+   "internal": false
+  },
+  {
+   "msg_id": "m11",
+   "role": "client",
+   "text": "Спасибо, всё понятно.",
+   "t_sec": 155,
+   "time": "02:35",
+   "internal": false
+  },
+  {
+   "msg_id": "m12",
+   "role": "operator",
+   "text": "Рада была помочь! Если появятся вопросы, обращайтесь. Всего доброго!",
+   "t_sec": 165,
+   "time": "02:45",
+   "internal": false
+  },
+  {
+   "msg_id": "m13",
+   "role": "system",
+   "text": "Оператор закрыл чат.",
+   "t_sec": 168,
+   "time": "02:48",
+   "internal": false
+  }
+ ],
+ "evaluations": [
+  {
+   "id": 101,
+   "model": "demo/fixture-model",
+   "ai_total": 95,
+   "created_at": "2026-11-07T14:20:00Z"
+  }
+ ]
+}

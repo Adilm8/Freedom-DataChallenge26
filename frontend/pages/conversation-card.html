@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CQA · Карточка диалога</title>
+  <link rel="stylesheet" href="../css/cqa.css">
+  <style>html, body { margin: 0; background: #f4f5f9; }</style>
+</head>
+<body>
+  <div id="cqa-host" class="cqa-root"></div>
+  <script type="module">
+    import { mount } from '../js/components/conversation-card.js';
+    import { paramsFromQuery } from '../js/ui.js';
+    const q = paramsFromQuery();
+    const el = document.getElementById('cqa-host');
+    if (q.demo === '1') el.classList.add('cqa-demo');
+    // Навигация между экранами: в автономной странице переходим в оболочку.
+    el.addEventListener('cqa:navigate', (e) => { location.href = '../index.html' + location.search + e.detail.to; });
+    mount(el, { group: q.group || 'DEV', id: q.id, eval: q.eval, mode: q.mode });
+  </script>
+</body>
+</html>

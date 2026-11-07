@@ -1,0 +1,76 @@
+{
+ "id": 6,
+ "conversation_id": "p1-ru-030",
+ "group_id": "DEV",
+ "channel": "chat",
+ "language": "ru",
+ "audio_url": null,
+ "duration_sec": null,
+ "transcript": [
+  {
+   "msg_id": "m0",
+   "role": "bot",
+   "text": "Здравствуйте! Я виртуальный помощник Freedom Broker. Чем могу помочь?",
+   "t_sec": 0,
+   "time": "00:00",
+   "internal": false
+  },
+  {
+   "msg_id": "m1",
+   "role": "client",
+   "text": "Подскажите, как пополнить счёт через Kaspi?",
+   "t_sec": 8,
+   "time": "00:08",
+   "internal": false
+  },
+  {
+   "msg_id": "m2",
+   "role": "bot",
+   "text": "Для пополнения нужен оператор. Перевожу вас.",
+   "t_sec": 12,
+   "time": "00:12",
+   "internal": false
+  },
+  {
+   "msg_id": "m3",
+   "role": "system",
+   "text": "Эскалация на оператора.",
+   "t_sec": 14,
+   "time": "00:14",
+   "internal": false
+  },
+  {
+   "msg_id": "m4",
+   "role": "operator",
+   "text": "Здравствуйте! Меня зовут Тимур. Пополнить счёт можно в приложении: «Счета» → «Пополнить» → «Kaspi».",
+   "t_sec": 40,
+   "time": "00:40",
+   "internal": false
+  },
+  {
+   "msg_id": "m5",
+   "role": "client",
+   "text": "Получилось, спасибо!",
+   "t_sec": 58,
+   "time": "00:58",
+   "internal": false
+  },
+  {
+   "msg_id": "m6",
+   "role": "operator",
+   "text": "Всегда рады помочь, хорошего дня!",
+   "t_sec": 62,
+   "time": "01:02",
+   "internal": false
+  },
+  {
+   "msg_id": "m7",
+   "role": "system",
+   "text": "Оператор закрыл чат.",
+   "t_sec": 64,
+   "time": "01:04",
+   "internal": false
+  }
+ ],
+ "evaluations": []
+}

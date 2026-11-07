@@ -1,0 +1,131 @@
+{
+ "id": 4,
+ "conversation_id": "p1-ru-021",
+ "group_id": "DEV",
+ "channel": "chat",
+ "language": "ru",
+ "audio_url": null,
+ "duration_sec": null,
+ "transcript": [
+  {
+   "msg_id": "m0",
+   "role": "bot",
+   "text": "Здравствуйте! Я виртуальный помощник Freedom Broker. Чем могу помочь?",
+   "t_sec": 0,
+   "time": "00:00",
+   "internal": false
+  },
+  {
+   "msg_id": "m1",
+   "role": "client",
+   "text": "Добрый день. Сколько у меня сейчас на счёте и какой налог будет с дивидендов?",
+   "t_sec": 14,
+   "time": "00:14",
+   "internal": false
+  },
+  {
+   "msg_id": "m2",
+   "role": "bot",
+   "text": "Передаю ваш вопрос оператору.",
+   "t_sec": 20,
+   "time": "00:20",
+   "internal": false
+  },
+  {
+   "msg_id": "m3",
+   "role": "system",
+   "text": "Эскалация на оператора.",
+   "t_sec": 22,
+   "time": "00:22",
+   "internal": false
+  },
+  {
+   "msg_id": "m4",
+   "role": "operator",
+   "text": "Добрый день, меня зовут Алия, Freedom Broker. Слушаю вас.",
+   "t_sec": 70,
+   "time": "01:10",
+   "internal": false
+  },
+  {
+   "msg_id": "m5",
+   "role": "client",
+   "text": "Кодовое слово — Алматы.",
+   "t_sec": 85,
+   "time": "01:25",
+   "internal": false
+  },
+  {
+   "msg_id": "m6",
+   "role": "operator",
+   "text": "Принято. На вашем счёте 1 240 000 тенге свободных средств.",
+   "t_sec": 100,
+   "time": "01:40",
+   "internal": false
+  },
+  {
+   "msg_id": "m7",
+   "role": "operator",
+   "text": "По дивидендам: налог зависит от вашего резидентства, обычно 10 процентов.",
+   "t_sec": 118,
+   "time": "01:58",
+   "internal": false
+  },
+  {
+   "msg_id": "m8",
+   "role": "client",
+   "text": "А если я резидент Казахстана?",
+   "t_sec": 140,
+   "time": "02:20",
+   "internal": false
+  },
+  {
+   "msg_id": "m9",
+   "role": "operator",
+   "text": "Минуточку, уточню.",
+   "t_sec": 150,
+   "time": "02:30",
+   "internal": false
+  },
+  {
+   "msg_id": "m10",
+   "role": "operator",
+   "text": "Для резидентов РК налог по дивидендам от казахстанских эмитентов обычно не удерживается, но точную ставку лучше проверить в справке брокера.",
+   "t_sec": 300,
+   "time": "05:00",
+   "internal": false
+  },
+  {
+   "msg_id": "m11",
+   "role": "client",
+   "text": "Ладно, спасибо.",
+   "t_sec": 320,
+   "time": "05:20",
+   "internal": false
+  },
+  {
+   "msg_id": "m12",
+   "role": "operator",
+   "text": "Пожалуйста, обращайтесь.",
+   "t_sec": 326,
+   "time": "05:26",
+   "internal": false
+  },
+  {
+   "msg_id": "m13",
+   "role": "system",
+   "text": "Оператор закрыл чат.",
+   "t_sec": 330,
+   "time": "05:30",
+   "internal": false
+  }
+ ],
+ "evaluations": [
+  {
+   "id": 104,
+   "model": "demo/fixture-model",
+   "ai_total": 85.5,
+   "created_at": "2026-11-07T14:20:00Z"
+  }
+ ]
+}

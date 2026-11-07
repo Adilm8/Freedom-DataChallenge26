@@ -1,0 +1,75 @@
+{
+ "id": 2,
+ "conversation_id": "p2-kz-007",
+ "group_id": "DEV",
+ "channel": "chat",
+ "language": "kz",
+ "audio_url": null,
+ "duration_sec": null,
+ "transcript": [
+  {
+   "msg_id": "m0",
+   "role": "bot",
+   "text": "Сәлеметсіз бе! Мен Freedom Broker виртуалды көмекшісімін. Қалай көмектесе аламын?",
+   "t_sec": 0,
+   "time": "00:00",
+   "internal": false
+  },
+  {
+   "msg_id": "m1",
+   "role": "client",
+   "text": "Сәлем, менің шотыма кіре алмай жатырмын.",
+   "t_sec": 9,
+   "time": "00:09",
+   "internal": false
+  },
+  {
+   "msg_id": "m2",
+   "role": "bot",
+   "text": "Сұрауыңызды операторға жіберемін.",
+   "t_sec": 14,
+   "time": "00:14",
+   "internal": false
+  },
+  {
+   "msg_id": "m3",
+   "role": "system",
+   "text": "Эскалация на оператора.",
+   "t_sec": 16,
+   "time": "00:16",
+   "internal": false
+  },
+  {
+   "msg_id": "m4",
+   "role": "operator",
+   "text": "Сәлеметсіз бе! Менің атым Данияр. Қандай мәселе туындады?",
+   "t_sec": 40,
+   "time": "00:40",
+   "internal": false
+  },
+  {
+   "msg_id": "m5",
+   "role": "operator",
+   "text": "Қосымшаға кіргенде қандай қате шығады? Қатенің мәтінін жазып жіберіңізші.",
+   "t_sec": 165,
+   "time": "02:45",
+   "internal": false
+  },
+  {
+   "msg_id": "m6",
+   "role": "system",
+   "text": "Клиент покинул чат.",
+   "t_sec": 260,
+   "time": "04:20",
+   "internal": false
+  }
+ ],
+ "evaluations": [
+  {
+   "id": 102,
+   "model": "demo/fixture-model",
+   "ai_total": 91.82,
+   "created_at": "2026-11-07T14:20:00Z"
+  }
+ ]
+}

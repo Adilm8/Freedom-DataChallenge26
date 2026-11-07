@@ -1,0 +1,323 @@
+{
+ "id": 102,
+ "conversation_id": 2,
+ "checklist_version_id": 1,
+ "provider": "openrouter",
+ "model": "demo/fixture-model",
+ "strategy": "grouped",
+ "prompt_version": "p1-draft",
+ "status": "done",
+ "facts": {
+  "first_response_delay_sec": 24
+ },
+ "overview": {
+  "summary": "Клиент не мог войти в личный кабинет. Оператор поздоровался и уточнил текст ошибки, после чего клиент покинул чат.",
+  "topic": "Проблема со входом в приложение",
+  "resolved": "no"
+ },
+ "params": {
+  "temperature": 0,
+  "seed": null,
+  "reuse": "none"
+ },
+ "ai_score": {
+  "total": 91.82,
+  "applicable_weight": 55,
+  "points_sum": 50.5,
+  "sections": [
+   {
+    "id": "start",
+    "title": "Начало и понимание запроса",
+    "points": 25,
+    "applicable_weight": 25,
+    "pct": 100
+   },
+   {
+    "id": "dialog",
+    "title": "Ведение и завершение диалога",
+    "points": 25.5,
+    "applicable_weight": 30,
+    "pct": 85
+   }
+  ],
+  "criteria": {
+   "01": {
+    "points": 10,
+    "contribution": 18.18
+   },
+   "02": {
+    "points": 15,
+    "contribution": 27.27
+   },
+   "05": {
+    "points": 15,
+    "contribution": 27.27
+   },
+   "06": {
+    "points": 10.5,
+    "contribution": 19.09
+   }
+  },
+  "critical": []
+ },
+ "final_score": {
+  "total": 91.82,
+  "applicable_weight": 55,
+  "points_sum": 50.5,
+  "sections": [
+   {
+    "id": "start",
+    "title": "Начало и понимание запроса",
+    "points": 25,
+    "applicable_weight": 25,
+    "pct": 100
+   },
+   {
+    "id": "dialog",
+    "title": "Ведение и завершение диалога",
+    "points": 25.5,
+    "applicable_weight": 30,
+    "pct": 85
+   }
+  ],
+  "criteria": {
+   "01": {
+    "points": 10,
+    "contribution": 18.18
+   },
+   "02": {
+    "points": 15,
+    "contribution": 27.27
+   },
+   "05": {
+    "points": 15,
+    "contribution": 27.27
+   },
+   "06": {
+    "points": 10.5,
+    "contribution": 19.09
+   }
+  },
+  "critical": []
+ },
+ "criteria": [
+  {
+   "key": "01",
+   "title": "Установление контакта",
+   "section": "start",
+   "type": "binary",
+   "weight": 10,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 10,
+   "final_answer": "yes",
+   "final_points": 10,
+   "overridden": false,
+   "reasoning": "Оператор қазақ тілінде сәлемдесіп, өз атын айтты (на казахском приветствие и имя).",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m4",
+     "quote": "Сәлеметсіз бе! Менің атым Данияр",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "02",
+   "title": "Выявление потребности",
+   "section": "start",
+   "type": "binary",
+   "weight": 15,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 15,
+   "final_answer": "yes",
+   "final_points": 15,
+   "overridden": false,
+   "reasoning": "Оператор задал уточняющий вопрос о тексте ошибки до каких-либо советов.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m5",
+     "quote": "Қосымшаға кіргенде қандай қате шығады?",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "03",
+   "title": "Идентификация",
+   "section": "safety",
+   "type": "binary",
+   "weight": 20,
+   "scale_max": null,
+   "ai_answer": "na",
+   "ai_points": null,
+   "final_answer": "na",
+   "final_points": null,
+   "overridden": false,
+   "reasoning": "Клиент не успел сформулировать запрос, требующий раскрытия данных.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [],
+   "checked_range": {
+    "from": "m4",
+    "to": "m6"
+   },
+   "na_reason": "Запрос не дошёл до действия, требующего идентификации.",
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "04",
+   "title": "Корректная и полная консультация",
+   "section": "safety",
+   "type": "scale",
+   "weight": 20,
+   "scale_max": 20,
+   "ai_answer": "na",
+   "ai_points": null,
+   "final_answer": "na",
+   "final_points": null,
+   "overridden": false,
+   "reasoning": "Клиент покинул чат до того, как описал проблему подробнее.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [],
+   "checked_range": {
+    "from": "m4",
+    "to": "m6"
+   },
+   "na_reason": "Чат закончился до того, как клиент сформулировал запрос.",
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "05",
+   "title": "Эмпатия и клиентоориентированность",
+   "section": "dialog",
+   "type": "binary",
+   "weight": 15,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 15,
+   "final_answer": "yes",
+   "final_points": 15,
+   "overridden": false,
+   "reasoning": "Оператор вежлив и сразу переходит к проблеме клиента.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m4",
+     "quote": "Қандай мәселе туындады?",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "06",
+   "title": "Управление диалогом, скорость и грамотность",
+   "section": "dialog",
+   "type": "scale",
+   "weight": 15,
+   "scale_max": 10,
+   "ai_answer": 7,
+   "ai_points": 10.5,
+   "final_answer": 7,
+   "final_points": 10.5,
+   "overridden": false,
+   "reasoning": "Между приветствием и вторым вопросом прошло более двух минут без предупреждения об ожидании.",
+   "confidence": "medium",
+   "advice": "Если нужно время на проверку, предупредить клиента: «Минуту, проверяю». Тишина на 2 минуты могла стать причиной ухода.",
+   "evidence": [
+    {
+     "msg_id": "m5",
+     "quote": "Қатенің мәтінін жазып жіберіңізші.",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "07",
+   "title": "Завершение",
+   "section": "dialog",
+   "type": "binary",
+   "weight": 5,
+   "scale_max": null,
+   "ai_answer": "na",
+   "ai_points": null,
+   "final_answer": "na",
+   "final_points": null,
+   "overridden": false,
+   "reasoning": "Клиент покинул чат, оператор не мог завершить диалог.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [],
+   "checked_range": {
+    "from": "m5",
+    "to": "m6"
+   },
+   "na_reason": "Чат оборвался до возможности его завершить.",
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "08",
+   "title": "Грубые ошибки",
+   "section": "critical",
+   "type": "flag",
+   "weight": 0,
+   "scale_max": null,
+   "ai_answer": "no",
+   "ai_points": null,
+   "final_answer": "no",
+   "final_points": null,
+   "overridden": false,
+   "reasoning": "Нарушений нет.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [],
+   "checked_range": {
+    "from": "m4",
+    "to": "m5"
+   },
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  }
+ ],
+ "tokens_in": 4380,
+ "tokens_out": 760,
+ "cost_usd": 0.0151,
+ "latency_ms": 6100,
+ "created_at": "2026-11-07T14:20:00Z",
+ "needs_review": false
+}

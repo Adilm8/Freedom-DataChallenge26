@@ -1,0 +1,391 @@
+{
+ "id": 101,
+ "conversation_id": 1,
+ "checklist_version_id": 1,
+ "provider": "openrouter",
+ "model": "demo/fixture-model",
+ "strategy": "grouped",
+ "prompt_version": "p1-draft",
+ "status": "done",
+ "facts": {
+  "first_response_delay_sec": 23
+ },
+ "overview": {
+  "summary": "Клиент хотел вывести деньги с брокерского счёта на карту. Оператор подтвердил личность, объяснил порядок и комиссию, корректно попрощался.",
+  "topic": "Вывод средств",
+  "resolved": "yes"
+ },
+ "params": {
+  "temperature": 0,
+  "seed": null,
+  "reuse": "none"
+ },
+ "ai_score": {
+  "total": 95,
+  "applicable_weight": 100,
+  "points_sum": 95,
+  "sections": [
+   {
+    "id": "start",
+    "title": "Начало и понимание запроса",
+    "points": 25,
+    "applicable_weight": 25,
+    "pct": 100
+   },
+   {
+    "id": "safety",
+    "title": "Безопасность и решение",
+    "points": 35,
+    "applicable_weight": 40,
+    "pct": 87.5
+   },
+   {
+    "id": "dialog",
+    "title": "Ведение и завершение диалога",
+    "points": 35,
+    "applicable_weight": 35,
+    "pct": 100
+   }
+  ],
+  "criteria": {
+   "01": {
+    "points": 10,
+    "contribution": 10
+   },
+   "02": {
+    "points": 15,
+    "contribution": 15
+   },
+   "03": {
+    "points": 20,
+    "contribution": 20
+   },
+   "04": {
+    "points": 15,
+    "contribution": 15
+   },
+   "05": {
+    "points": 15,
+    "contribution": 15
+   },
+   "06": {
+    "points": 15,
+    "contribution": 15
+   },
+   "07": {
+    "points": 5,
+    "contribution": 5
+   }
+  },
+  "critical": []
+ },
+ "final_score": {
+  "total": 100,
+  "applicable_weight": 100,
+  "points_sum": 100,
+  "sections": [
+   {
+    "id": "start",
+    "title": "Начало и понимание запроса",
+    "points": 25,
+    "applicable_weight": 25,
+    "pct": 100
+   },
+   {
+    "id": "safety",
+    "title": "Безопасность и решение",
+    "points": 40,
+    "applicable_weight": 40,
+    "pct": 100
+   },
+   {
+    "id": "dialog",
+    "title": "Ведение и завершение диалога",
+    "points": 35,
+    "applicable_weight": 35,
+    "pct": 100
+   }
+  ],
+  "criteria": {
+   "01": {
+    "points": 10,
+    "contribution": 10
+   },
+   "02": {
+    "points": 15,
+    "contribution": 15
+   },
+   "03": {
+    "points": 20,
+    "contribution": 20
+   },
+   "04": {
+    "points": 20,
+    "contribution": 20
+   },
+   "05": {
+    "points": 15,
+    "contribution": 15
+   },
+   "06": {
+    "points": 15,
+    "contribution": 15
+   },
+   "07": {
+    "points": 5,
+    "contribution": 5
+   }
+  },
+  "critical": []
+ },
+ "criteria": [
+  {
+   "key": "01",
+   "title": "Установление контакта",
+   "section": "start",
+   "type": "binary",
+   "weight": 10,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 10,
+   "final_answer": "yes",
+   "final_points": 10,
+   "overridden": false,
+   "reasoning": "В первой реплике оператор поздоровался по-русски и назвал своё имя.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m4",
+     "quote": "Здравствуйте! Меня зовут Айгерим",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "02",
+   "title": "Выявление потребности",
+   "section": "start",
+   "type": "binary",
+   "weight": 15,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 15,
+   "final_answer": "yes",
+   "final_points": 15,
+   "overridden": false,
+   "reasoning": "Оператор запросил данные для идентификации и затем ответил на вопрос о комиссии, который клиент уточнил сам.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m5",
+     "quote": "подтвердите, пожалуйста, ваше ФИО и кодовое слово",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "03",
+   "title": "Идентификация",
+   "section": "safety",
+   "type": "binary",
+   "weight": 20,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 20,
+   "final_answer": "yes",
+   "final_points": 20,
+   "overridden": false,
+   "reasoning": "Идентификация запрошена до раскрытия порядка вывода и подтверждена системным сообщением.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m5",
+     "quote": "ФИО и кодовое слово",
+     "quote_ok": true
+    },
+    {
+     "msg_id": "m7",
+     "quote": "Личность клиента подтверждена.",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "04",
+   "title": "Корректная и полная консультация",
+   "section": "safety",
+   "type": "scale",
+   "weight": 20,
+   "scale_max": 20,
+   "ai_answer": 15,
+   "ai_points": 15,
+   "final_answer": 20,
+   "final_points": 20,
+   "overridden": true,
+   "reasoning": "Порядок вывода и сроки названы верно. Не упомянуты лимиты на вывод и минимальная сумма — это второстепенная деталь.",
+   "confidence": "high",
+   "advice": "Добавлять информацию о минимальной сумме и дневном лимите вывода: клиент часто спрашивает об этом следующим вопросом.",
+   "evidence": [
+    {
+     "msg_id": "m8",
+     "quote": "раздел «Счета», кнопка «Вывести»",
+     "quote_ok": true
+    },
+    {
+     "msg_id": "m10",
+     "quote": "Вывод на карту казахстанского банка бесплатный",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": {
+    "id": 1,
+    "evaluation_id": 101,
+    "criterion_key": "04",
+    "comment": "Лимиты на вывод не входят в вопрос клиента, ответ полный.",
+    "status": "decided",
+    "ai_answer_snapshot": 15,
+    "decision_answer": 20,
+    "decision_reason": "Клиент не спрашивал о лимитах, основной вопрос закрыт полностью.",
+    "created_at": "2026-11-07T15:02:00Z",
+    "decided_at": "2026-11-07T15:20:00Z"
+   }
+  },
+  {
+   "key": "05",
+   "title": "Эмпатия и клиентоориентированность",
+   "section": "dialog",
+   "type": "binary",
+   "weight": 15,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 15,
+   "final_answer": "yes",
+   "final_points": 15,
+   "overridden": false,
+   "reasoning": "Оператор вежлив, благодарит клиента за уточняющий вопрос.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m10",
+     "quote": "Спасибо, что уточнили заранее",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "06",
+   "title": "Управление диалогом, скорость и грамотность",
+   "section": "dialog",
+   "type": "scale",
+   "weight": 15,
+   "scale_max": 10,
+   "ai_answer": 10,
+   "ai_points": 15,
+   "final_answer": 10,
+   "final_points": 15,
+   "overridden": false,
+   "reasoning": "Ответы ясные и идут в логичном порядке, ожиданий не было.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m8",
+     "quote": "Средства поступят на карту в течение одного рабочего дня",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "07",
+   "title": "Завершение",
+   "section": "dialog",
+   "type": "binary",
+   "weight": 5,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 5,
+   "final_answer": "yes",
+   "final_points": 5,
+   "overridden": false,
+   "reasoning": "Оператор предложил дальнейшую помощь и попрощался перед закрытием чата.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m12",
+     "quote": "Если появятся вопросы, обращайтесь. Всего доброго!",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "08",
+   "title": "Грубые ошибки",
+   "section": "critical",
+   "type": "flag",
+   "weight": 0,
+   "scale_max": null,
+   "ai_answer": "no",
+   "ai_points": null,
+   "final_answer": "no",
+   "final_points": null,
+   "overridden": false,
+   "reasoning": "Оскорблений, услуг в обход компании и раскрытия конфиденциальных данных нет.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [],
+   "checked_range": {
+    "from": "m4",
+    "to": "m12"
+   },
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  }
+ ],
+ "tokens_in": 5120,
+ "tokens_out": 980,
+ "cost_usd": 0.0184,
+ "latency_ms": 7400,
+ "created_at": "2026-11-07T14:20:00Z",
+ "needs_review": false
+}
