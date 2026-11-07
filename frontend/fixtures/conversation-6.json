@@ -1,0 +1,120 @@
+{
+ "id": 6,
+ "conversation_id": "p1-ru-030",
+ "group_id": "DEV",
+ "channel": "agent chat",
+ "language": "RU",
+ "audio_url": null,
+ "source": "fixture",
+ "audio_offset_fix_sec": 0,
+ "imported_at": "2026-11-07T14:20:00Z",
+ "messages": [
+  {
+   "msg_id": "m0",
+   "idx": 0,
+   "speaker": "bot",
+   "text": "Здравствуйте! Я виртуальный помощник Freedom Broker. Чем могу помочь?",
+   "timestamp": "00:00",
+   "t_sec": 0,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m1",
+   "idx": 1,
+   "speaker": "client",
+   "text": "Подскажите, как пополнить счёт через Kaspi?",
+   "timestamp": "00:08",
+   "t_sec": 8,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m2",
+   "idx": 2,
+   "speaker": "bot",
+   "text": "Для пополнения нужен оператор. Перевожу вас.",
+   "timestamp": "00:12",
+   "t_sec": 12,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m3",
+   "idx": 3,
+   "speaker": "system",
+   "text": "Эскалация на оператора.",
+   "timestamp": "00:14",
+   "t_sec": 14,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": "escalation"
+  },
+  {
+   "msg_id": "m4",
+   "idx": 4,
+   "speaker": "operator",
+   "text": "Здравствуйте! Меня зовут Тимур. Пополнить счёт можно в приложении: «Счета» → «Пополнить» → «Kaspi».",
+   "timestamp": "00:40",
+   "t_sec": 40,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m5",
+   "idx": 5,
+   "speaker": "client",
+   "text": "Получилось, спасибо!",
+   "timestamp": "00:58",
+   "t_sec": 58,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m6",
+   "idx": 6,
+   "speaker": "operator",
+   "text": "Всегда рады помочь, хорошего дня!",
+   "timestamp": "01:02",
+   "t_sec": 62,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m7",
+   "idx": 7,
+   "speaker": "system",
+   "text": "Оператор закрыл чат.",
+   "timestamp": "01:04",
+   "t_sec": 64,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": "operator_closed"
+  }
+ ],
+ "segments": [],
+ "events": [
+  {
+   "type": "escalation",
+   "idx": 3,
+   "msg_id": "m3",
+   "t_sec": 14,
+   "text": "Эскалация на оператора."
+  },
+  {
+   "type": "operator_closed",
+   "idx": 7,
+   "msg_id": "m7",
+   "t_sec": 64,
+   "text": "Оператор закрыл чат."
+  }
+ ],
+ "warnings": [],
+ "evaluations": []
+}

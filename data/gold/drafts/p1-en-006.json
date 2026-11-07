@@ -1,0 +1,86 @@
+{
+  "conversation_id": "p1-en-006",
+  "drafted_by": "claude-session",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "yes",
+      "reasoning": "«Hello, I'm Sam» — приветствие и имя.",
+      "evidence": [
+        "m10"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "yes",
+      "reasoning": "До передачи обращения уточнил валюту (m13) и примерное время перевода (m18) — этих данных не было.",
+      "evidence": [
+        "m13",
+        "m18"
+      ],
+      "confidence": "high"
+    },
+    "03": {
+      "answer": "yes",
+      "reasoning": "Оператор запросил проверку до работы со счётом; системное «Customer identity verified» (m12) стоит раньше проверки платежа (m15).",
+      "evidence": [
+        "m10",
+        "m12",
+        "m13",
+        "m15"
+      ],
+      "confidence": "high"
+    },
+    "04": {
+      "answer": 20,
+      "reasoning": "Платёж передан на проверку с деталями, ответ будет в этом чате, повторно объяснять не нужно; вопрос об отчёте закрыт.",
+      "evidence": [
+        "m15",
+        "m20",
+        "m22",
+        "m25",
+        "m27"
+      ],
+      "confidence": "high"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Клиент нервничал, оператор отреагировал («I understand why you'd want to check») и вежлив весь диалог.",
+      "evidence": [
+        "m0",
+        "m10"
+      ],
+      "confidence": "high"
+    },
+    "06": {
+      "answer": 10,
+      "reasoning": "Ответы ясные и последовательные, клиент не переспрашивал.",
+      "evidence": [
+        "m15",
+        "m18",
+        "m22"
+      ],
+      "confidence": "high"
+    },
+    "07": {
+      "answer": "yes",
+      "reasoning": "Итог («We'll follow up here about the transfer») и прощание.",
+      "evidence": [
+        "m29"
+      ],
+      "confidence": "high"
+    },
+    "08": {
+      "answer": "no",
+      "reasoning": "Нарушений нет.",
+      "evidence": [
+        "m15",
+        "m29"
+      ],
+      "confidence": "high"
+    }
+  },
+  "total": 100.0,
+  "critical": false,
+  "notes": "Длинный хороший диалог с идентификацией."
+}

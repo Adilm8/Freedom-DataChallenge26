@@ -2,7 +2,7 @@
 name: frontend-dev
 description: Реализует страницы и компоненты в frontend/ на чистом HTML/CSS/JS по контракту API из docs/CONTRACTS.md. Используй для интерфейса списка диалогов, карточки, конструктора чек-листа и апелляций.
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: sonnet
+model: opus
 effort: medium
 ---
 

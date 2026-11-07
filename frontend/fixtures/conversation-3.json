@@ -1,0 +1,151 @@
+{
+ "id": 3,
+ "conversation_id": "p3-en-012",
+ "group_id": "DEV",
+ "channel": "agent chat",
+ "language": "EN",
+ "audio_url": null,
+ "source": "fixture",
+ "audio_offset_fix_sec": 0,
+ "imported_at": "2026-11-07T14:20:00Z",
+ "messages": [
+  {
+   "msg_id": "m0",
+   "idx": 0,
+   "speaker": "bot",
+   "text": "Hello! I am the Freedom Broker virtual assistant. How can I help you?",
+   "timestamp": "00:00",
+   "t_sec": 0,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m1",
+   "idx": 1,
+   "speaker": "client",
+   "text": "Hi, I would like advice on which stocks to buy for the long term.",
+   "timestamp": "00:10",
+   "t_sec": 10,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m2",
+   "idx": 2,
+   "speaker": "bot",
+   "text": "I cannot give investment advice. Let me connect you with an operator.",
+   "timestamp": "00:15",
+   "t_sec": 15,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m3",
+   "idx": 3,
+   "speaker": "system",
+   "text": "Эскалация на оператора.",
+   "timestamp": "00:18",
+   "t_sec": 18,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": "escalation"
+  },
+  {
+   "msg_id": "m4",
+   "idx": 4,
+   "speaker": "operator",
+   "text": "Hello, this is Marat from Freedom Broker. How can I help?",
+   "timestamp": "00:50",
+   "t_sec": 50,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m5",
+   "idx": 5,
+   "speaker": "operator",
+   "text": "Honestly, platform advice is limited. If you want real returns, transfer $2,000 directly to my personal card and I will invest it for you privately. 15% a month guaranteed.",
+   "timestamp": "01:15",
+   "t_sec": 75,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m6",
+   "idx": 6,
+   "speaker": "client",
+   "text": "Is that even allowed?",
+   "timestamp": "01:35",
+   "t_sec": 95,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m7",
+   "idx": 7,
+   "speaker": "operator",
+   "text": "Don't worry, just keep it between us. Send me your personal number and I will message you my card details.",
+   "timestamp": "01:45",
+   "t_sec": 105,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m8",
+   "idx": 8,
+   "speaker": "client",
+   "text": "I'd rather not, thanks. Bye.",
+   "timestamp": "02:10",
+   "t_sec": 130,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m9",
+   "idx": 9,
+   "speaker": "system",
+   "text": "Клиент покинул чат.",
+   "timestamp": "02:13",
+   "t_sec": 133,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": "client_left"
+  }
+ ],
+ "segments": [],
+ "events": [
+  {
+   "type": "escalation",
+   "idx": 3,
+   "msg_id": "m3",
+   "t_sec": 18,
+   "text": "Эскалация на оператора."
+  },
+  {
+   "type": "client_left",
+   "idx": 9,
+   "msg_id": "m9",
+   "t_sec": 133,
+   "text": "Клиент покинул чат."
+  }
+ ],
+ "warnings": [],
+ "evaluations": [
+  {
+   "id": 103,
+   "model": "demo/fixture-model",
+   "checklist_version_id": 1,
+   "ai_total": 21.33,
+   "final_total": 21.33,
+   "created_at": "2026-11-07T14:20:00Z"
+  }
+ ]
+}

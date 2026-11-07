@@ -4,6 +4,8 @@
 
 **Контекст (прочитай сначала):** `docs/checklist.md` (критерии 01, 05, 06, 07, 08), `docs/architecture/evaluation-pipeline.md` раздел 2 «Факты», `data/raw/DEV_readable.md` или `Freedom Datathon/research/DEV_readable.md` (только чаты `p1-*`).
 
+**Важно:** оба файла уже есть в репозитории (первые версии сделал Claude по данным DEV). Задача — **дополнить** их вариантами, не меняя формат и не удаляя существующие строки.
+
 **Сделать:**
 1. `data/config/lexicons.json`:
 ```json

@@ -1,0 +1,195 @@
+{
+ "id": 4,
+ "conversation_id": "p1-ru-021",
+ "group_id": "DEV",
+ "channel": "agent chat",
+ "language": "RU",
+ "audio_url": null,
+ "source": "fixture",
+ "audio_offset_fix_sec": 0,
+ "imported_at": "2026-11-07T14:20:00Z",
+ "messages": [
+  {
+   "msg_id": "m0",
+   "idx": 0,
+   "speaker": "bot",
+   "text": "Здравствуйте! Я виртуальный помощник Freedom Broker. Чем могу помочь?",
+   "timestamp": "00:00",
+   "t_sec": 0,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m1",
+   "idx": 1,
+   "speaker": "client",
+   "text": "Добрый день. Сколько у меня сейчас на счёте и какой налог будет с дивидендов?",
+   "timestamp": "00:14",
+   "t_sec": 14,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m2",
+   "idx": 2,
+   "speaker": "bot",
+   "text": "Передаю ваш вопрос оператору.",
+   "timestamp": "00:20",
+   "t_sec": 20,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m3",
+   "idx": 3,
+   "speaker": "system",
+   "text": "Эскалация на оператора.",
+   "timestamp": "00:22",
+   "t_sec": 22,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": "escalation"
+  },
+  {
+   "msg_id": "m4",
+   "idx": 4,
+   "speaker": "operator",
+   "text": "Добрый день, меня зовут Алия, Freedom Broker. Слушаю вас.",
+   "timestamp": "01:10",
+   "t_sec": 70,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m5",
+   "idx": 5,
+   "speaker": "client",
+   "text": "Кодовое слово — Алматы.",
+   "timestamp": "01:25",
+   "t_sec": 85,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m6",
+   "idx": 6,
+   "speaker": "operator",
+   "text": "Принято. На вашем счёте 1 240 000 тенге свободных средств.",
+   "timestamp": "01:40",
+   "t_sec": 100,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m7",
+   "idx": 7,
+   "speaker": "operator",
+   "text": "По дивидендам: налог зависит от вашего резидентства, обычно 10 процентов.",
+   "timestamp": "01:58",
+   "t_sec": 118,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m8",
+   "idx": 8,
+   "speaker": "client",
+   "text": "А если я резидент Казахстана?",
+   "timestamp": "02:20",
+   "t_sec": 140,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m9",
+   "idx": 9,
+   "speaker": "operator",
+   "text": "Минуточку, уточню.",
+   "timestamp": "02:30",
+   "t_sec": 150,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m10",
+   "idx": 10,
+   "speaker": "operator",
+   "text": "Для резидентов РК налог по дивидендам от казахстанских эмитентов обычно не удерживается, но точную ставку лучше проверить в справке брокера.",
+   "timestamp": "05:00",
+   "t_sec": 300,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m11",
+   "idx": 11,
+   "speaker": "client",
+   "text": "Ладно, спасибо.",
+   "timestamp": "05:20",
+   "t_sec": 320,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m12",
+   "idx": 12,
+   "speaker": "operator",
+   "text": "Пожалуйста, обращайтесь.",
+   "timestamp": "05:26",
+   "t_sec": 326,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m13",
+   "idx": 13,
+   "speaker": "system",
+   "text": "Оператор закрыл чат.",
+   "timestamp": "05:30",
+   "t_sec": 330,
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": "operator_closed"
+  }
+ ],
+ "segments": [],
+ "events": [
+  {
+   "type": "escalation",
+   "idx": 3,
+   "msg_id": "m3",
+   "t_sec": 22,
+   "text": "Эскалация на оператора."
+  },
+  {
+   "type": "operator_closed",
+   "idx": 13,
+   "msg_id": "m13",
+   "t_sec": 330,
+   "text": "Оператор закрыл чат."
+  }
+ ],
+ "warnings": [],
+ "evaluations": [
+  {
+   "id": 104,
+   "model": "demo/fixture-model",
+   "checklist_version_id": 1,
+   "ai_total": 85.5,
+   "final_total": 85.5,
+   "created_at": "2026-11-07T14:20:00Z"
+  }
+ ]
+}

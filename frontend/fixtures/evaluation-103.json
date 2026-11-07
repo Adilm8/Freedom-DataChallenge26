@@ -1,0 +1,361 @@
+{
+ "id": 103,
+ "conversation_id": 3,
+ "checklist_version_id": 1,
+ "provider": "openrouter",
+ "model": "demo/fixture-model",
+ "strategy": "grouped",
+ "prompt_version": "p1-draft",
+ "status": "done",
+ "facts": {
+  "first_response_delay_sec": 32,
+  "risk_terms": [
+   "personal card",
+   "guaranteed"
+  ]
+ },
+ "overview": {
+  "summary": "Клиент попросил совет по долгосрочным инвестициям. Оператор предложил перевести деньги ему лично и гарантировал доходность. Клиент отказался и ушёл.",
+  "topic": "Инвестиционная консультация",
+  "resolved": "no"
+ },
+ "params": {
+  "temperature": 0,
+  "seed": null,
+  "reuse": "none"
+ },
+ "ai_score": {
+  "total": 21.33,
+  "applicable_weight": 75,
+  "points_sum": 16,
+  "sections": [
+   {
+    "id": "start",
+    "title": "Начало и понимание запроса",
+    "points": 10,
+    "applicable_weight": 25,
+    "pct": 40
+   },
+   {
+    "id": "safety",
+    "title": "Безопасность и решение",
+    "points": 0,
+    "applicable_weight": 20,
+    "pct": 0
+   },
+   {
+    "id": "dialog",
+    "title": "Ведение и завершение диалога",
+    "points": 6,
+    "applicable_weight": 30,
+    "pct": 20
+   }
+  ],
+  "criteria": {
+   "01": {
+    "points": 10,
+    "contribution": 13.33
+   },
+   "02": {
+    "points": 0,
+    "contribution": 0
+   },
+   "04": {
+    "points": 0,
+    "contribution": 0
+   },
+   "05": {
+    "points": 0,
+    "contribution": 0
+   },
+   "06": {
+    "points": 6,
+    "contribution": 8
+   }
+  },
+  "critical": [
+   "08"
+  ]
+ },
+ "final_score": {
+  "total": 21.33,
+  "applicable_weight": 75,
+  "points_sum": 16,
+  "sections": [
+   {
+    "id": "start",
+    "title": "Начало и понимание запроса",
+    "points": 10,
+    "applicable_weight": 25,
+    "pct": 40
+   },
+   {
+    "id": "safety",
+    "title": "Безопасность и решение",
+    "points": 0,
+    "applicable_weight": 20,
+    "pct": 0
+   },
+   {
+    "id": "dialog",
+    "title": "Ведение и завершение диалога",
+    "points": 6,
+    "applicable_weight": 30,
+    "pct": 20
+   }
+  ],
+  "criteria": {
+   "01": {
+    "points": 10,
+    "contribution": 13.33
+   },
+   "02": {
+    "points": 0,
+    "contribution": 0
+   },
+   "04": {
+    "points": 0,
+    "contribution": 0
+   },
+   "05": {
+    "points": 0,
+    "contribution": 0
+   },
+   "06": {
+    "points": 6,
+    "contribution": 8
+   }
+  },
+  "critical": [
+   "08"
+  ]
+ },
+ "criteria": [
+  {
+   "key": "01",
+   "title": "Установление контакта",
+   "section": "start",
+   "type": "binary",
+   "weight": 10,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 10,
+   "final_answer": "yes",
+   "final_points": 10,
+   "overridden": false,
+   "reasoning": "Greeting in English and the operator introduced himself in the first reply.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m4",
+     "quote": "Hello, this is Marat from Freedom Broker",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "02",
+   "title": "Выявление потребности",
+   "section": "start",
+   "type": "binary",
+   "weight": 15,
+   "scale_max": null,
+   "ai_answer": "no",
+   "ai_points": 0,
+   "final_answer": "no",
+   "final_points": 0,
+   "overridden": false,
+   "reasoning": "Оператор не уточнил цели, срок и отношение клиента к риску, а сразу перешёл к личному предложению.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [],
+   "checked_range": {
+    "from": "m4",
+    "to": "m7"
+   },
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "03",
+   "title": "Идентификация",
+   "section": "safety",
+   "type": "binary",
+   "weight": 20,
+   "scale_max": null,
+   "ai_answer": "na",
+   "ai_points": null,
+   "final_answer": "na",
+   "final_points": null,
+   "overridden": false,
+   "reasoning": "Идентификация не требовалась: клиент спрашивал общий совет.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [],
+   "checked_range": {
+    "from": "m4",
+    "to": "m7"
+   },
+   "na_reason": "Запрос не требовал идентификации.",
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "04",
+   "title": "Корректная и полная консультация",
+   "section": "safety",
+   "type": "scale",
+   "weight": 20,
+   "scale_max": 20,
+   "ai_answer": 0,
+   "ai_points": 0,
+   "final_answer": 0,
+   "final_points": 0,
+   "overridden": false,
+   "reasoning": "Ключевая рекомендация ошибочна: гарантированная доходность 15% в месяц невозможна, а перевод на личную карту — нарушение.",
+   "confidence": "high",
+   "advice": "Объяснить, что персональных рекомендаций оператор не даёт, и предложить официальные материалы или консультацию аналитика компании.",
+   "evidence": [
+    {
+     "msg_id": "m5",
+     "quote": "15% a month guaranteed",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "05",
+   "title": "Эмпатия и клиентоориентированность",
+   "section": "dialog",
+   "type": "binary",
+   "weight": 15,
+   "scale_max": null,
+   "ai_answer": "no",
+   "ai_points": 0,
+   "final_answer": "no",
+   "final_points": 0,
+   "overridden": false,
+   "reasoning": "Оператор не отреагировал на запрос клиента по существу и давил на него вместо помощи.",
+   "confidence": "medium",
+   "advice": "Реагировать на конкретную потребность клиента: сначала спросить цель инвестиций.",
+   "evidence": [
+    {
+     "msg_id": "m7",
+     "quote": "keep it between us",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "06",
+   "title": "Управление диалогом, скорость и грамотность",
+   "section": "dialog",
+   "type": "scale",
+   "weight": 15,
+   "scale_max": 10,
+   "ai_answer": 4,
+   "ai_points": 6,
+   "final_answer": 4,
+   "final_points": 6,
+   "overridden": false,
+   "reasoning": "Клиенту пришлось переспросить, допустимо ли предложение; ответ оператора ушёл от темы.",
+   "confidence": "medium",
+   "advice": "Отвечать прямо на вопросы клиента.",
+   "evidence": [
+    {
+     "msg_id": "m6",
+     "quote": "Is that even allowed?",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "07",
+   "title": "Завершение",
+   "section": "dialog",
+   "type": "binary",
+   "weight": 5,
+   "scale_max": null,
+   "ai_answer": "na",
+   "ai_points": null,
+   "final_answer": "na",
+   "final_points": null,
+   "overridden": false,
+   "reasoning": "Клиент ушёл из чата сам.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [],
+   "checked_range": {
+    "from": "m8",
+    "to": "m9"
+   },
+   "na_reason": "Чат оборвался до возможности его завершить.",
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "08",
+   "title": "Грубые ошибки",
+   "section": "critical",
+   "type": "flag",
+   "weight": 0,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": null,
+   "final_answer": "yes",
+   "final_points": null,
+   "overridden": false,
+   "reasoning": "Оператор предлагает перевести деньги на личную карту и просит личный номер клиента для частной услуги. Достаточно самого предложения.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m5",
+     "quote": "transfer $2,000 directly to my personal card",
+     "quote_ok": true
+    },
+    {
+     "msg_id": "m7",
+     "quote": "Send me your personal number",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  }
+ ],
+ "tokens_in": 4010,
+ "tokens_out": 890,
+ "cost_usd": 0.0142,
+ "latency_ms": 6900,
+ "created_at": "2026-11-07T14:20:00Z",
+ "needs_review": false
+}

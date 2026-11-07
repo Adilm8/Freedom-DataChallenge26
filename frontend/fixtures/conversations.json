@@ -1,0 +1,85 @@
+[
+ {
+  "id": 1,
+  "conversation_id": "p1-ru-014",
+  "group_id": "DEV",
+  "channel": "agent chat",
+  "language": "RU",
+  "latest": {
+   "evaluation_id": 101,
+   "ai_total": 95,
+   "final_total": 100,
+   "critical": false,
+   "needs_review": false,
+   "open_appeals": 0
+  }
+ },
+ {
+  "id": 2,
+  "conversation_id": "p2-kz-007",
+  "group_id": "DEV",
+  "channel": "agent chat",
+  "language": "KZ",
+  "latest": {
+   "evaluation_id": 102,
+   "ai_total": 91.82,
+   "final_total": 91.82,
+   "critical": false,
+   "needs_review": false,
+   "open_appeals": 0
+  }
+ },
+ {
+  "id": 3,
+  "conversation_id": "p3-en-012",
+  "group_id": "DEV",
+  "channel": "agent chat",
+  "language": "EN",
+  "latest": {
+   "evaluation_id": 103,
+   "ai_total": 21.33,
+   "final_total": 21.33,
+   "critical": true,
+   "needs_review": false,
+   "open_appeals": 0
+  }
+ },
+ {
+  "id": 4,
+  "conversation_id": "p1-ru-021",
+  "group_id": "DEV",
+  "channel": "agent chat",
+  "language": "RU",
+  "latest": {
+   "evaluation_id": 104,
+   "ai_total": 85.5,
+   "final_total": 85.5,
+   "critical": false,
+   "needs_review": true,
+   "open_appeals": 1
+  }
+ },
+ {
+  "id": 5,
+  "conversation_id": "p4-ru-002",
+  "group_id": "DEV",
+  "channel": "voice call",
+  "language": "RU",
+  "latest": {
+   "evaluation_id": 105,
+   "ai_total": 90.5,
+   "final_total": 90.5,
+   "critical": false,
+   "needs_review": false,
+   "open_appeals": 0
+  }
+ },
+ {
+  "id": 6,
+  "conversation_id": "p1-ru-030",
+  "group_id": "DEV",
+  "channel": "agent chat",
+  "language": "RU",
+  "latest": null
+ }
+]

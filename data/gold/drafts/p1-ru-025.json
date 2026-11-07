@@ -1,0 +1,79 @@
+{
+  "conversation_id": "p1-ru-025",
+  "drafted_by": "claude-session",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "yes",
+      "reasoning": "«Здравствуйте! Меня зовут Валерия, поддержка Freedom Broker» — приветствие и имя.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "yes",
+      "reasoning": "Клиент не назвал вопрос ни боту, ни оператору; оператор сразу спросил «С чем помочь?» — уточнил недостающее. N/A по 02 разрешён, только если данных хватало с начала, а здесь их не было.",
+      "evidence": [
+        "m3",
+        "m4",
+        "m9"
+      ],
+      "confidence": "low"
+    },
+    "03": {
+      "answer": "na",
+      "reasoning": "Запрос не сформулирован, данные не раскрывались.",
+      "evidence": [
+        "m9",
+        "m10"
+      ],
+      "confidence": "high"
+    },
+    "04": {
+      "answer": "na",
+      "reasoning": "Клиент покинул чат (m10) раньше, чем сформулировал запрос.",
+      "evidence": [
+        "m9",
+        "m10"
+      ],
+      "confidence": "high"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Вежливое приветствие; больше реплик не было.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "06": {
+      "answer": 10,
+      "reasoning": "Единственная реплика ясная, первый ответ через 1 мин 37 с после эскалации — в пределах порога 3 мин.",
+      "evidence": [
+        "m8",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "07": {
+      "answer": "na",
+      "reasoning": "Клиент ушёл сразу после приветствия оператора — завершить диалог было невозможно.",
+      "evidence": [
+        "m10"
+      ],
+      "confidence": "high"
+    },
+    "08": {
+      "answer": "no",
+      "reasoning": "Нарушений нет.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    }
+  },
+  "total": 100.0,
+  "critical": false,
+  "notes": "02: «Да» или N/A. На итог не влияет (100 в обоих случаях)."
+}

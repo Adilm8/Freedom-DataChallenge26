@@ -1,0 +1,166 @@
+{
+ "id": 5,
+ "conversation_id": "p4-ru-002",
+ "group_id": "DEV",
+ "channel": "voice call",
+ "language": "RU",
+ "audio_url": null,
+ "source": "fixture",
+ "audio_offset_fix_sec": 0,
+ "imported_at": "2026-11-07T14:20:00Z",
+ "messages": [
+  {
+   "msg_id": "m0",
+   "idx": 0,
+   "speaker": "operator",
+   "text": "Freedom Broker, добрый день, меня зовут Мадина, слушаю вас.",
+   "timestamp": "2026-10-30T06:02:15Z",
+   "t_sec": 0,
+   "audio_offset_sec": 0,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m1",
+   "idx": 1,
+   "speaker": "client",
+   "text": "Здравствуйте, я хотел бы узнать, э-э, по поводу комиссии за маржинальную торговлю.",
+   "timestamp": "2026-10-30T06:02:21Z",
+   "t_sec": 6,
+   "audio_offset_sec": 6,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m2",
+   "idx": 2,
+   "speaker": "operator",
+   "text": "Конечно. Подскажите, пожалуйста, ваше ФИО и кодовое слово для проверки.",
+   "timestamp": "2026-10-30T06:02:29Z",
+   "t_sec": 14,
+   "audio_offset_sec": 14,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m3",
+   "idx": 3,
+   "speaker": "client",
+   "text": "Сергеев Андрей Николаевич, кодовое слово «Весна».",
+   "timestamp": "2026-10-30T06:02:37Z",
+   "t_sec": 22,
+   "audio_offset_sec": 22,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m4",
+   "idx": 4,
+   "speaker": "operator",
+   "text": "Спасибо, Андрей Николаевич, личность подтвердила. Одну минуту, уточню информацию, останьтесь на линии.",
+   "timestamp": "2026-10-30T06:02:46Z",
+   "t_sec": 31,
+   "audio_offset_sec": 31,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m5",
+   "idx": 5,
+   "speaker": "operator",
+   "text": "Асем, подскажи, где смотреть ставку по марже для частных клиентов?",
+   "timestamp": "2026-10-30T06:02:55Z",
+   "t_sec": 40,
+   "audio_offset_sec": 40,
+   "internal": true,
+   "event": null
+  },
+  {
+   "msg_id": "m6",
+   "idx": 6,
+   "speaker": "operator",
+   "text": "Это тариф «Маржа», пункт четыре, там ступени по сумме.",
+   "timestamp": "2026-10-30T06:03:01Z",
+   "t_sec": 46,
+   "audio_offset_sec": 46,
+   "internal": true,
+   "event": null
+  },
+  {
+   "msg_id": "m7",
+   "idx": 7,
+   "speaker": "operator",
+   "text": "Андрей Николаевич, благодарю за ожидание. Ставка зависит от суммы позиции: до миллиона тенге — ноль целых семь сотых процента в день, свыше — по ступеням, ну, и детали есть в тарифе.",
+   "timestamp": "2026-10-30T06:03:17Z",
+   "t_sec": 62,
+   "audio_offset_sec": 62,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m8",
+   "idx": 8,
+   "speaker": "client",
+   "text": "Понятно, а минимальная сумма есть?",
+   "timestamp": "2026-10-30T06:03:35Z",
+   "t_sec": 80,
+   "audio_offset_sec": 80,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m9",
+   "idx": 9,
+   "speaker": "operator",
+   "text": "Да, минимальная сумма для маржинальной позиции — сто тысяч тенге.",
+   "timestamp": "2026-10-30T06:03:41Z",
+   "t_sec": 86,
+   "audio_offset_sec": 86,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m10",
+   "idx": 10,
+   "speaker": "client",
+   "text": "Хорошо, спасибо большое.",
+   "timestamp": "2026-10-30T06:03:49Z",
+   "t_sec": 94,
+   "audio_offset_sec": 94,
+   "internal": false,
+   "event": null
+  },
+  {
+   "msg_id": "m11",
+   "idx": 11,
+   "speaker": "operator",
+   "text": "Рада была помочь. Если появятся ещё вопросы — звоните, всего доброго, до свидания.",
+   "timestamp": "2026-10-30T06:03:53Z",
+   "t_sec": 98,
+   "audio_offset_sec": 98,
+   "internal": false,
+   "event": null
+  }
+ ],
+ "segments": [
+  {
+   "type": "consult",
+   "start_idx": 5,
+   "end_idx": 6,
+   "start_sec": 40,
+   "end_sec": 46
+  }
+ ],
+ "events": [],
+ "warnings": [],
+ "evaluations": [
+  {
+   "id": 105,
+   "model": "demo/fixture-model",
+   "checklist_version_id": 1,
+   "ai_total": 90.5,
+   "final_total": 90.5,
+   "created_at": "2026-11-07T14:20:00Z"
+  }
+ ]
+}

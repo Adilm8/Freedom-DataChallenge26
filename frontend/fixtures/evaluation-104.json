@@ -1,0 +1,399 @@
+{
+ "id": 104,
+ "conversation_id": 4,
+ "checklist_version_id": 1,
+ "provider": "openrouter",
+ "model": "demo/fixture-model",
+ "strategy": "grouped",
+ "prompt_version": "p1-draft",
+ "status": "done",
+ "facts": {
+  "first_response_delay_sec": 48
+ },
+ "overview": {
+  "summary": "Клиент спросил остаток и налог на дивиденды. Оператор назвал остаток после кодового слова и дал противоречивые ответы по налогу.",
+  "topic": "Остаток по счёту и налог на дивиденды",
+  "resolved": "unclear"
+ },
+ "params": {
+  "temperature": 0,
+  "seed": null,
+  "reuse": "none"
+ },
+ "ai_score": {
+  "total": 85.5,
+  "applicable_weight": 100,
+  "points_sum": 85.5,
+  "sections": [
+   {
+    "id": "start",
+    "title": "Начало и понимание запроса",
+    "points": 25,
+    "applicable_weight": 25,
+    "pct": 100
+   },
+   {
+    "id": "safety",
+    "title": "Безопасность и решение",
+    "points": 35,
+    "applicable_weight": 40,
+    "pct": 87.5
+   },
+   {
+    "id": "dialog",
+    "title": "Ведение и завершение диалога",
+    "points": 25.5,
+    "applicable_weight": 35,
+    "pct": 72.86
+   }
+  ],
+  "criteria": {
+   "01": {
+    "points": 10,
+    "contribution": 10
+   },
+   "02": {
+    "points": 15,
+    "contribution": 15
+   },
+   "03": {
+    "points": 20,
+    "contribution": 20
+   },
+   "04": {
+    "points": 15,
+    "contribution": 15
+   },
+   "05": {
+    "points": 15,
+    "contribution": 15
+   },
+   "06": {
+    "points": 10.5,
+    "contribution": 10.5
+   },
+   "07": {
+    "points": 0,
+    "contribution": 0
+   }
+  },
+  "critical": []
+ },
+ "final_score": {
+  "total": 85.5,
+  "applicable_weight": 100,
+  "points_sum": 85.5,
+  "sections": [
+   {
+    "id": "start",
+    "title": "Начало и понимание запроса",
+    "points": 25,
+    "applicable_weight": 25,
+    "pct": 100
+   },
+   {
+    "id": "safety",
+    "title": "Безопасность и решение",
+    "points": 35,
+    "applicable_weight": 40,
+    "pct": 87.5
+   },
+   {
+    "id": "dialog",
+    "title": "Ведение и завершение диалога",
+    "points": 25.5,
+    "applicable_weight": 35,
+    "pct": 72.86
+   }
+  ],
+  "criteria": {
+   "01": {
+    "points": 10,
+    "contribution": 10
+   },
+   "02": {
+    "points": 15,
+    "contribution": 15
+   },
+   "03": {
+    "points": 20,
+    "contribution": 20
+   },
+   "04": {
+    "points": 15,
+    "contribution": 15
+   },
+   "05": {
+    "points": 15,
+    "contribution": 15
+   },
+   "06": {
+    "points": 10.5,
+    "contribution": 10.5
+   },
+   "07": {
+    "points": 0,
+    "contribution": 0
+   }
+  },
+  "critical": []
+ },
+ "criteria": [
+  {
+   "key": "01",
+   "title": "Установление контакта",
+   "section": "start",
+   "type": "binary",
+   "weight": 10,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 10,
+   "final_answer": "yes",
+   "final_points": 10,
+   "overridden": false,
+   "reasoning": "Приветствие на русском и имя оператора есть в первой реплике.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m4",
+     "quote": "Добрый день, меня зовут Алия",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "02",
+   "title": "Выявление потребности",
+   "section": "start",
+   "type": "binary",
+   "weight": 15,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 15,
+   "final_answer": "yes",
+   "final_points": 15,
+   "overridden": false,
+   "reasoning": "Оператор уточнил детали по налогу после вопроса о резидентстве.",
+   "confidence": "medium",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m7",
+     "quote": "налог зависит от вашего резидентства",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "03",
+   "title": "Идентификация",
+   "section": "safety",
+   "type": "binary",
+   "weight": 20,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 20,
+   "final_answer": "yes",
+   "final_points": 20,
+   "overridden": false,
+   "reasoning": "Клиент назвал кодовое слово, оператор принял его, но системного подтверждения личности в чате нет. Оценка выставлена по реплике оператора.",
+   "confidence": "low",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m5",
+     "quote": "Кодовое слово — Алматы.",
+     "quote_ok": true
+    },
+    {
+     "msg_id": "m6",
+     "quote": "Принято.",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": {
+    "from": "m4",
+    "to": "m6"
+   },
+   "na_reason": null,
+   "issues": [
+    "Низкая уверенность: в чате нет системного сообщения «Личность клиента подтверждена».",
+    "Остаток по счёту назван сразу после кодового слова без проверки ФИО."
+   ],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "04",
+   "title": "Корректная и полная консультация",
+   "section": "safety",
+   "type": "scale",
+   "weight": 20,
+   "scale_max": 20,
+   "ai_answer": 15,
+   "ai_points": 15,
+   "final_answer": 15,
+   "final_points": 15,
+   "overridden": false,
+   "reasoning": "Остаток назван, по налогу даны два разных ответа (10 процентов, затем «обычно не удерживается»), точная ставка не названа.",
+   "confidence": "low",
+   "advice": "Сверять ставки налога с базой знаний до ответа и не давать два разных ответа подряд. Если точных данных нет, прямо сказать об этом и назвать источник.",
+   "evidence": [
+    {
+     "msg_id": "m6",
+     "quote": "На вашем счёте 1 240 000 тенге",
+     "quote_ok": true
+    },
+    {
+     "msg_id": "m10",
+     "quote": "точную ставку лучше проверить в справке брокера",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [
+    "Низкая уверенность: фактическая ставка налога не подтверждена базой знаний."
+   ],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "05",
+   "title": "Эмпатия и клиентоориентированность",
+   "section": "dialog",
+   "type": "binary",
+   "weight": 15,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 15,
+   "final_answer": "yes",
+   "final_points": 15,
+   "overridden": false,
+   "reasoning": "Оператор вежлив и ответил на уточняющий вопрос клиента.",
+   "confidence": "medium",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m9",
+     "quote": "Минуточку, уточню.",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "06",
+   "title": "Управление диалогом, скорость и грамотность",
+   "section": "dialog",
+   "type": "scale",
+   "weight": 15,
+   "scale_max": 10,
+   "ai_answer": 7,
+   "ai_points": 10.5,
+   "final_answer": 7,
+   "final_points": 10.5,
+   "overridden": false,
+   "reasoning": "Оператор сначала ответил на налог общей фразой, затем исправил её; клиент ждал 2.5 минуты после «Минуточку».",
+   "confidence": "medium",
+   "advice": "Предупреждать о длительном ожидании («около трёх минут») и сразу давать точный ответ.",
+   "evidence": [
+    {
+     "msg_id": "m9",
+     "quote": "Минуточку, уточню.",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "07",
+   "title": "Завершение",
+   "section": "dialog",
+   "type": "binary",
+   "weight": 5,
+   "scale_max": null,
+   "ai_answer": "no",
+   "ai_points": 0,
+   "final_answer": "no",
+   "final_points": 0,
+   "overridden": false,
+   "reasoning": "Оператор не подвёл итог и не попрощался, ограничившись «Пожалуйста, обращайтесь».",
+   "confidence": "medium",
+   "advice": "Завершать диалог итогом и прощанием: «Если появятся вопросы, пишите. Всего доброго!»",
+   "evidence": [
+    {
+     "msg_id": "m12",
+     "quote": "Пожалуйста, обращайтесь.",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": {
+    "id": 2,
+    "evaluation_id": 104,
+    "criterion_key": "07",
+    "comment": "Фраза «Пожалуйста, обращайтесь» — предложение дальнейшей помощи.",
+    "status": "open",
+    "ai_answer_snapshot": "no",
+    "decision_answer": null,
+    "decision_reason": null,
+    "created_at": "2026-11-07T16:05:00Z",
+    "decided_at": null
+   }
+  },
+  {
+   "key": "08",
+   "title": "Грубые ошибки",
+   "section": "critical",
+   "type": "flag",
+   "weight": 0,
+   "scale_max": null,
+   "ai_answer": "no",
+   "ai_points": null,
+   "final_answer": "no",
+   "final_points": null,
+   "overridden": false,
+   "reasoning": "Нарушений не выявлено.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [],
+   "checked_range": {
+    "from": "m4",
+    "to": "m12"
+   },
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  }
+ ],
+ "tokens_in": 5600,
+ "tokens_out": 1210,
+ "cost_usd": 0.0213,
+ "latency_ms": 8800,
+ "created_at": "2026-11-07T14:20:00Z",
+ "needs_review": true
+}
