@@ -87,10 +87,21 @@ class OpenAICompatProvider:
             except ProviderError as e:
                 # supported_parameters у OpenRouter — объединение по всем провайдерам модели; часть моделей
                 # (новые Anthropic) отвечает 400 на sampling-параметры. Один повтор без них.
-                if e.status not in (400, 404, 422) or not ({"temperature", "seed"} & kwargs.keys()):
+                strict = kwargs.get("response_format", {}).get("type") == "json_schema"
+                if e.status not in (400, 404, 422) or not ({"temperature", "seed"} & kwargs.keys() or strict):
                     raise
                 kwargs = {k: v for k, v in kwargs.items() if k not in ("temperature", "seed")}
-                resp, attempts = self._call_with_retries(messages, kwargs, timeout_s)
+                try:
+                    resp, attempts = self._call_with_retries(messages, kwargs, timeout_s)
+                except ProviderError as e2:
+                    # Anthropic отклоняет большие strict-схемы («compiled grammar is too large»):
+                    # повтор в JSON-режиме, форму JSON берёт из подсказки, ответ проверяет валидатор.
+                    if e2.status not in (400, 422) or not strict:
+                        raise
+                    kwargs = self._without_strict_schema(kwargs)
+                    messages = _with_schema_hint(messages, json_schema)
+                    resp, attempts = self._call_with_retries(messages, kwargs, timeout_s)
+                    attempts += 1
                 attempts += 1
             latency_ms = int((time.monotonic() - started) * 1000)
         request_meta = {k: v for k, v in kwargs.items() if k != "messages"}
@@ -157,6 +168,16 @@ class OpenAICompatProvider:
                 extra["reasoning"] = {"enabled": False} if effort == "none" else {"effort": effort, "exclude": True}
         if extra:
             kw["extra_body"] = extra
+        return kw
+
+    @staticmethod
+    def _without_strict_schema(kwargs: dict) -> dict:
+        kw = {**kwargs, "response_format": {"type": "json_object"}}
+        extra = {k: v for k, v in (kw.get("extra_body") or {}).items() if k != "provider"}
+        if extra:
+            kw["extra_body"] = extra
+        else:
+            kw.pop("extra_body", None)
         return kw
 
     def _call_with_retries(self, messages, kwargs, timeout_s):
