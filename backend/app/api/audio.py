@@ -7,7 +7,15 @@
 передаётся потоком как есть. Если источник `Range` игнорирует (200 на весь файл), прокси:
 - на запрос без `Range` или с `bytes=0-` отдаёт поток сразу и попутно кладёт файл в память;
 - на запрос с другого места скачивает файл целиком и отдаёт нужный кусок (206).
-Кэш в памяти небольшой (LRU), на диск записи не пишутся.
+Кэш в памяти небольшой (LRU).
+
+Локальные записи: если в `settings.audio_dir` (по умолчанию `data/audio/`, в .gitignore) лежит
+`<conversation_id>.<mp3|wav|ogg|m4a|webm|flac>`, она отдаётся оттуда, без сети. Так работают записи, скачанные
+заранее (`scripts/fetch_audio.py`), если ссылка устарела или хост закрыт.
+
+Ссылка организаторов (flow Power Platform) отдаёт не аудио, а HTML-страницу с `<audio><source src=…>`: короткоживущей
+ссылкой на файл. Прокси достаёт эту ссылку, скачивает файл целиком и сохраняет его в `audio_dir`, чтобы перемотка и
+повторные открытия работали после истечения ссылки.
 
 Отдаём только `audio/*` и `video/*` (иначе `application/octet-stream`) с `nosniff` и `sandbox`: ответ источника
 не может стать страницей в нашем origin. Ссылки берутся только из набора организаторов (ручной ввод их не задаёт).
@@ -16,13 +24,16 @@ from __future__ import annotations
 
 import logging
 import re
+import html as html_lib
 from collections import OrderedDict
+from pathlib import Path
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response, StreamingResponse
 from sqlmodel import Session
 
+from ..config import settings
 from ..db import get_session
 from ..models import Conversation
 
@@ -147,16 +158,109 @@ def _upstream_error(status: int) -> HTTPException:
     return HTTPException(502, f"Источник записи ответил ошибкой {status}")
 
 
+AUDIO_EXT = {".mp3": "audio/mpeg", ".wav": "audio/wav", ".ogg": "audio/ogg", ".m4a": "audio/mp4", ".webm": "audio/webm", ".flac": "audio/flac"}
+_EXT_OF = {"audio/mpeg": ".mp3", "audio/wav": ".wav", "audio/ogg": ".ogg", "audio/mp4": ".m4a", "audio/webm": ".webm", "audio/flac": ".flac"}
+_SRC_RE = re.compile(r"<(?:source|audio)\b[^>]*?\bsrc\s*=\s*[\"']([^\"']+)[\"']", re.I)
+MAX_HTML = 256 * 1024
+
+
+def _safe_name(cid: str) -> str:
+    return re.sub(r"[^A-Za-z0-9._-]", "_", cid or "").strip(".") or "_"
+
+
+def local_file(conversation_id: str) -> Path | None:
+    """Скачанная заранее запись диалога в `settings.audio_dir`, если есть."""
+    d = Path(settings.audio_dir)
+    name = _safe_name(conversation_id)
+    for ext in AUDIO_EXT:
+        f = d / f"{name}{ext}"
+        if f.is_file() and f.stat().st_size > 0:
+            return f
+    return None
+
+
+def save_local(conversation_id: str, data: bytes, ctype: str) -> None:
+    """Кладёт скачанную запись в `audio_dir` (папка не в git). Ошибки записи не мешают отдаче."""
+    ext = _EXT_OF.get(ctype)
+    if not ext or not conversation_id:
+        return
+    try:
+        d = Path(settings.audio_dir)
+        d.mkdir(parents=True, exist_ok=True)
+        tmp = d / f".{_safe_name(conversation_id)}{ext}.part"
+        tmp.write_bytes(data)
+        tmp.replace(d / f"{_safe_name(conversation_id)}{ext}")
+    except OSError as e:
+        log.warning("запись %s не сохранена локально (%s)", conversation_id, type(e).__name__)
+
+
+def extract_media_url(page: str) -> str | None:
+    """Ссылка на файл из HTML-страницы плеера (`<source src>` или `<audio src>`); только https."""
+    m = _SRC_RE.search(page or "")
+    if not m:
+        return None
+    url = html_lib.unescape(m.group(1)).strip()
+    return url if url.lower().startswith("https://") else None
+
+
+async def _download(client: httpx.AsyncClient, url: str) -> tuple[int, bytes]:
+    async with client.stream("GET", url) as r:
+        if r.status_code != 200:
+            return r.status_code, b""
+        buf = bytearray()
+        async for chunk in r.aiter_bytes():
+            buf.extend(chunk)
+            if len(buf) > MAX_CACHE_ITEM:
+                raise HTTPException(502, "Запись слишком большая")
+        return 200, bytes(buf)
+
+
+async def _from_html_page(up: httpx.Response, client: httpx.AsyncClient, pk: int, cid: str, key, range_header: str | None) -> Response:
+    """Источник вернул страницу плеера: достаём ссылку на файл, качаем его, сохраняем локально, отдаём кусок."""
+    page = bytearray()
+    async for chunk in up.aiter_bytes():
+        page.extend(chunk)
+        if len(page) > MAX_HTML:
+            break
+    media = extract_media_url(page.decode("utf-8", "replace"))
+    if not media:
+        raise HTTPException(502, "Источник записи вернул страницу без ссылки на аудио")
+    try:
+        status, data = await _download(client, media)
+    except httpx.HTTPError as e:
+        log.warning("запись диалога %s: файл по ссылке со страницы недоступен (%s)", pk, type(e).__name__)
+        raise HTTPException(502, "Файл записи недоступен: сеть не пускает к хранилищу записей. Положите скачанные записи в data/audio") from None
+    if status != 200:
+        log.warning("запись диалога %s: хранилище ответило %s", pk, status)
+        raise _upstream_error(status)
+    ctype = sniff(data[:16]) or "application/octet-stream"
+    if not ctype.startswith("audio/"):
+        raise HTTPException(502, "По ссылке со страницы лежит не аудио")
+    _types[pk] = ctype
+    cache.put(key, data, ctype)
+    save_local(cid, data, ctype)
+    return _from_bytes(data, ctype, range_header)
+
+
 @router.get("/{pk}/audio")
 async def conversation_audio(pk: int, request: Request, session: Session = Depends(get_session)) -> Response:
     c = session.get(Conversation, pk)
     if not c:
         raise HTTPException(404, "диалог не найден")
+    range_header = request.headers.get("range")
+    lf = local_file(c.conversation_id)
+    if lf is not None:
+        lkey = (pk, f"file:{lf}")
+        hit = cache.get(lkey)
+        if not hit:
+            data = lf.read_bytes()
+            hit = (data, sniff(data[:16]) or AUDIO_EXT[lf.suffix.lower()])
+            cache.put(lkey, *hit)
+        return _from_bytes(hit[0], hit[1], range_header)
     if not c.audio_url:
         raise HTTPException(404, "у диалога нет записи")
     src = c.audio_url
     key = (pk, src)
-    range_header = request.headers.get("range")
 
     hit = cache.get(key)
     if hit:
@@ -187,6 +291,12 @@ async def conversation_audio(pk: int, request: Request, session: Session = Depen
             log.warning("запись диалога %s: источник ответил %s", pk, status)
             raise _upstream_error(status)
 
+        if status == 200 and "html" in up.headers.get("content-type", "").lower():
+            try:
+                return await _from_html_page(up, client, pk, c.conversation_id, key, range_header)
+            finally:
+                await close()
+
         encoded = up.headers.get("content-encoding", "identity").lower() not in ("", "identity")
         length = None if encoded else _int(up.headers.get("content-length"))
         rng = parse_range(range_header, length) if range_header else None
@@ -206,6 +316,7 @@ async def conversation_audio(pk: int, request: Request, session: Session = Depen
             data = bytes(buf)
             ctype = _media_type(up.headers.get("content-type"), data[:16], pk)
             cache.put(key, data, ctype)
+            save_local(c.conversation_id, data, ctype)
             return _from_bytes(data, ctype, range_header)
 
         it = up.aiter_bytes()
@@ -254,6 +365,7 @@ async def conversation_audio(pk: int, request: Request, session: Session = Depen
                 await close()
                 if complete and buf is not None and (length is None or len(buf) == length):
                     cache.put(key, bytes(buf), ctype)
+                    save_local(c.conversation_id, bytes(buf), ctype)
 
         return StreamingResponse(body(), status_code=out_status, headers=headers, media_type=ctype)
     except HTTPException:

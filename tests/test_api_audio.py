@@ -32,7 +32,8 @@ def dataset(audio_url=SRC):
 
 
 @pytest.fixture(autouse=True)
-def _clean_cache():
+def _clean_cache(tmp_path, monkeypatch):
+    monkeypatch.setattr(audio.settings, "audio_dir", tmp_path / "audio")
     audio.cache.clear()
     audio._types.clear()
     yield
@@ -185,3 +186,68 @@ def test_sniff():
     assert audio.sniff(b"\xff\xfb\x90\x00") == "audio/mpeg"
     assert audio.sniff(b"OggS\x00") == "audio/ogg"
     assert audio.sniff(b"hello") is None
+
+
+PAGE = (
+    '<!DOCTYPE html><html><body><audio id="a" controls>'
+    '<source src="https://store.test/file/abc?sp=r&amp;sig=STORE-SIG&amp;rsct=audio%2Fmpeg" type="audio/mpeg">'
+    '</audio></body></html>'
+)
+
+
+def test_html_player_page_is_resolved_and_saved_locally(client, monkeypatch):
+    call, _ = ids(client)
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        if req.url.host == "rec.test":
+            return httpx.Response(200, text=PAGE, headers={"Content-Type": "text/html; charset=utf-8"})
+        assert req.url.host == "store.test" and req.url.params["sig"] == "STORE-SIG"
+        return httpx.Response(200, content=WAV, headers={"Content-Type": "application/octet-stream"})
+
+    seen = use_upstream(monkeypatch, handler)
+    r = client.get(f"/api/conversations/{call}/audio", headers={"Range": "bytes=100-199"})
+    assert r.status_code == 206
+    assert r.content == WAV[100:200]
+    assert r.headers["content-type"] == "audio/wav"
+    assert "STORE-SIG" not in r.text and all("STORE-SIG" not in v for v in r.headers.values())
+    assert_no_secret(r)
+    assert [q.url.host for q in seen] == ["rec.test", "store.test"]
+    saved = audio.settings.audio_dir / "t-call-a.wav"
+    assert saved.read_bytes() == WAV
+
+    # Ссылка истекла, сеть закрыта: запись берётся из локальной папки.
+    audio.cache.clear()
+    use_upstream(monkeypatch, lambda req: httpx.Response(403))
+    r = client.get(f"/api/conversations/{call}/audio")
+    assert r.status_code == 200 and r.content == WAV
+
+
+def test_html_page_without_audio_link_is_502(client, monkeypatch):
+    call, _ = ids(client)
+    use_upstream(monkeypatch, lambda req: httpx.Response(200, text="<html>нет</html>", headers={"Content-Type": "text/html"}))
+    r = client.get(f"/api/conversations/{call}/audio")
+    assert r.status_code == 502
+    assert_no_secret(r)
+
+
+def test_local_file_served_with_range_without_network(client, monkeypatch):
+    call, _ = ids(client)
+    d = audio.settings.audio_dir
+    d.mkdir(parents=True)
+    (d / "t-call-a.wav").write_bytes(WAV)
+
+    def boom(req):
+        raise AssertionError("сеть не нужна")
+
+    use_upstream(monkeypatch, boom)
+    r = client.get(f"/api/conversations/{call}/audio", headers={"Range": "bytes=0-9"})
+    assert r.status_code == 206
+    assert r.content == WAV[:10]
+    assert r.headers["content-range"] == f"bytes 0-9/{len(WAV)}"
+    assert r.headers["content-type"] == "audio/wav"
+
+
+def test_extract_media_url():
+    assert audio.extract_media_url(PAGE).startswith("https://store.test/file/abc?sp=r&sig=STORE-SIG")
+    assert audio.extract_media_url('<audio src="http://plain.test/a.mp3">') is None
+    assert audio.extract_media_url("") is None
