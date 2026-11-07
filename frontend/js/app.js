@@ -19,10 +19,9 @@ const ROUTES = {
   appeals: { nav: 'appeals', load: () => import('./components/appeal-review.js') },
   review: { nav: 'review', load: () => import('./components/review-queue.js') },
   new: { nav: 'conversations', load: () => import('./components/new-dialog.js') },
+  compare: { nav: 'conversations', load: () => import('./components/evaluation-compare.js') }, // #/compare?conversation=&a=&b= или #/compare/<id>?a=&b=
 };
-const PLACEHOLDERS = {
-  compare: ['Сравнение', 'Два результата одного диалога рядом.'],
-};
+const PLACEHOLDERS = {};
 
 // ---------- Настройки (на уровне оболочки), сохраняются локально ----------
 const store = {
@@ -144,7 +143,8 @@ async function route() {
   }
   const mod = await def.load();
   if (my !== routeToken) return;
-  const params = name === 'conversation' || name === 'gold' ? { ...base, id: arg } : base;
+  const params = name === 'conversation' || name === 'gold' ? { ...base, id: arg }
+    : name === 'compare' ? { ...base, conversation: q.conversation || arg } : base;
   current = { name, instance: mod.mount(host, params), el: host };
 }
 

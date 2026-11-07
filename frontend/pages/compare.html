@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CQA · Сравнение оценок</title>
+  <link rel="stylesheet" href="../css/cqa.css">
+  <style>html, body { margin: 0; background: #f4f5f9; } html:has(.cqa-root[data-theme="dark"]), html:has(.cqa-root[data-theme="dark"]) body { background: #0f1218; }</style>
+</head>
+<body>
+  <!-- Сравнение двух оценок одного диалога: ?conversation=<id>&a=<evalId>&b=<evalId> (без a/b — последняя и предыдущая) -->
+  <div id="cqa-host" class="cqa-root"></div>
+  <script type="module">
+    import { mount } from '../js/components/evaluation-compare.js';
+    import { paramsFromQuery } from '../js/ui.js';
+    import { openRunDialog } from '../js/components/run-dialog.js';
+    const q = paramsFromQuery();
+    const el = document.getElementById('cqa-host');
+    if (q.demo === '1') el.classList.add('cqa-demo');
+    if (q.theme === 'dark') el.dataset.theme = 'dark';
+    // Навигация между экранами: в автономной странице переходим в оболочку.
+    el.addEventListener('cqa:navigate', (e) => { location.href = '../index.html' + location.search + e.detail.to; });
+    // Повторная оценка: то же окно, что в оболочке; по завершении компонент перечитывает данные (B — новая оценка).
+    el.addEventListener('cqa:run-request', (e) => openRunDialog(el, { group: q.group || 'DEV', ...e.detail,
+      onFinished: () => el.dispatchEvent(new CustomEvent('cqa:refresh')) }));
+    mount(el, { conversation: q.conversation || q.id, a: q.a, b: q.b });
+  </script>
+</body>
+</html>

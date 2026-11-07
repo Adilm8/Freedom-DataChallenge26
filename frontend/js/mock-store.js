@@ -297,3 +297,46 @@ export async function exportFile(path, params = {}) {
   const csv = '﻿' + [cols.join(';'), ...recs.map((r) => cols.map((k) => cell(r[k])).join(';'))].join('\r\n') + '\r\n';
   return { blob: new Blob([csv], { type: 'text/csv;charset=utf-8' }), filename: `cqa-${group}-demo.csv`, validationErrors: null };
 }
+
+// ---------- Сравнение двух оценок одного диалога (как services/compare.py) ----------
+// Сравниваются AI-ответы; решения апелляций этой вкладки видны в final_answer. Без bId — предыдущая неупавшая оценка.
+const CONFIG_FIELDS = ['model', 'strategy', 'prompt_version', 'checklist_version_id'];
+const cmpSide = (ev) => ({ id: ev.id, status: ev.status, created_at: ev.created_at, provider: ev.provider, model: ev.model, strategy: ev.strategy,
+  prompt_version: ev.prompt_version, checklist_version_id: ev.checklist_version_id, temperature: ev.params?.temperature ?? null,
+  seed: ev.params?.seed ?? null, reuse: ev.params?.reuse ?? null, ai_total: ev.ai_score?.total ?? null, final_total: ev.final_score?.total ?? null,
+  cost_usd: ev.cost_usd ?? null });
+const cmpCrit = (c) => (c ? { answer: c.ai_answer ?? null, points: c.ai_points ?? null, final_answer: c.final_answer ?? null, overridden: !!c.overridden,
+  confidence: c.confidence ?? null, reasoning: c.reasoning ?? null, evidence: (c.evidence || []).map((e) => e.msg_id).filter(Boolean),
+  reused_from_evaluation_id: c.reused_from_evaluation_id ?? null } : null);
+
+export async function compare(aId, bId) {
+  const a = await evalObj(aId).catch(() => { throw notFound('оценка не найдена'); });
+  let b = null;
+  if (bId) b = await evalObj(bId).catch(() => { throw notFound(`оценка №${bId} не найдена`); });
+  else {
+    const older = ((await conversation(a.conversation_id)).evaluations || []).filter((x) => x.id < a.id).sort((x, y) => y.id - x.id);
+    for (const x of older) {
+      const e = await evalObj(x.id).catch(() => null);
+      if (e && e.status !== 'failed') { b = e; break; }
+    }
+  }
+  if (!b) return { a: cmpSide(a), b: null, criteria: [], changed: 0, common: 0, total_delta: null, same_config: null, config_diff: [] };
+  if (b.conversation_id !== a.conversation_id) throw invalid('other', 'сравниваются только оценки одного диалога');
+  const byKey = (ev) => new Map(ev.criteria.map((c) => [c.key, c]));
+  const ma = byKey(a), mb = byKey(b);
+  const keys = [...new Set([...ma.keys(), ...mb.keys()])];
+  let changed = 0, common = 0;
+  const criteria = keys.map((k) => {
+    const ra = ma.get(k), rb = mb.get(k);
+    const both = !!ra && !!rb;
+    const same = both && String(ra.ai_answer ?? '') === String(rb.ai_answer ?? '');
+    if (both) { common += 1; changed += same ? 0 : 1; }
+    return { key: k, title: (ra || rb).title, a: cmpCrit(ra), b: cmpCrit(rb),
+      status: same ? 'same' : both ? 'changed' : rb ? 'removed' : 'added',
+      points_delta: both ? Math.round(((ra.ai_points || 0) - (rb.ai_points || 0)) * 100) / 100 : null };
+  });
+  const diff = CONFIG_FIELDS.filter((f) => a[f] !== b[f]);
+  const ta = a.ai_score?.total, tb = b.ai_score?.total;
+  return clone({ a: cmpSide(a), b: cmpSide(b), criteria, changed, common, total_delta: ta != null && tb != null ? Math.round((ta - tb) * 100) / 100 : null,
+    same_config: !diff.length, config_diff: diff });
+}

@@ -2,11 +2,13 @@
 // Параметры: id (суррогатный id диалога), eval (id оценки; без него — последняя), focus (код критерия: прокрутить к нему
 // и подсветить доказательства — переход из очереди «требует проверки» и апелляций), group, mode.
 // Наружу: cqa:navigate {to}, cqa:location {to} (сменить адрес без перехода), cqa:run-request {ids, label, channel, preset, ...}.
-// Внутрь: cqa:refresh на el — перечитать диалог и показать последнюю оценку (после прогона);
+// Внутрь: cqa:refresh на el — перечитать диалог и показать последнюю оценку (после прогона; если появилась новая оценка —
+// баннер «что изменилось» по GET /evaluations/{id}/compare со ссылкой на экран сравнения);
 // cqa:evaluation-updated {evaluation} от панели результата (апелляция подана) — обновить итог в шапке.
 // Звонок: плеер над транскриптом; клик по реплике или доказательству переводит запись на секунду реплики (с поправкой).
 import { h, clear, emit, channelBadge, langChip, score, fmtScore, fmtDate, skeletonRows, errorState } from '../ui.js';
-import { getConversation, getEvaluation, listConversations } from '../api.js';
+import { getConversation, getEvaluation, listConversations, compareEvaluations } from '../api.js';
+import { plural } from './viz.js';
 import { mount as mountTranscript } from './transcript-view.js';
 import { mount as mountResult } from './result-panel.js';
 import { mount as mountFacts } from './facts-panel.js';
@@ -21,6 +23,7 @@ export function mount(el, params = {}) {
   let token = 0;
   let trEl = null, resEl = null, playerEl = null, tlEl = null;
   let conv = null, ev = null, lastRows = [];
+  let afterRun = null; // {conv, newest, shown} до прогона: после перечитывания сравниваем новую оценку с показанной
 
   function evidenceMap(e) {
     return (e?.criteria || [])
@@ -51,6 +54,7 @@ export function mount(el, params = {}) {
       if (my !== token) return;
       conv = c; ev = e;
       render(rows);
+      if (afterRun) { const before = afterRun; afterRun = null; if (before.conv === conv.id) showRunDiff(before, my); }
     } catch (err) {
       if (my !== token) return;
       clear(root).append(h('div', { class: 'cqa-page' }, h('div', { class: 'cqa-panel' }, errorState(err, load))));
@@ -77,6 +81,45 @@ export function mount(el, params = {}) {
     return h('span', { class: 'cqa-card__total cqa-card__total--two', title: 'AI-оценка не меняется; финальный итог — с решениями по апелляциям' },
       h('span', { class: 'cqa-faint cqa-h3' }, 'AI'), score(ai, 'cqa-faint'), h('span', { class: 'cqa-faint' }, '→'),
       h('span', { class: 'cqa-faint cqa-h3' }, 'Финальный'), score(fin, 'cqa-text-lg'));
+  }
+
+  // «Сравнить с прошлой» (FR-CARD-06): показанная оценка против предыдущей неупавшей; у самой ранней — против последней.
+  function compareBtn() {
+    const list = conv.evaluations || [];
+    if (!ev || ev.status === 'failed') return null;
+    const ok = (x) => x.id !== ev.id && x.status !== 'failed';
+    const i = list.findIndex((x) => x.id === ev.id);
+    const older = list.slice(i + 1).find(ok), newer = list.find(ok);
+    if (!older && !newer) return null;
+    const [a, b] = older ? [older.id, ev.id] : [ev.id, newer.id];
+    return h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', id: 'cqa-card-compare',
+      title: older ? `Что изменилось по сравнению с оценкой #${older.id}` : `Сравнить с последней оценкой #${newer.id}`,
+      onclick: () => emit(root, 'cqa:navigate', { to: `#/compare?conversation=${conv.id}&a=${a}&b=${b}` }) },
+    h('span', null, '⇄ Сравнить', h('span', { class: 'cqa-card__cmplong' }, older ? ' с прошлой' : ' с последней'))); // на узкой шапке — «⇄ Сравнить» с подсказкой
+  }
+
+  // После прогона: новая оценка против той, что была на экране (или предыдущей). Один запрос сравнения; ошибка — без баннера.
+  async function showRunDiff(before, my) {
+    const fresh = conv.evaluations?.[0];
+    if (!fresh || fresh.id === before.newest || fresh.status === 'failed') return;
+    let d;
+    try { d = await compareEvaluations(fresh.id, before.shown && before.shown !== fresh.id ? before.shown : undefined); } catch { return; }
+    if (my !== token || !d?.b) return;
+    const n = d.changed, m = d.common;
+    const of = `${m} ${plural(m, 'критерия', 'критериев', 'критериев')}`;
+    const dt = d.total_delta;
+    const tot = dt == null ? '' : `, итог ${fmtScore(d.b.ai_total)} → ${fmtScore(d.a.ai_total)}${dt ? ` (${dt > 0 ? '+' : '−'}${Math.abs(dt).toFixed(2)})` : ''}`;
+    const cfg = d.same_config ? 'та же конфигурация' : 'другая конфигурация';
+    const note = h('div', { class: `cqa-banner cqa-banner--info cqa-card__cmpnote`, role: 'status', id: 'cqa-card-cmpnote' },
+      h('span', { class: 'cqa-banner__icon', 'aria-hidden': 'true' }, n ? '≠' : '='),
+      h('div', { class: 'cqa-card__cmpnote-text' },
+        h('b', null, `Повторная оценка #${d.a.id}: `),
+        n ? `изменилось ${n} из ${of}${tot}` : `совпала с оценкой #${d.b.id} по всем ${m} ${plural(m, 'критерию', 'критериям', 'критериям')}${tot}`,
+        h('span', { class: 'cqa-faint' }, ` · ${cfg}`)),
+      h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-btn--primary', id: 'cqa-card-cmpnote-open',
+        onclick: () => emit(root, 'cqa:navigate', { to: `#/compare?conversation=${conv.id}&a=${d.b.id}&b=${d.a.id}` }) }, 'Открыть сравнение'),
+      h('button', { type: 'button', class: 'cqa-modal__x cqa-card__cmpnote-x', 'aria-label': 'Скрыть', title: 'Скрыть', onclick: () => note.remove() }, '×'));
+    root.querySelector('.cqa-card__head')?.after(note);
   }
 
   function render(rows) {
@@ -108,6 +151,7 @@ export function mount(el, params = {}) {
       old ? h('button', { type: 'button', class: 'cqa-badge cqa-badge--warn cqa-card__old', onclick: () => go(`#/conversation/${conv.id}`) }, 'не последняя оценка · к последней') : null,
       evalPicker(),
       h('button', { type: 'button', class: `cqa-btn cqa-btn--sm ${ev ? '' : 'cqa-btn--primary'}`, id: 'cqa-card-run', onclick: () => runRequest() }, ev ? '↻ Оценить повторно' : 'Оценить'),
+      compareBtn(),
       h('div', { class: 'cqa-card__nav' },
         idx >= 0 ? h('span', { class: 'cqa-faint', style: 'font-size:var(--cqa-text-xs)' }, `${idx + 1} из ${rows.length}`) : null,
         h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', disabled: !prev, onclick: () => prev && go(`#/conversation/${prev.id}`) }, '‹ Предыдущий'),
@@ -189,6 +233,7 @@ export function mount(el, params = {}) {
     root.querySelector('.cqa-card__head')?.replaceWith(head(lastRows));
   });
   const onRefresh = () => {
+    afterRun = conv ? { conv: conv.id, newest: conv.evaluations?.[0]?.id ?? null, shown: ev && ev.status !== 'failed' ? ev.id : null } : null;
     if (p.eval) { p = { ...p, eval: undefined }; emit(root, 'cqa:location', { to: `#/conversation/${p.id}` }); }
     load();
   };

@@ -113,6 +113,14 @@ export async function getEvaluationCalls(id) {
   return http(`/evaluations/${encodeURIComponent(id)}/calls`);
 }
 
+/** GET /evaluations/{id}/compare?other= → {a, b, criteria: [{key, title, status: same|changed|added|removed, a, b, points_delta}],
+ *  changed, common, total_delta, same_config, config_diff}. `a` — оценка id, `b` — other или предыдущая неупавшая оценка диалога
+ *  (null, если сравнивать не с чем); 422 — оценки разных диалогов. В mock-режиме разница считается в браузере по фикстурам. */
+export async function compareEvaluations(id, other) {
+  if (isMock()) return (await mockStore()).compare(id, other);
+  return request('GET', `/evaluations/${encodeURIComponent(id)}/compare`, { params: { other }, failText: 'Сравнение недоступно' });
+}
+
 /** Настроенные провайдеры и модели: {models: [{provider, model, paid, voice_allowed?}], default_provider, default_strategy, strategies}. */
 export async function getMetaModels() {
   if (isMock()) return fixture('meta-models');
