@@ -5,7 +5,10 @@ from sqlmodel import Session, select
 
 from ..db import get_session
 from ..models import ChecklistVersion
+from ..config import settings
+from ..providers import configured_models
 from ..services import checklists as svc
+from ..services import trial as trial_svc
 
 router = APIRouter(prefix="/checklists", tags=["checklists"])
 
@@ -65,3 +68,38 @@ def activate(version_id: int, session: Session = Depends(get_session)) -> dict:
         return _full(svc.activate_version(session, version_id))
     except LookupError:
         raise HTTPException(404, "версия чек-листа не найдена")
+
+
+class TrialBody(BaseModel):
+    body: dict                       # черновик чек-листа целиком (несохранённые правки тоже)
+    criterion_key: str
+    conversation_ids: list[int]      # id диалогов в БД, не больше 5
+    base_version_id: int | None = None
+    compare_key: str | None = None   # заменённый критерий: «было» берётся по его коду
+    provider: str | None = None
+    model: str | None = None
+
+
+@router.post("/trial")
+def trial(b: TrialBody):
+    """Песочница: один критерий из черновика на 1–5 диалогах, без изменения их оценок (services/trial.py)."""
+    try:
+        checklist = svc.validate(b.body)
+    except svc.ChecklistInvalid as e:
+        return JSONResponse(status_code=422, content={"detail": "чек-лист не прошёл проверку", "errors": e.errors})
+    if not b.conversation_ids:
+        raise HTTPException(400, "выберите хотя бы один диалог")
+    if len(b.conversation_ids) > trial_svc.MAX_DIALOGS:
+        raise HTTPException(400, f"не больше {trial_svc.MAX_DIALOGS} диалогов за раз")
+    provider = (b.provider or settings.llm_provider).strip().lower()
+    known = {m["provider"]: m["model"] for m in configured_models()}
+    if provider not in known:
+        raise HTTPException(400, f"неизвестный провайдер «{provider}»")
+    model = b.model or known[provider]
+    if not model:
+        raise HTTPException(400, f"у провайдера «{provider}» не задана модель")
+    try:
+        return trial_svc.run(checklist, b.criterion_key, b.conversation_ids, provider_name=provider, model=model,
+                             base_version_id=b.base_version_id, compare_key=b.compare_key)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from None
