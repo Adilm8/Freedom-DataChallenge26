@@ -85,7 +85,20 @@ def test_gives_up_after_retries_and_does_not_retry_400():
     p2, seen2 = make(lambda r, n: httpx.Response(400, json={"error": {"message": "bad"}}))
     with pytest.raises(ProviderError):
         p2.complete([{"role": "user", "content": "hi"}])
-    assert len(seen2) == 1
+    assert len(seen2) == 2                                 # 400 не ретраится; один повтор — без sampling-параметров
+    assert "temperature" in seen2[0] and "temperature" not in seen2[1]
+
+
+def test_sampling_params_dropped_when_model_rejects_them():
+    def h(r, n):
+        body = json.loads(r.content)
+        if "temperature" in body:
+            return httpx.Response(400, json={"error": {"message": "temperature is not supported"}})
+        return httpx.Response(200, json=completion('{"x": "a"}'))
+
+    p, seen = make(h)
+    res = p.complete([{"role": "user", "content": "hi"}], seed=7)
+    assert res.parsed == {"x": "a"} and "temperature" not in res.request and "seed" not in res.request
 
 
 def test_free_gemini_refuses_voice_calls():
