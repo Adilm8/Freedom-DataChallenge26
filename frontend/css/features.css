@@ -85,3 +85,9 @@
   .cqa-coach__sheet { box-shadow: none; border: 0; padding: 0; }
   .cqa-coach__item, .cqa-coach__quote { break-inside: avoid; }
 }
+
+/* Второе мнение ИИ в карточке апелляции (appeal-review.js) */
+.cqa-apr__opask { display: flex; align-items: center; gap: var(--cqa-s-2); flex-wrap: wrap; }
+.cqa-apr__opbox { display: grid; gap: 8px; padding: var(--cqa-s-3); border: 1px solid var(--cqa-border); border-radius: var(--cqa-r-md); background: var(--cqa-surface-2); min-width: 0; }
+.cqa-apr__opbox--diff { border-color: var(--cqa-warn-bd); background: var(--cqa-warn-soft); }
+.cqa-apr__opmeta { font-size: var(--cqa-text-xs); }

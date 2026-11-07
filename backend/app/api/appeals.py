@@ -3,9 +3,12 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlmodel import Session
 
+from ..config import settings
 from ..db import get_session
+from ..providers import configured_models
 from ..services import appeals as svc
 from ..services import evaluations as evaluations_svc
+from ..services import second_opinion as opinion_svc
 
 router = APIRouter(prefix="/appeals", tags=["appeals"])
 STATUS_FILTERS = (*svc.STATUSES, "closed")
@@ -54,3 +57,26 @@ def decide(appeal_id: int, body: DecisionBody, session: Session = Depends(get_se
     except svc.AppealError as e:
         return _error(e)
     return {"appeal": svc.to_api(a), "evaluation": evaluations_svc.to_api(session, ev)}
+
+
+class SecondOpinionBody(BaseModel):
+    provider: str | None = None
+    model: str | None = None
+
+
+@router.post("/{appeal_id}/second-opinion")
+def second_opinion(appeal_id: int, body: SecondOpinionBody | None = None, session: Session = Depends(get_session)):
+    """Второе мнение ИИ: слепая перепроверка спорного критерия одним вызовом конвейера (services/second_opinion.py).
+    Оценка и апелляция не меняются. 409 — апелляция рассмотрена; 502 — модель не ответила."""
+    b = body or SecondOpinionBody()
+    provider = (b.provider or settings.llm_provider).strip().lower()
+    known = {m["provider"]: m["model"] for m in configured_models()}
+    if provider not in known:
+        raise HTTPException(400, f"неизвестный провайдер «{provider}»")
+    model = b.model or known[provider]
+    if not model:
+        raise HTTPException(400, f"у провайдера «{provider}» не задана модель")
+    try:
+        return opinion_svc.run(session, appeal_id, provider_name=provider, model=model)
+    except svc.AppealError as e:
+        return _error(e)

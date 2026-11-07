@@ -240,6 +240,8 @@ def list_rows(session: Session, *, status: str | None = None, group_id: str | No
         Conversation.id.in_({e.conversation_pk for e in evs.values()})))} if evs else {}
     rows = latest.criterion_rows(session, evs.keys())
     cache = latest.ChecklistCache(session)
+    from . import second_opinion  # second_opinion импортирует этот модуль
+    opinions = second_opinion.latest_map(session, [a.id for a in appeals])
     out = []
     for a in appeals:
         ev = evs.get(a.evaluation_id)
@@ -263,5 +265,6 @@ def list_rows(session: Session, *, status: str | None = None, group_id: str | No
             "criterion": _criterion_block(crit, r) if r else None,
             "fragment": fragment((conv.normalized or {}).get("messages", []), r.evidence if r else [],
                                  r.checked_range if r else None),
+            "second_opinion": second_opinion.to_api(opinions.get(a.id)),
         })
     return out

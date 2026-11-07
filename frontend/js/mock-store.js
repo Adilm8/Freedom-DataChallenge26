@@ -204,6 +204,31 @@ export async function decideAppeal(id, body) {
   return { appeal: clone(a), evaluation: clone(ev) };
 }
 
+/** Второе мнение ИИ в демо-режиме: модели нет, ответ детерминированный и помечен как демо.
+ *  Чётный номер апелляции — расходится с AI (другой разрешённый ответ), нечётный — совпадает. */
+export async function secondOpinion(id) {
+  const all = await appealsAll();
+  const row = all.find((a) => a.id === Number(id));
+  if (!row) throw notFound('апелляция не найдена');
+  if (row.status !== 'open') throw conflict(`апелляция №${row.id} уже рассмотрена: второе мнение — только для открытой`);
+  const c = row.criterion || {};
+  const ai = row.ai_answer_snapshot ?? c.ai_answer;
+  const others = (c.allowed_answers || []).filter((v) => String(v) !== String(ai));
+  const answer = row.id % 2 === 0 && others.length ? others[0] : ai;
+  const ev = (row.fragment || []).find((m) => m.speaker === 'operator') || (row.fragment || [])[0];
+  const op = {
+    id: row.id * 10 + 1, appeal_id: row.id, evaluation_id: row.evaluation_id, criterion_key: row.criterion_key,
+    provider: 'mock', model: 'демо, без вызова модели', status: 'done', error: null, answer,
+    reasoning: 'Демо-ответ: в режиме ?mock=1 модель не вызывается. В рабочем режиме здесь — независимое обоснование модели по этому критерию: она видит только диалог и чек-лист, без ответа AI и комментария аналитика.',
+    confidence: 'medium', na_reason: answer === 'na' ? 'демо: повода для критерия нет' : null, checked_range: null, issues: [],
+    evidence: ev ? [{ msg_id: ev.msg_id, quote: String(ev.text || '').slice(0, 60), quote_ok: true }] : [],
+    ai_answer: ai, agrees: String(answer) === String(ai), cost_usd: 0, tokens: [0, 0], latency_ms: 0, created_at: now(),
+  };
+  await new Promise((r) => setTimeout(r, 600));
+  row.second_opinion = op;
+  return clone(op);
+}
+
 // ---------- Очередь «требует проверки»: фикстура + апелляции этой вкладки ----------
 export async function reviewQueue(params = {}) {
   const items = (await fx('review-queue')).filter((x) => !params.group_id || x.group_id === params.group_id);
