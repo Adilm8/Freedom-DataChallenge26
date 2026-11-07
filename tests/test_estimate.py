@@ -1,14 +1,21 @@
 """Оценка стоимости и времени до запуска (FR-UX-03): без LLM, по реальным промптам и истории вызовов."""
+from types import SimpleNamespace
+
+from backend.app.services import estimate
 from tests.test_api_datasets import payload, upload
 from tests.test_api_runs import env, start, wait  # noqa: F401  (env — фикстура)
 
 
-def test_estimate_before_and_after_history(env):
+def test_estimate_before_and_after_history(env, monkeypatch):
     c = env
+    # без сети: прайс OpenRouter недоступен → цена до первых вызовов неизвестна
+    monkeypatch.setattr(estimate, "get_provider", lambda name=None: SimpleNamespace(
+        allow_voice=True, free=False, pricing=SimpleNamespace(estimate=lambda *a: None)))
     upload(c, payload())
     body = {"group_id": "T", "provider": "openrouter", "model": "fake/m"}
     e = c.post("/api/runs/estimate", json=body).json()
     assert e["dialogs"] == 2 and e["calls"] == 8 and e["tokens_in"] > 500 and e["tokens_out"] > 0
+    assert e["cost_source"] == "unknown" and e["cost_usd"] is None
     wait(c, start(c).json()["run_id"])                                   # 8 вызовов фейка — история цены
     e2 = c.post("/api/runs/estimate", json=body).json()
     assert e2["cost_source"] == "history" and e2["cost_usd"] > 0 and e2["seconds"] >= 0
