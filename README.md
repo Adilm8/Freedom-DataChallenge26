@@ -148,7 +148,20 @@ uvicorn backend.app.main:app --reload
 
 ### Windows (PowerShell)
 
-С uv:
+Перед началом работы в PowerShell рекомендуем включить UTF-8 в текущей сессии, чтобы скрипты и тесты не падали с ошибкой кодировки (`UnicodeEncodeError`) при выводе кириллицы и казахских символов:
+
+```powershell
+$env:PYTHONUTF8 = "1"
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+```
+
+Если PowerShell блокирует выполнение скрипта активации `Activate.ps1`, разрешите запуск для текущего окна:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+С [uv](https://docs.astral.sh/uv/) (сам скачает Python 3.11, если его нет):
 
 ```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"   # если uv ещё не установлен
@@ -158,26 +171,44 @@ uv pip install -r requirements.txt
 Copy-Item .env.example .env                          # заполнить: notepad .env
 ```
 
-Без uv:
+Без uv, стандартным `venv` и `pip`:
 
 ```powershell
-py -3.11 -m venv .venv
+py -3.11 -m venv .venv                               # или: python -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
-Если PowerShell не даёт запустить `Activate.ps1`, разрешите скрипты для текущего окна: `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`.
-
 Данные и запуск:
 
+- Загрузка датасета из API организаторов (требуется `ORGANIZER_API_URL` в `.env`):
+  ```powershell
+  python scripts/fetch_dataset.py
+  ```
+- Либо загрузка из локального файла (без сети):
+  ```powershell
+  python scripts/fetch_dataset.py --from-file data\raw\DEV.json
+  ```
+
+Создание БД и запуск сервера:
+
 ```powershell
-python scripts/fetch_dataset.py
-python scripts/reset_db.py --import data/raw/DEV.json
+python scripts/reset_db.py --import data/raw/DEV.json   # создать чистую БД и импортировать DEV
 uvicorn backend.app.main:app --reload
 ```
 
-Открыть http://localhost:8000. Проверка: `Invoke-RestMethod http://localhost:8000/api/health`. Если в выводе скриптов кириллица отображается неверно, выполните `$env:PYTHONUTF8 = "1"` в том же окне.
+Открыть http://localhost:8000.
+
+Проверка API: `Invoke-RestMethod http://localhost:8000/api/health` (или `Invoke-WebRequest -UseBasicParsing http://localhost:8000/api/health`).
+
+Экспорт в CSV (кнопка в веб-интерфейсе или `/api/export?format=csv`) формируется в UTF-8 с BOM и разделителем `;`, поэтому корректно открывается в Microsoft Excel без искажения кириллицы и казахских букв (`ә`, `і`, `ң`, `ғ`, `ү`, `ұ`, `қ`, `ө`, `һ`).
+
+Запуск тестов:
+
+```powershell
+pytest -q
+```
 
 ### Настройки `.env`
 
