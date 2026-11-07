@@ -7,6 +7,7 @@
 import { h, clear, emit, toast, fmtDate, skeletonRows, errorState, emptyState, channelBadge, langChip, score } from '../ui.js';
 import { listChecklists, getChecklist, createChecklist, activateChecklist, listConversations, getFactLabels, isMock } from '../api.js';
 import { plural } from './run-dialog.js';
+import { openTrial } from './criterion-trial.js';
 import {
   TYPES, TYPE_LABEL, TYPE_HINT, ORGANIZER_CODES, FIELD_LABEL, SETTINGS, DEFAULT_SETTINGS, SCORING_ONLY_SETTINGS, ANSWER_LABEL,
   allowedAnswers, normCriterion, sameCriterion, weightSum, fmtNum, validateBody, diffBodies, replacements, autoNote, nextKey, locate, blank, txt,
@@ -483,6 +484,13 @@ export function mount(el, params = {}) {
       h('span', { class: 'cqa-chk-switch__ui', 'aria-hidden': 'true' }))),
     cell('acts', null,
       h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', onclick: () => openEditor('edit', idx) }, 'Изменить'),
+      n.enabled ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-chk-trial', id: `cqa-chk-trial-${c.key}`,
+        title: 'Проверить критерий из черновика на 1–5 диалогах до сохранения: было → стало, без изменения оценок',
+        onclick: () => {
+          // заменённый критерий: выключенный с тем же кодом в файле сдачи — с его ответами сравниваем «было»
+          const old = n.export_id ? st.draft.criteria.find((x) => x !== c && x.enabled === false && txt(x.export_id) === n.export_id) : null;
+          openTrial(host(), { body: clone(st.draft), criterionKey: c.key, compareKey: old?.key || null, group: group(), versionId: st.cur?.id ?? null });
+        } }, 'Проверить') : null,
       n.enabled ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-chk-replace', id: `cqa-chk-replace-${c.key}`, onclick: () => openEditor('replace', idx),
         title: `Новый критерий на месте ${c.key}: та же секция, вес ${fmtNum(Number(c.weight))}${n.export_id ? ` и код ${n.export_id}` : ''}` }, 'Заменить') : null));
   }

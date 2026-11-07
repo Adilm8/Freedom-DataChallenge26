@@ -335,3 +335,9 @@ export async function downloadExport(path, params = {}) {
   return { blob: await res.blob(), filename: name ? decodeURIComponent(name) : path.endsWith('results') ? 'results.json' : `export.${params.format || 'csv'}`,
     validationErrors: v == null || v === '' ? null : Number(v) };
 }
+
+/** Песочница критерия: {body, criterion_key, conversation_ids, base_version_id?} → {items, cost_usd, model}. */
+export async function trialCriterion(payload) {
+  if (isMock()) throw new ApiError('Проверка критерия работает только с сервером: в демо-данных нет модели.', 0);
+  return request('POST', '/checklists/trial', { body: payload, failText: 'Проверка не выполнена', netText: 'Нет связи с сервером: проверка не выполнена.' });
+}
