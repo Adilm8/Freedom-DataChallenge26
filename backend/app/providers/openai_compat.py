@@ -18,6 +18,7 @@ from typing import Any, Callable
 import httpx
 from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 
+from ..config import settings
 from .base import LLMResult, ProviderError, ProviderPolicyError
 from .pricing import Pricing
 
@@ -150,6 +151,10 @@ class OpenAICompatProvider:
                 kw["response_format"] = {"type": "json_object"}
         if self.is_openrouter:
             extra["usage"] = {"include": True}
+            effort = (settings.openrouter_reasoning_effort or "").strip().lower()
+            if effort and (supported is None or "reasoning" in supported):
+                # none — отключить рассуждения; рассуждения не возвращаем в ответ, чтобы не платить за их вывод дважды
+                extra["reasoning"] = {"enabled": False} if effort == "none" else {"effort": effort, "exclude": True}
         if extra:
             kw["extra_body"] = extra
         return kw
