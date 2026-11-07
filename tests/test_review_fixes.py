@@ -188,3 +188,25 @@ def test_submission_skips_manual_dialogs(s4):
         s.commit()
         doc = results_export.build(s, GROUP, team_name="t")
     assert sorted(r["conversation_id"] for r in doc["results"]) == sorted(pks)
+
+
+# --------------------------------------------------------------------------- сравнение с прошлой оценкой
+
+
+def test_compare_with_previous(s4):
+    c = s4.client
+    pks = s4.load()
+    pk = pks["s4-chat-1"]
+    first = s4.evaluate(pk, ScriptedProvider(answers={"05": "no"}))
+    assert c.get(f"/api/evaluations/{first}/compare").json()["b"] is None
+    s4.evaluate(pk, BrokenProvider())                     # упавшая пропускается
+    second = s4.evaluate(pk, ScriptedProvider())
+    d = c.get(f"/api/evaluations/{second}/compare").json()
+    assert d["b"]["id"] == first and d["same_config"] is True and d["config_diff"] == []
+    assert d["common"] == 8 and d["changed"] == 1 and d["total_delta"] == 15.0
+    row = next(x for x in d["criteria"] if x["key"] == "05")
+    assert row["status"] == "changed" and row["a"]["answer"] == "yes" and row["b"]["answer"] == "no"
+    assert row["points_delta"] == 15.0 and row["title"]
+    other = s4.evaluate(pks["s4-chat-2"])
+    assert c.get(f"/api/evaluations/{second}/compare?other={other}").status_code == 422
+    assert c.get("/api/evaluations/999/compare").status_code == 404

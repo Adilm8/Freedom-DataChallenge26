@@ -166,6 +166,7 @@
 | `GET /runs/{run_id}` | — | `{status, total, done, failed, cost_usd, started_at, finished_at}` |
 | `GET /evaluations/{id}` | — | `Evaluation` |
 | `GET /evaluations/{id}/calls` | — | `[LLMCall]` с сырыми ответами |
+| `GET /evaluations/{id}/compare?other=` | — | `{a, b, criteria: [{key, title, status: same\|changed\|added\|removed, a, b, points_delta}], changed, common, total_delta, same_config, config_diff}` (FR-EVAL-20, FR-CARD-06); без `other` — предыдущая неупавшая оценка диалога, `b: null`, если её нет; 422 — оценки разных диалогов |
 | `POST /appeals` | `{evaluation_id, criterion_key, comment}` (комментарий обязателен) | `Appeal` (201); 404 — нет оценки или критерия; 409 — по критерию уже есть открытая; 422 с `errors` |
 | `GET /appeals` | `?status=open\|confirmed\|changed\|closed&group_id&evaluation_id&conversation_id` (id диалога в БД); без `status` — все | `[AppealRow]`, новые сверху |
 | `POST /appeals/{id}/decision` | `{action: "confirm" \| "change", answer?, reason}` (причина обязательна; `answer` — из `allowed_answers` критерия и не равен текущему) | `{appeal, evaluation}` с пересчитанным `final_score`; 409 — апелляция уже рассмотрена; 422 с `errors` |
