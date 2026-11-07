@@ -1,0 +1,166 @@
+[
+ {
+  "id": 1021,
+  "criteria_keys": [
+   "01",
+   "02",
+   "03",
+   "05",
+   "07"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 3400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"01\": {\"reasoning\": \"Оператор қазақ тілінде сәлемдесіп, өз атын айтты (на казахском приветствие и имя).\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m4\", \"quote\": \"Сәлеметсіз бе! Менің атым Данияр\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"02\": {\"reasoning\": \"Оператор задал уточняющий вопрос о тексте ошибки до каких-либо советов.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m5\", \"quote\": \"Қосымшаға кіргенде қандай қате шығады?\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"03\": {\"reasoning\": \"Клиент не успел сформулировать запрос, требующий раскрытия данных.\", \"answer\": \"na\", \"confidence\": \"high\", \"evidence\": [], \"checked_range\": {\"from\": \"m4\", \"to\": \"m6\"}, \"na_reason\": \"Запрос не дошёл до действия, требующего идентификации.\", \"advice\": null}, \"05\": {\"reasoning\": \"Оператор вежлив и сразу переходит к проблеме клиента.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m4\", \"quote\": \"Қандай мәселе туындады?\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"07\": {\"reasoning\": \"Клиент покинул чат, оператор не мог завершить диалог.\", \"answer\": \"na\", \"confidence\": \"high\", \"evidence\": [], \"checked_range\": {\"from\": \"m5\", \"to\": \"m6\"}, \"na_reason\": \"Чат оборвался до возможности его завершить.\", \"advice\": null}}, \"overview\": {\"summary\": \"Клиент не мог войти в личный кабинет. Оператор поздоровался и уточнил текст ошибки, после чего клиент покинул чат.\", \"topic\": \"Проблема со входом в приложение\", \"resolved\": \"no\"}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 4300,
+  "tokens_out": 516,
+  "cached_tokens": 0,
+  "cost_usd": 0.02064,
+  "latency_ms": 3550,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1022,
+  "criteria_keys": [
+   "04"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"04\": {\"reasoning\": \"Клиент покинул чат до того, как описал проблему подробнее.\", \"answer\": \"na\", \"confidence\": \"high\", \"evidence\": [], \"checked_range\": {\"from\": \"m4\", \"to\": \"m6\"}, \"na_reason\": \"Чат закончился до того, как клиент сформулировал запрос.\", \"advice\": null}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 94,
+  "cached_tokens": 0,
+  "cost_usd": 0.00975,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1023,
+  "criteria_keys": [
+   "06"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"06\": {\"reasoning\": \"Между приветствием и вторым вопросом прошло более двух минут без предупреждения об ожидании.\", \"answer\": \"7\", \"confidence\": \"medium\", \"evidence\": [{\"msg_id\": \"m5\", \"quote\": \"Қатенің мәтінін жазып жіберіңізші.\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": \"Если нужно время на проверку, предупредить клиента: «Минуту, проверяю». Тишина на 2 минуты могла стать причиной ухода.\"}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 140,
+  "cached_tokens": 0,
+  "cost_usd": 0.01044,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1024,
+  "criteria_keys": [
+   "08"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"08\": {\"reasoning\": \"Нарушений нет.\", \"answer\": \"no\", \"confidence\": \"high\", \"evidence\": [], \"checked_range\": {\"from\": \"m4\", \"to\": \"m5\"}, \"na_reason\": null, \"advice\": null}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 62,
+  "cached_tokens": 0,
+  "cost_usd": 0.00927,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ }
+]

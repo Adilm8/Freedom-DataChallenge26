@@ -52,8 +52,9 @@ export function mount(el, params = {}) {
       h('span', { class: 'cqa-toolbar__spacer' }),
       (st.q || st.lang || st.channel || st.flag || st.review || st.appeals)
         ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--ghost cqa-btn--sm', onclick: reset }, 'Сбросить фильтры') : null,
-      h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', disabled: !st.selected.size, onclick: runRequest },
-        st.selected.size ? `Оценить (${st.selected.size})` : 'Оценить'));
+      h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-list-run', onclick: runRequest,
+        title: st.selected.size ? 'Оценить выбранные диалоги' : 'Ничего не выбрано: оценить всю группу' },
+      st.selected.size ? `Оценить (${st.selected.size})` : `Оценить группу (${rows.length})`));
     const wrap = h('div', { class: 'cqa-tablewrap' });
     if (!list.length) {
       wrap.append(emptyState({ title: 'Ничего не найдено', text: 'Измените условия поиска или сбросьте фильтры.', actionLabel: 'Сбросить фильтры', onAction: reset, icon: '⌕' }));
@@ -78,7 +79,7 @@ export function mount(el, params = {}) {
     return h('label', { class: 'cqa-toggle' }, h('input', { type: 'checkbox', checked: st[key], onchange: (e) => { st[key] = e.target.checked; renderTable(); } }), label);
   }
   function reset() { Object.assign(st, { q: '', lang: '', channel: '', flag: false, review: false, appeals: false }); renderTable(); }
-  function runRequest() { emit(root, 'cqa:run-request', { ids: [...st.selected], group: p.group }); }
+  function runRequest() { emit(root, 'cqa:run-request', { ids: [...st.selected], group: p.group || 'DEV', rows }); }
 
   function table(list) {
     const allOn = list.every((r) => st.selected.has(r.id));
@@ -113,15 +114,20 @@ export function mount(el, params = {}) {
       })));
   }
 
-  async function load() {
-    clear(body).append(skeletonRows(7));
+  async function load({ quiet = false } = {}) {
+    if (!quiet) clear(body).append(skeletonRows(7));
     try {
       rows = await listConversations({ group_id: p.group || 'DEV' });
+      const known = new Set(rows.map((r) => r.id));
+      for (const id of [...st.selected]) if (!known.has(id)) st.selected.delete(id);
       renderTable();
     } catch (e) {
       clear(body).append(errorState(e, load));
     }
   }
+  // После прогона оценки оболочка шлёт cqa:refresh: перечитываем итоги без мигания и с тем же выбором.
+  const onRefresh = () => load({ quiet: true });
+  el.addEventListener('cqa:refresh', onRefresh);
 
   root.append(
     h('div', { class: 'cqa-pagehead' },
@@ -131,6 +137,6 @@ export function mount(el, params = {}) {
 
   return {
     update(np) { const g = np.group !== p.group; p = { ...p, ...np }; if (g) { st.selected.clear(); load(); } },
-    unmount() { root.remove(); },
+    unmount() { el.removeEventListener('cqa:refresh', onRefresh); root.remove(); },
   };
 }

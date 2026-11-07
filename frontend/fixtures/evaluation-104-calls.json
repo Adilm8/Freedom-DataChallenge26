@@ -1,0 +1,210 @@
+[
+ {
+  "id": 1041,
+  "criteria_keys": [
+   "01",
+   "02",
+   "03",
+   "05",
+   "07"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 3400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"01\": {\"reasoning\": \"Приветствие на русском и имя оператора есть в первой реплике.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m4\", \"quote\": \"Добрый день, меня зовут Алия\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"02\": {\"reasoning\": \"Оператор уточнил детали по налогу после вопроса о резидентстве.\", \"answer\": \"yes\", \"confidence\": \"medium\", \"evidence\": [{\"msg_id\": \"m7\", \"quote\": \"налог зависит от вашего резидентства\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"03\": {\"reasoning\": \"Клиент назвал кодовое слово, оператор принял его, но системного подтверждения личности в чате нет. Оценка выставлена по реплике оператора.\", \"answer\": \"yes\", \"confidence\": \"low\", \"evidence\": [{\"msg_id\": \"m5\", \"quote\": \"Кодовое слово — Алматы.\"}, {\"msg_id\": \"m6\", \"quote\": \"Принято.\"}], \"checked_range\": {\"from\": \"m4\", \"to\": \"m6\"}, \"na_reason\": null, \"advice\": null}, \"05\": {\"reasoning\": \"Оператор вежлив и ответил на уточняющий вопрос клиента.\", \"answer\": \"yes\", \"confidence\": \"medium\", \"evidence\": [{\"msg_id\": \"m9\", \"quote\": \"Минуточку, уточню.\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"07\": {\"reasoning\": \"Оператор не подвёл итог и не попрощался, ограничившись «Пожалуйста, обращайтесь».\", \"answer\": \"no\", \"confidence\": \"medium\", \"evidence\": [{\"msg_id\": \"m12\", \"quote\": \"Пожалуйста, обращайтесь.\"}, {\"msg_id\": \"m10\", \"quote\": \"Если появятся вопросы, мы всегда на связи\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": \"Завершать диалог итогом и прощанием: «Если появятся вопросы, пишите. Всего доброго!»\"}}, \"overview\": {\"summary\": \"Клиент спросил остаток и налог на дивиденды. Оператор назвал остаток после кодового слова и дал противоречивые ответы по налогу.\", \"topic\": \"Остаток по счёту и налог на дивиденды\", \"resolved\": \"unclear\"}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 4300,
+  "tokens_out": 608,
+  "cached_tokens": 0,
+  "cost_usd": 0.02202,
+  "latency_ms": 3550,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1042,
+  "criteria_keys": [
+   "01",
+   "02",
+   "03",
+   "05",
+   "07"
+  ],
+  "attempt": 2,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 3400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"01\": {\"reasoning\": \"Приветствие на русском и имя оператора есть в первой реплике.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m4\", \"quote\": \"Добрый день, меня зовут Алия\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"02\": {\"reasoning\": \"Оператор уточнил детали по налогу после вопроса о резидентстве.\", \"answer\": \"yes\", \"confidence\": \"medium\", \"evidence\": [{\"msg_id\": \"m7\", \"quote\": \"налог зависит от вашего резидентства\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"03\": {\"reasoning\": \"Клиент назвал кодовое слово, оператор принял его, но системного подтверждения личности в чате нет. Оценка выставлена по реплике оператора.\", \"answer\": \"yes\", \"confidence\": \"low\", \"evidence\": [{\"msg_id\": \"m5\", \"quote\": \"Кодовое слово — Алматы.\"}, {\"msg_id\": \"m6\", \"quote\": \"Принято.\"}], \"checked_range\": {\"from\": \"m4\", \"to\": \"m6\"}, \"na_reason\": null, \"advice\": null}, \"05\": {\"reasoning\": \"Оператор вежлив и ответил на уточняющий вопрос клиента.\", \"answer\": \"yes\", \"confidence\": \"medium\", \"evidence\": [{\"msg_id\": \"m9\", \"quote\": \"Минуточку, уточню.\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"07\": {\"reasoning\": \"Оператор не подвёл итог и не попрощался, ограничившись «Пожалуйста, обращайтесь».\", \"answer\": \"no\", \"confidence\": \"medium\", \"evidence\": [{\"msg_id\": \"m12\", \"quote\": \"Пожалуйста, обращайтесь.\"}, {\"msg_id\": \"m10\", \"quote\": \"Если появятся вопросы, мы всегда на связи\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": \"Завершать диалог итогом и прощанием: «Если появятся вопросы, пишите. Всего доброго!»\"}}, \"overview\": {\"summary\": \"Клиент спросил остаток и налог на дивиденды. Оператор назвал остаток после кодового слова и дал противоречивые ответы по налогу.\", \"topic\": \"Остаток по счёту и налог на дивиденды\", \"resolved\": \"unclear\"}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 5200,
+  "tokens_out": 608,
+  "cached_tokens": 0,
+  "cost_usd": 0.02472,
+  "latency_ms": 3550,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1043,
+  "criteria_keys": [
+   "04"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"04\": {\"reasoning\": \"Остаток назван, по налогу даны два разных ответа (10 процентов, затем «обычно не удерживается»), точная ставка не названа.\", \"answer\": \"15\", \"confidence\": \"low\", \"evidence\": [{\"msg_id\": \"m6\", \"quote\": \"На вашем счёте 1 240 000 тенге\"}, {\"msg_id\": \"m10\", \"quote\": \"точную ставку лучше проверить в справке брокера\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": \"Сверять ставки налога с базой знаний до ответа и не давать два разных ответа подряд. Если точных данных нет, прямо сказать об этом и назвать источник.\"}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 185,
+  "cached_tokens": 0,
+  "cost_usd": 0.011115,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1044,
+  "criteria_keys": [
+   "06"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"06\": {\"reasoning\": \"Оператор сначала ответил на налог общей фразой, затем исправил её; клиент ждал 2.5 минуты после «Минуточку».\", \"answer\": \"7\", \"confidence\": \"medium\", \"evidence\": [{\"msg_id\": \"m9\", \"quote\": \"Минуточку, уточню.\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": \"Предупреждать о длительном ожидании («около трёх минут») и сразу давать точный ответ.\"}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 129,
+  "cached_tokens": 0,
+  "cost_usd": 0.010275,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1045,
+  "criteria_keys": [
+   "08"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"08\": {\"reasoning\": \"Нарушений не выявлено.\", \"answer\": \"no\", \"confidence\": \"high\", \"evidence\": [], \"checked_range\": {\"from\": \"m4\", \"to\": \"m12\"}, \"na_reason\": null, \"advice\": null}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 65,
+  "cached_tokens": 0,
+  "cost_usd": 0.009315,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ }
+]

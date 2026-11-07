@@ -66,11 +66,11 @@
   "channel": "voice call",
   "language": "RU",
   "latest": {
-   "evaluation_id": 105,
-   "ai_total": 90.5,
-   "final_total": 90.5,
+   "evaluation_id": 106,
+   "ai_total": 85.5,
+   "final_total": 85.5,
    "critical": false,
-   "needs_review": false,
+   "needs_review": true,
    "open_appeals": 0
   }
  },

@@ -1,0 +1,27 @@
+{
+ "models": [
+  {
+   "provider": "openrouter",
+   "model": "demo/fixture-model",
+   "paid": true
+  },
+  {
+   "provider": "gemini",
+   "model": "gemini-demo-flash",
+   "paid": false,
+   "voice_allowed": false
+  },
+  {
+   "provider": "ollama",
+   "model": "",
+   "paid": false
+  }
+ ],
+ "default_provider": "openrouter",
+ "default_strategy": "grouped",
+ "strategies": [
+  "single",
+  "grouped",
+  "per_criterion"
+ ]
+}

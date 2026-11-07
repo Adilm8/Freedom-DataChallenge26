@@ -1,0 +1,166 @@
+[
+ {
+  "id": 1051,
+  "criteria_keys": [
+   "01",
+   "02",
+   "03",
+   "05",
+   "07"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 3400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"01\": {\"reasoning\": \"Оператор поздоровалась и представилась в первой реплике.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m0\", \"quote\": \"добрый день, меня зовут Мадина\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"02\": {\"reasoning\": \"Оператор запросила данные для идентификации и уточнила, что нужно клиенту, до ответа.\", \"answer\": \"yes\", \"confidence\": \"medium\", \"evidence\": [{\"msg_id\": \"m2\", \"quote\": \"ваше ФИО и кодовое слово\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"03\": {\"reasoning\": \"ФИО и кодовое слово запрошены и подтверждены до раскрытия ставок по счёту клиента.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m2\", \"quote\": \"ФИО и кодовое слово\"}, {\"msg_id\": \"m4\", \"quote\": \"личность подтвердила\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"05\": {\"reasoning\": \"Оператор вежлива, поблагодарила за ожидание.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m7\", \"quote\": \"благодарю за ожидание\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"07\": {\"reasoning\": \"Оператор предложила дальнейшую помощь и попрощалась.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m11\", \"quote\": \"Если появятся ещё вопросы — звоните, всего доброго, до свидания.\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}}, \"overview\": {\"summary\": \"Клиент спросил о комиссии за маржинальную торговлю. Оператор подтвердила личность, сверилась с коллегой и назвала ставку и минимальную сумму.\", \"topic\": \"Комиссия за маржинальную торговлю\", \"resolved\": \"yes\"}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 4300,
+  "tokens_out": 538,
+  "cached_tokens": 0,
+  "cost_usd": 0.02097,
+  "latency_ms": 3550,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1052,
+  "criteria_keys": [
+   "04"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"04\": {\"reasoning\": \"Ставка названа, минимальная сумма указана. Ступени свыше миллиона не перечислены, клиента отправили в тариф.\", \"answer\": \"15\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m7\", \"quote\": \"до миллиона тенге\"}, {\"msg_id\": \"m9\", \"quote\": \"сто тысяч тенге\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": \"Назвать хотя бы первую ступень свыше миллиона, чтобы клиенту не пришлось искать её самому.\"}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 146,
+  "cached_tokens": 0,
+  "cost_usd": 0.01053,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1053,
+  "criteria_keys": [
+   "06"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"06\": {\"reasoning\": \"Реплика m7 перегружена: в одной фразе ставка, ступени и отсылка к тарифу; часть деталей осталась неясной. Об ожидании оператор предупредила.\", \"answer\": \"7\", \"confidence\": \"medium\", \"evidence\": [{\"msg_id\": \"m7\", \"quote\": \"ну, и детали есть в тарифе\"}, {\"msg_id\": \"m4\", \"quote\": \"останьтесь на линии\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": \"Разбивать ответ по шагам и не отсылать к документам без пояснения.\"}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 153,
+  "cached_tokens": 0,
+  "cost_usd": 0.010635,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1054,
+  "criteria_keys": [
+   "08"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"08\": {\"reasoning\": \"Нарушений не выявлено. Внутренний разговор с коллегой (m5–m6) данных клиента не раскрывает.\", \"answer\": \"no\", \"confidence\": \"high\", \"evidence\": [], \"checked_range\": {\"from\": \"m0\", \"to\": \"m11\"}, \"na_reason\": null, \"advice\": null}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 88,
+  "cached_tokens": 0,
+  "cost_usd": 0.00966,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ }
+]

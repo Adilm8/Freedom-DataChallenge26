@@ -8,7 +8,235 @@
  "prompt_version": "p1-draft",
  "status": "done",
  "facts": {
-  "first_response_delay_sec": 23
+  "has_operator": {
+   "value": true,
+   "msg_ids": [],
+   "note": null
+  },
+  "is_voice": {
+   "value": false,
+   "msg_ids": [],
+   "note": null
+  },
+  "operator_turns": {
+   "value": 5,
+   "msg_ids": [],
+   "note": null
+  },
+  "client_turns": {
+   "value": 4,
+   "msg_ids": [],
+   "note": null
+  },
+  "internal_turns": {
+   "value": 0,
+   "msg_ids": [],
+   "note": null
+  },
+  "bot_turns": {
+   "value": 2,
+   "msg_ids": [],
+   "note": null
+  },
+  "system_events": {
+   "value": [
+    {
+     "type": "escalation",
+     "msg_id": "m3",
+     "t_sec": 25.0
+    },
+    {
+     "type": "identity_verified",
+     "msg_id": "m7",
+     "t_sec": 82.0
+    },
+    {
+     "type": "operator_closed",
+     "msg_id": "m13",
+     "t_sec": 168.0
+    }
+   ],
+   "msg_ids": [
+    "m3",
+    "m7",
+    "m13"
+   ],
+   "note": null
+  },
+  "identity_verified_at": {
+   "value": {
+    "msg_id": "m7",
+    "t_sec": 82.0
+   },
+   "msg_ids": [
+    "m7"
+   ],
+   "note": null
+  },
+  "identity_verified": {
+   "value": true,
+   "msg_ids": [
+    "m7"
+   ],
+   "note": null
+  },
+  "escalation_at": {
+   "value": {
+    "msg_id": "m3",
+    "t_sec": 25.0,
+    "timestamp": "00:25",
+    "source": "escalation_event"
+   },
+   "msg_ids": [
+    "m3"
+   ],
+   "note": "по системному событию эскалации"
+  },
+  "first_operator_msg": {
+   "value": {
+    "msg_id": "m4",
+    "t_sec": 48.0,
+    "timestamp": "00:48",
+    "text": "Здравствуйте! Меня зовут Айгерим, я помогу вам с выводом средств."
+   },
+   "msg_ids": [
+    "m4"
+   ],
+   "note": null
+  },
+  "first_response_delay_sec": {
+   "value": 23.0,
+   "msg_ids": [
+    "m3",
+    "m4"
+   ],
+   "note": "от m3; порог 180 с"
+  },
+  "first_response_slow": {
+   "value": false,
+   "msg_ids": [
+    "m3",
+    "m4"
+   ],
+   "note": "порог 180 с"
+  },
+  "long_gaps": {
+   "value": [],
+   "msg_ids": [],
+   "note": "порог 120 с"
+  },
+  "long_gap_without_warning": {
+   "value": false,
+   "msg_ids": [],
+   "note": "порог 120 с"
+  },
+  "client_language": {
+   "value": "ru",
+   "msg_ids": [],
+   "note": null
+  },
+  "operator_first_msg_language": {
+   "value": "ru",
+   "msg_ids": [
+    "m4"
+   ],
+   "note": null
+  },
+  "first_msg_language_matches_client": {
+   "value": true,
+   "msg_ids": [
+    "m4"
+   ],
+   "note": null
+  },
+  "greeting_in_first_msg": {
+   "value": true,
+   "msg_ids": [
+    "m4"
+   ],
+   "note": "«Здравствуйте» (ru)"
+  },
+  "intro_in_first_msg": {
+   "value": true,
+   "msg_ids": [
+    "m4"
+   ],
+   "note": "«Меня зовут Айгерим» (ru)"
+  },
+  "first_greeting_msg": {
+   "value": {
+    "msg_id": "m4",
+    "t_sec": 48.0,
+    "phrase": "Здравствуйте",
+    "lang": "ru"
+   },
+   "msg_ids": [
+    "m4"
+   ],
+   "note": null
+  },
+  "first_intro_msg": {
+   "value": {
+    "msg_id": "m4",
+    "t_sec": 48.0,
+    "phrase": "Меня зовут Айгерим",
+    "lang": "ru"
+   },
+   "msg_ids": [
+    "m4"
+   ],
+   "note": null
+  },
+  "last_operator_msg": {
+   "value": {
+    "msg_id": "m12",
+    "t_sec": 165.0,
+    "timestamp": "02:45",
+    "text": "Рада была помочь! Если появятся вопросы, обращайтесь. Всего доброго!"
+   },
+   "msg_ids": [
+    "m12"
+   ],
+   "note": null
+  },
+  "farewell_in_last_msg": {
+   "value": true,
+   "msg_ids": [
+    "m12"
+   ],
+   "note": "«Всего доброго»"
+  },
+  "help_offer_in_closing": {
+   "value": true,
+   "msg_ids": [
+    "m12"
+   ],
+   "note": "«Если появятся вопросы»"
+  },
+  "ended_by": {
+   "value": "operator_closed",
+   "msg_ids": [
+    "m13"
+   ],
+   "note": "оператор закрыл чат"
+  },
+  "ended_abruptly": {
+   "value": false,
+   "msg_ids": [
+    "m13"
+   ],
+   "note": "оператор закрыл чат сам"
+  },
+  "risk_terms": {
+   "value": [],
+   "msg_ids": [],
+   "note": "по словарю ничего не найдено (это не доказывает отсутствие нарушения)"
+  },
+  "empathy_phrases": {
+   "value": [],
+   "msg_ids": [],
+   "note": "по словарю не найдено; вежливость и реакцию на проблему оценивай по репликам"
+  }
  },
  "overview": {
   "summary": "Клиент хотел вывести деньги с брокерского счёта на карту. Оператор подтвердил личность, объяснил порядок и комиссию, корректно попрощался.",
@@ -17,7 +245,7 @@
  },
  "params": {
   "temperature": 0,
-  "seed": null,
+  "seed": 7,
   "reuse": "none"
  },
  "ai_score": {
@@ -382,10 +610,10 @@
    "appeal": null
   }
  ],
- "tokens_in": 5120,
- "tokens_out": 980,
- "cost_usd": 0.0184,
- "latency_ms": 7400,
+ "tokens_in": 12640,
+ "tokens_out": 917,
+ "cost_usd": 0.051675,
+ "latency_ms": 3550,
  "created_at": "2026-11-07T14:20:00Z",
  "needs_review": false
 }

@@ -1,0 +1,594 @@
+{
+ "id": 106,
+ "conversation_id": 5,
+ "checklist_version_id": 1,
+ "provider": "openrouter",
+ "model": "demo/fixture-model",
+ "strategy": "grouped",
+ "prompt_version": "p1-draft",
+ "status": "done",
+ "facts": {
+  "has_operator": {
+   "value": true,
+   "msg_ids": [],
+   "note": null
+  },
+  "is_voice": {
+   "value": true,
+   "msg_ids": [],
+   "note": null
+  },
+  "operator_turns": {
+   "value": 6,
+   "msg_ids": [],
+   "note": null
+  },
+  "client_turns": {
+   "value": 4,
+   "msg_ids": [],
+   "note": null
+  },
+  "internal_turns": {
+   "value": 2,
+   "msg_ids": [
+    "m5",
+    "m6"
+   ],
+   "note": "реплики внутри удержания или консультации не считаются обращением к клиенту"
+  },
+  "bot_turns": {
+   "value": 0,
+   "msg_ids": [],
+   "note": null
+  },
+  "system_events": {
+   "value": [],
+   "msg_ids": [],
+   "note": null
+  },
+  "identity_verified_at": {
+   "value": null,
+   "msg_ids": [],
+   "note": "системного подтверждения личности нет; в звонке проверка может идти голосом — смотри реплики"
+  },
+  "identity_verified": {
+   "value": false,
+   "msg_ids": [],
+   "note": "в звонке проверка может идти голосом — смотри реплики"
+  },
+  "escalation_at": {
+   "value": {
+    "msg_id": "m0",
+    "t_sec": 0.0,
+    "timestamp": "2026-10-30T06:02:15Z",
+    "source": "first_operator_msg"
+   },
+   "msg_ids": [
+    "m0"
+   ],
+   "note": "события эскалации нет; переходом к оператору считаем его первую реплику"
+  },
+  "first_operator_msg": {
+   "value": {
+    "msg_id": "m0",
+    "t_sec": 0.0,
+    "timestamp": "2026-10-30T06:02:15Z",
+    "text": "Freedom Broker, добрый день, меня зовут Мадина, слушаю вас."
+   },
+   "msg_ids": [
+    "m0"
+   ],
+   "note": null
+  },
+  "first_response_delay_sec": {
+   "value": null,
+   "msg_ids": [],
+   "note": "оператор начал диалог первым — клиент ответа не ждал"
+  },
+  "first_response_slow": {
+   "value": null,
+   "msg_ids": [],
+   "note": "порог 180 с; задержка неизвестна"
+  },
+  "long_gaps": {
+   "value": [],
+   "msg_ids": [],
+   "note": "порог 120 с"
+  },
+  "long_gap_without_warning": {
+   "value": false,
+   "msg_ids": [],
+   "note": "порог 120 с"
+  },
+  "client_language": {
+   "value": "ru",
+   "msg_ids": [],
+   "note": null
+  },
+  "operator_first_msg_language": {
+   "value": "ru",
+   "msg_ids": [
+    "m0"
+   ],
+   "note": null
+  },
+  "first_msg_language_matches_client": {
+   "value": true,
+   "msg_ids": [
+    "m0"
+   ],
+   "note": null
+  },
+  "greeting_in_first_msg": {
+   "value": true,
+   "msg_ids": [
+    "m0"
+   ],
+   "note": "«добрый день» (ru)"
+  },
+  "intro_in_first_msg": {
+   "value": true,
+   "msg_ids": [
+    "m0"
+   ],
+   "note": "«меня зовут Мадина» (ru)"
+  },
+  "first_greeting_msg": {
+   "value": {
+    "msg_id": "m0",
+    "t_sec": 0.0,
+    "phrase": "добрый день",
+    "lang": "ru"
+   },
+   "msg_ids": [
+    "m0"
+   ],
+   "note": null
+  },
+  "first_intro_msg": {
+   "value": {
+    "msg_id": "m0",
+    "t_sec": 0.0,
+    "phrase": "меня зовут Мадина",
+    "lang": "ru"
+   },
+   "msg_ids": [
+    "m0"
+   ],
+   "note": null
+  },
+  "last_operator_msg": {
+   "value": {
+    "msg_id": "m11",
+    "t_sec": 98.0,
+    "timestamp": "2026-10-30T06:03:53Z",
+    "text": "Рада была помочь. Если появятся ещё вопросы — звоните, всего доброго, до свидания."
+   },
+   "msg_ids": [
+    "m11"
+   ],
+   "note": null
+  },
+  "farewell_in_last_msg": {
+   "value": true,
+   "msg_ids": [
+    "m11"
+   ],
+   "note": "«всего доброго»; последние 3 реплики оператора (звонок)"
+  },
+  "help_offer_in_closing": {
+   "value": true,
+   "msg_ids": [
+    "m11"
+   ],
+   "note": "«Если появятся ещё вопросы»"
+  },
+  "ended_by": {
+   "value": "normal",
+   "msg_ids": [
+    "m11"
+   ],
+   "note": "события завершения нет; последняя реплика за оператором"
+  },
+  "ended_abruptly": {
+   "value": false,
+   "msg_ids": [],
+   "note": "диалог не оборван клиентом или связью"
+  },
+  "risk_terms": {
+   "value": [],
+   "msg_ids": [],
+   "note": "по словарю ничего не найдено (это не доказывает отсутствие нарушения)"
+  },
+  "empathy_phrases": {
+   "value": [
+    {
+     "phrase": "благодарю за ожидание",
+     "msg_id": "m7",
+     "lang": "ru"
+    }
+   ],
+   "msg_ids": [
+    "m7"
+   ],
+   "note": null
+  }
+ },
+ "overview": {
+  "summary": "Клиент спросил о комиссии за маржинальную торговлю. Оператор подтвердила личность, сверилась с коллегой и назвала ставку и минимальную сумму.",
+  "topic": "Комиссия за маржинальную торговлю",
+  "resolved": "yes"
+ },
+ "params": {
+  "temperature": 0,
+  "seed": 7,
+  "reuse": "auto"
+ },
+ "ai_score": {
+  "total": 85.5,
+  "applicable_weight": 100,
+  "points_sum": 85.5,
+  "sections": [
+   {
+    "id": "start",
+    "title": "Начало и понимание запроса",
+    "points": 25,
+    "applicable_weight": 25,
+    "pct": 100
+   },
+   {
+    "id": "safety",
+    "title": "Безопасность и решение",
+    "points": 30,
+    "applicable_weight": 40,
+    "pct": 75.0
+   },
+   {
+    "id": "dialog",
+    "title": "Ведение и завершение диалога",
+    "points": 30.5,
+    "applicable_weight": 35,
+    "pct": 87.14
+   }
+  ],
+  "criteria": {
+   "01": {
+    "points": 10,
+    "contribution": 10
+   },
+   "02": {
+    "points": 15,
+    "contribution": 15
+   },
+   "03": {
+    "points": 20,
+    "contribution": 20
+   },
+   "04": {
+    "points": 10,
+    "contribution": 10
+   },
+   "05": {
+    "points": 15,
+    "contribution": 15
+   },
+   "06": {
+    "points": 10.5,
+    "contribution": 10.5
+   },
+   "07": {
+    "points": 5,
+    "contribution": 5
+   }
+  },
+  "critical": []
+ },
+ "final_score": {
+  "total": 85.5,
+  "applicable_weight": 100,
+  "points_sum": 85.5,
+  "sections": [
+   {
+    "id": "start",
+    "title": "Начало и понимание запроса",
+    "points": 25,
+    "applicable_weight": 25,
+    "pct": 100
+   },
+   {
+    "id": "safety",
+    "title": "Безопасность и решение",
+    "points": 30,
+    "applicable_weight": 40,
+    "pct": 75.0
+   },
+   {
+    "id": "dialog",
+    "title": "Ведение и завершение диалога",
+    "points": 30.5,
+    "applicable_weight": 35,
+    "pct": 87.14
+   }
+  ],
+  "criteria": {
+   "01": {
+    "points": 10,
+    "contribution": 10
+   },
+   "02": {
+    "points": 15,
+    "contribution": 15
+   },
+   "03": {
+    "points": 20,
+    "contribution": 20
+   },
+   "04": {
+    "points": 10,
+    "contribution": 10
+   },
+   "05": {
+    "points": 15,
+    "contribution": 15
+   },
+   "06": {
+    "points": 10.5,
+    "contribution": 10.5
+   },
+   "07": {
+    "points": 5,
+    "contribution": 5
+   }
+  },
+  "critical": []
+ },
+ "criteria": [
+  {
+   "key": "01",
+   "title": "Установление контакта",
+   "section": "start",
+   "type": "binary",
+   "weight": 10,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 10,
+   "final_answer": "yes",
+   "final_points": 10,
+   "overridden": false,
+   "reasoning": "Оператор поздоровалась и представилась в первой реплике.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m0",
+     "quote": "добрый день, меня зовут Мадина",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": 105,
+   "appeal": null
+  },
+  {
+   "key": "02",
+   "title": "Выявление потребности",
+   "section": "start",
+   "type": "binary",
+   "weight": 15,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 15,
+   "final_answer": "yes",
+   "final_points": 15,
+   "overridden": false,
+   "reasoning": "Оператор запросила данные для идентификации и уточнила, что нужно клиенту, до ответа.",
+   "confidence": "medium",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m2",
+     "quote": "ваше ФИО и кодовое слово",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": 105,
+   "appeal": null
+  },
+  {
+   "key": "03",
+   "title": "Идентификация",
+   "section": "safety",
+   "type": "binary",
+   "weight": 20,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 20,
+   "final_answer": "yes",
+   "final_points": 20,
+   "overridden": false,
+   "reasoning": "ФИО и кодовое слово запрошены и подтверждены до раскрытия ставок по счёту клиента.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m2",
+     "quote": "ФИО и кодовое слово",
+     "quote_ok": true
+    },
+    {
+     "msg_id": "m4",
+     "quote": "личность подтвердила",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": 105,
+   "appeal": null
+  },
+  {
+   "key": "04",
+   "title": "Корректная и полная консультация",
+   "section": "safety",
+   "type": "scale",
+   "weight": 20,
+   "scale_max": 20,
+   "ai_answer": 10,
+   "ai_points": 10,
+   "final_answer": 10,
+   "final_points": 10,
+   "overridden": false,
+   "reasoning": "Ставка названа устно, но из расшифровки неясно, какая именно («ноль ... процентов» — часть слов не распознана). Ступени свыше миллиона не перечислены.",
+   "confidence": "low",
+   "advice": "Назвать ставку чётко и повторить её, а ступени свыше миллиона перечислить или отправить ссылку на тариф в SMS.",
+   "evidence": [
+    {
+     "msg_id": "m7",
+     "quote": "до миллиона тенге",
+     "quote_ok": true
+    },
+    {
+     "msg_id": "m9",
+     "quote": "сто тысяч тенге",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [
+    "низкая уверенность модели"
+   ],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "05",
+   "title": "Эмпатия и клиентоориентированность",
+   "section": "dialog",
+   "type": "binary",
+   "weight": 15,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 15,
+   "final_answer": "yes",
+   "final_points": 15,
+   "overridden": false,
+   "reasoning": "Оператор вежлива, поблагодарила за ожидание.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m7",
+     "quote": "благодарю за ожидание",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": 105,
+   "appeal": null
+  },
+  {
+   "key": "06",
+   "title": "Управление диалогом, скорость и грамотность",
+   "section": "dialog",
+   "type": "scale",
+   "weight": 15,
+   "scale_max": 10,
+   "ai_answer": 7,
+   "ai_points": 10.5,
+   "final_answer": 7,
+   "final_points": 10.5,
+   "overridden": false,
+   "reasoning": "Об ожидании оператор предупредила (m4) и поблагодарила после него (m7). Ответ m7 перегружен деталями, часть пришлось уточнять.",
+   "confidence": "medium",
+   "advice": "Разбивать ответ по шагам и не отсылать к документам без пояснения.",
+   "evidence": [
+    {
+     "msg_id": "m7",
+     "quote": "ну, и детали есть в тарифе",
+     "quote_ok": true
+    },
+    {
+     "msg_id": "m4",
+     "quote": "останьтесь на линии",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": {
+    "from": "m4",
+    "to": "m7"
+   },
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": null,
+   "appeal": null
+  },
+  {
+   "key": "07",
+   "title": "Завершение",
+   "section": "dialog",
+   "type": "binary",
+   "weight": 5,
+   "scale_max": null,
+   "ai_answer": "yes",
+   "ai_points": 5,
+   "final_answer": "yes",
+   "final_points": 5,
+   "overridden": false,
+   "reasoning": "Оператор предложила дальнейшую помощь и попрощалась.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [
+    {
+     "msg_id": "m11",
+     "quote": "Если появятся ещё вопросы — звоните, всего доброго, до свидания.",
+     "quote_ok": true
+    }
+   ],
+   "checked_range": null,
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": 105,
+   "appeal": null
+  },
+  {
+   "key": "08",
+   "title": "Грубые ошибки",
+   "section": "critical",
+   "type": "flag",
+   "weight": 0,
+   "scale_max": null,
+   "ai_answer": "no",
+   "ai_points": null,
+   "final_answer": "no",
+   "final_points": null,
+   "overridden": false,
+   "reasoning": "Нарушений не выявлено. Внутренний разговор с коллегой (m5–m6) данных клиента не раскрывает.",
+   "confidence": "high",
+   "advice": null,
+   "evidence": [],
+   "checked_range": {
+    "from": "m0",
+    "to": "m11"
+   },
+   "na_reason": null,
+   "issues": [],
+   "reused_from_evaluation_id": 105,
+   "appeal": null
+  }
+ ],
+ "tokens_in": 5560,
+ "tokens_out": 322,
+ "cost_usd": 0.02151,
+ "latency_ms": 2150,
+ "created_at": "2026-11-07T16:05:00Z",
+ "needs_review": true
+}

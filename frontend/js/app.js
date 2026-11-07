@@ -1,6 +1,7 @@
 // Оболочка: шапка, переключатели, hash-роутинг. Экраны монтируются как самостоятельные компоненты.
 import { h, clear, emptyState, toast } from './ui.js';
 import { getHealth, isMock } from './api.js';
+import { openRunDialog } from './components/run-dialog.js';
 
 const appEl = document.getElementById('app');
 
@@ -75,7 +76,7 @@ function markNav(name) {
 }
 
 async function checkHealth() {
-  const set = (cls, text) => { healthEl.className = `cqa-health cqa-health--${cls}`; healthEl.querySelector('.cqa-health__text').textContent = text; };
+  const set = (cls, text) => { healthEl.className = `cqa-health cqa-health--${cls}`; healthEl.title = text; healthEl.querySelector('.cqa-health__text').textContent = text; };
   try {
     const hl = await getHealth();
     if (isMock()) set('mock', 'демо-данные');
@@ -111,8 +112,12 @@ async function route() {
 
 function onAppEvent(e) {
   if (e.type === 'cqa:navigate' && e.detail?.to) location.hash = e.detail.to;
-  else if (e.type === 'cqa:run-request') toast(appEl, `Запуск оценки подключим следующим шагом. Выбрано диалогов: ${e.detail.ids.length}.`);
-  else if (e.type === 'cqa:import-request') toast(appEl, 'Импорт набора появится вместе с бэкендом.');
+  else if (e.type === 'cqa:location' && e.detail?.to) history.replaceState(null, '', e.detail.to); // адрес без перехода
+  else if (e.type === 'cqa:run-request') {
+    // По завершении прогона обновляем тот экран, который открыт в этот момент (карточка или список).
+    openRunDialog(appEl, { group: settings.group, ...e.detail,
+      onFinished: () => current?.el?.dispatchEvent(new CustomEvent('cqa:refresh')) });
+  } else if (e.type === 'cqa:import-request') toast(appEl, 'Импорт набора появится вместе с бэкендом.');
 }
 
 function init() {
@@ -123,7 +128,7 @@ function init() {
   shell.append(header, mainEl);
   appEl.append(shell);
   appEl.style.setProperty('--cqa-header-h', '60px');
-  for (const t of ['cqa:navigate', 'cqa:run-request', 'cqa:import-request']) appEl.addEventListener(t, onAppEvent);
+  for (const t of ['cqa:navigate', 'cqa:location', 'cqa:run-request', 'cqa:import-request']) appEl.addEventListener(t, onAppEvent);
   syncHeader();
   window.addEventListener('hashchange', route);
   if (!location.hash) location.replace('#/conversations' + (query.has('group') ? `?group=${query.get('group')}` : ''));

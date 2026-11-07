@@ -1,0 +1,166 @@
+[
+ {
+  "id": 1011,
+  "criteria_keys": [
+   "01",
+   "02",
+   "03",
+   "05",
+   "07"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 3400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"01\": {\"reasoning\": \"В первой реплике оператор поздоровался по-русски и назвал своё имя.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m4\", \"quote\": \"Здравствуйте! Меня зовут Айгерим\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"02\": {\"reasoning\": \"Оператор запросил данные для идентификации и затем ответил на вопрос о комиссии, который клиент уточнил сам.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m5\", \"quote\": \"подтвердите, пожалуйста, ваше ФИО и кодовое слово\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"03\": {\"reasoning\": \"Идентификация запрошена до раскрытия порядка вывода и подтверждена системным сообщением.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m5\", \"quote\": \"ФИО и кодовое слово\"}, {\"msg_id\": \"m7\", \"quote\": \"Личность клиента подтверждена.\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"05\": {\"reasoning\": \"Оператор вежлив, благодарит клиента за уточняющий вопрос.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m10\", \"quote\": \"Спасибо, что уточнили заранее\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"07\": {\"reasoning\": \"Оператор предложил дальнейшую помощь и попрощался перед закрытием чата.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m12\", \"quote\": \"Если появятся вопросы, обращайтесь. Всего доброго!\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}}, \"overview\": {\"summary\": \"Клиент хотел вывести деньги с брокерского счёта на карту. Оператор подтвердил личность, объяснил порядок и комиссию, корректно попрощался.\", \"topic\": \"Вывод средств\", \"resolved\": \"yes\"}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 4300,
+  "tokens_out": 564,
+  "cached_tokens": 0,
+  "cost_usd": 0.02136,
+  "latency_ms": 3550,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1012,
+  "criteria_keys": [
+   "04"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"04\": {\"reasoning\": \"Порядок вывода и сроки названы верно. Не упомянуты лимиты на вывод и минимальная сумма — это второстепенная деталь.\", \"answer\": \"15\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m8\", \"quote\": \"раздел «Счета», кнопка «Вывести»\"}, {\"msg_id\": \"m10\", \"quote\": \"Вывод на карту казахстанского банка бесплатный\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": \"Добавлять информацию о минимальной сумме и дневном лимите вывода: клиент часто спрашивает об этом следующим вопросом.\"}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 173,
+  "cached_tokens": 0,
+  "cost_usd": 0.010935,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1013,
+  "criteria_keys": [
+   "06"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"06\": {\"reasoning\": \"Ответы ясные и идут в логичном порядке, ожиданий не было.\", \"answer\": \"10\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m8\", \"quote\": \"Средства поступят на карту в течение одного рабочего дня\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 97,
+  "cached_tokens": 0,
+  "cost_usd": 0.009795,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1014,
+  "criteria_keys": [
+   "08"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"08\": {\"reasoning\": \"Оскорблений, услуг в обход компании и раскрытия конфиденциальных данных нет.\", \"answer\": \"no\", \"confidence\": \"high\", \"evidence\": [], \"checked_range\": {\"from\": \"m4\", \"to\": \"m12\"}, \"na_reason\": null, \"advice\": null}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 83,
+  "cached_tokens": 0,
+  "cost_usd": 0.009585,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ }
+]
