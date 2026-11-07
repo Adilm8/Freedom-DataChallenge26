@@ -6,7 +6,7 @@
     python eval/run_eval.py ... --repeat 2                                     # стабильность (NFR-14)
 
 Платные прогоны (OpenRouter) требуют `--approved` с отметкой, кто и когда разрешил (правило Лиды).
-Эталон — `data/gold/gold_labels.json`; пока его нет, можно `--use-drafts` (черновик Claude — только для отладки).
+Эталон — `data/gold/gold_labels.json`; пока его нет, можно `--use-drafts` (черновик — только для отладки).
 Результаты — `eval/runs/` (не в git).
 """
 
