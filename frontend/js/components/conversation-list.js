@@ -8,7 +8,13 @@ const APPEAL_FILTER = [['', 'Апелляции: все'], ['open', 'Есть о
 export function mount(el, params = {}) {
   let p = { ...params };
   let rows = [];
-  const st = { q: '', lang: '', channel: '', flag: false, review: false, appeal: APPEAL_FILTER.some(([v]) => v && v === p.appeal) ? p.appeal : '', sort: null, selected: new Set() };
+  const st = { q: '', lang: '', channel: '', flag: false, review: false, appeal: '', sort: null, selected: new Set() };
+  // Фильтры из адреса (переход с дашборда): ?lang=kz&channel=voice%20call&flag=1&review=1&appeal=open или ?ids=1,2&label=…
+  const on = (v) => v === '1' || v === 'true';
+  Object.assign(st, { lang: String(p.lang || '').toLowerCase(), channel: p.channel || '', flag: on(p.flag), review: on(p.review),
+    appeal: APPEAL_FILTER.some(([v]) => v && v === p.appeal) ? p.appeal : (on(p.appeals) ? 'open' : '') });
+  st.ids = p.ids ? new Set(String(p.ids).split(',').map(Number).filter((x) => !isNaN(x))) : null;
+  st.idsLabel = p.label || 'отбор с дашборда';
   const root = h('div', { class: 'cqa-page' });
   el.append(root);
   const body = h('div');
@@ -16,6 +22,7 @@ export function mount(el, params = {}) {
   function visible() {
     let r = rows.filter((x) => {
       const l = x.latest;
+      if (st.ids && !st.ids.has(x.id)) return false;
       if (st.q && !x.conversation_id.toLowerCase().includes(st.q.toLowerCase())) return false;
       if (st.lang && String(x.language).toLowerCase() !== st.lang) return false;
       if (st.channel && (x.channel === 'voice call' ? 'voice call' : 'chat') !== st.channel) return false;
@@ -51,12 +58,14 @@ export function mount(el, params = {}) {
     const toolbar = h('div', { class: 'cqa-toolbar' },
       h('input', { class: 'cqa-input', type: 'search', placeholder: 'Поиск по id', value: st.q, 'aria-label': 'Поиск по id', style: 'width:180px',
         oninput: (e) => { st.q = e.target.value; refreshTable(); } }),
+      st.ids ? h('span', { class: 'cqa-listfilter', title: 'Диалоги, выбранные на дашборде' }, h('span', null, `${st.idsLabel} · ${st.ids.size}`),
+        h('button', { type: 'button', 'aria-label': 'Снять отбор с дашборда', onclick: () => { st.ids = null; syncHash(); renderTable(); } }, '×')) : null,
       select('Язык', 'lang', [['', 'Все языки'], ['ru', 'RU'], ['kz', 'KZ'], ['en', 'EN']]),
       select('Канал', 'channel', [['', 'Все каналы'], ['chat', 'Чат'], ['voice call', 'Звонок']]),
       toggle('Грубая ошибка', 'flag'), toggle('Требует проверки', 'review'),
       select('Апелляции', 'appeal', APPEAL_FILTER),
       h('span', { class: 'cqa-toolbar__spacer' }),
-      (st.q || st.lang || st.channel || st.flag || st.review || st.appeal)
+      (st.q || st.lang || st.channel || st.flag || st.review || st.appeal || st.ids)
         ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--ghost cqa-btn--sm', onclick: reset }, 'Сбросить фильтры') : null,
       h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-list-run', onclick: runRequest,
         title: st.selected.size ? 'Оценить выбранные диалоги' : 'Ничего не выбрано: оценить всю группу' },
@@ -84,7 +93,14 @@ export function mount(el, params = {}) {
   function toggle(label, key) {
     return h('label', { class: 'cqa-toggle' }, h('input', { type: 'checkbox', checked: st[key], onchange: (e) => { st[key] = e.target.checked; renderTable(); } }), label);
   }
-  function reset() { Object.assign(st, { q: '', lang: '', channel: '', flag: false, review: false, appeal: '' }); renderTable(); }
+  function reset() { Object.assign(st, { q: '', lang: '', channel: '', flag: false, review: false, appeal: '', ids: null }); syncHash(); renderTable(); }
+  // Снятые фильтры не должны вернуться из адреса при обновлении страницы.
+  function syncHash() {
+    const qs = location.hash.split('?')[1];
+    if (!qs) return;
+    const g = new URLSearchParams(qs).get('group');
+    emit(root, 'cqa:location', { to: '#/conversations' + (g ? `?group=${encodeURIComponent(g)}` : '') });
+  }
   function runRequest() { emit(root, 'cqa:run-request', { ids: [...st.selected], group: p.group || 'DEV', rows }); }
 
   function table(list) {

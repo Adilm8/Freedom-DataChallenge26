@@ -230,6 +230,26 @@ export async function getRun(id) {
   return http(`/runs/${encodeURIComponent(id)}`);
 }
 
+// ---------- Дашборд и качество (FR-ANL-01, FR-OPS-05) ----------
+/** GET /analytics?group_id&checklist_version_id → Analytics (CONTRACTS.md §3). В mock-режиме — фикстура analytics.json. */
+export async function getAnalytics(params = {}) {
+  if (isMock()) return fixture('analytics');
+  return http('/analytics', params);
+}
+
+/** GET /quality/runs → {dir, runs: [RunSummary]}: прогоны run_eval.py, новые сверху.
+ *  В mock-режиме — вымышленные прогоны из фикстур (`mock: true`; экран помечает их как демо-данные). */
+export async function listQualityRuns() {
+  if (isMock()) return { ...(await fixture('quality-runs')), mock: true };
+  return http('/quality/runs');
+}
+
+/** GET /quality/runs/{name} → RunSummary + {criteria, total, by_language, by_channel, calibration, cost, languages}. */
+export async function getQualityRun(name) {
+  if (isMock()) return { ...(await fixture(`quality-run-${name}`)), mock: true };
+  return http(`/quality/runs/${encodeURIComponent(name)}`);
+}
+
 // ---------- Проверка gold (только DEV; без mock-режима: файлы разметки живут на бэкенде) ----------
 export async function listGold() { return http('/gold'); }
 export async function getGold(conversationId) { return http(`/gold/${encodeURIComponent(conversationId)}`); }

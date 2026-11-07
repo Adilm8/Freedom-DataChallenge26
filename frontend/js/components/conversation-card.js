@@ -11,6 +11,7 @@ import { mount as mountTranscript } from './transcript-view.js';
 import { mount as mountResult } from './result-panel.js';
 import { mount as mountFacts } from './facts-panel.js';
 import { mount as mountPlayer } from './audio-player.js';
+import { mount as mountTimeline } from './timeline.js';
 
 export function mount(el, params = {}) {
   let p = { ...params };
@@ -18,7 +19,7 @@ export function mount(el, params = {}) {
   el.append(root);
   let kids = [];
   let token = 0;
-  let trEl = null, resEl = null, playerEl = null;
+  let trEl = null, resEl = null, playerEl = null, tlEl = null;
   let conv = null, ev = null, lastRows = [];
 
   function evidenceMap(e) {
@@ -128,9 +129,10 @@ export function mount(el, params = {}) {
       left.append(playerEl, scrollEl);
     }
     const factsEl = h('div');
+    tlEl = h('div', { class: 'cqa-card__timeline' }); // таймлайн (FR-UX-01): клик по метке — cqa:evidence-click, как у доказательства
     trEl = h('div');
     resEl = h('div');
-    scrollEl.append(factsEl, h('div', { class: 'cqa-panel' },
+    scrollEl.append(tlEl, factsEl, h('div', { class: 'cqa-panel' },
       h('div', { class: 'cqa-panel__head cqa-trhead' }, h('h3', { class: 'cqa-h3' }, 'Транскрипт'),
         h('span', { class: 'cqa-faint cqa-trhead__n' }, `${conv.messages.length} реплик`),
         isCall ? h('span', { class: 'cqa-faint cqa-trhead__hint' }, withAudio ? 'расшифровка устной речи · клик по реплике — слушать' : 'расшифровка устной речи') : null),
@@ -142,7 +144,8 @@ export function mount(el, params = {}) {
       audio: isCall ? (withAudio ? 'seek' : 'times') : undefined, segments: conv.segments });
     const rs = mountResult(resEl, { evaluation: ev, mode: p.mode, conversationId: conv.id });
     const pl = playerEl ? mountPlayer(playerEl, { conversation: conv, evidence: evidenceMap(ev) }) : null;
-    kids = [tr, rs, fx, pl].filter(Boolean);
+    const tl = mountTimeline(tlEl, { conversation: conv, evaluation: ev });
+    kids = [tr, rs, fx, pl, tl].filter(Boolean);
     if (p.focus && ev) {
       const key = p.focus;
       p = { ...p, focus: undefined }; // один раз: после «Оценить повторно» карточка открывается сверху
@@ -165,6 +168,7 @@ export function mount(el, params = {}) {
   root.addEventListener('cqa:audio-time', (e) => {
     const d = e.detail || {};
     trEl?.dispatchEvent(new CustomEvent('cqa:playing', { detail: { msg_id: d.msg_id, scroll: d.playing && d.follow } }));
+    tlEl?.dispatchEvent(new CustomEvent('cqa:audio-time', { detail: d }));
   });
   root.addEventListener('cqa:audio-fix', (e) => trEl?.dispatchEvent(new CustomEvent('cqa:audio-fix', { detail: e.detail })));
   // Переход к секунде или реплике записи извне (хост web resource, будущий таймлайн): {msg_id | sec, play}.

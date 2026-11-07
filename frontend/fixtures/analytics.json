@@ -1,0 +1,423 @@
+{
+ "group_id": "DEV",
+ "checklist_version_id": 1,
+ "checklist_version": {
+  "id": 1,
+  "key": "default",
+  "version": 1,
+  "name": "Чек-лист качества чатов"
+ },
+ "conversations": 6,
+ "count": 5,
+ "not_evaluated": 1,
+ "status_counts": {
+  "done": 5
+ },
+ "avg_total": 76.83,
+ "avg_ai_total": 75.83,
+ "avg_final_total": 76.83,
+ "histogram": [
+  {
+   "from": 0,
+   "to": 10,
+   "count": 0,
+   "ai_count": 0
+  },
+  {
+   "from": 10,
+   "to": 20,
+   "count": 0,
+   "ai_count": 0
+  },
+  {
+   "from": 20,
+   "to": 30,
+   "count": 1,
+   "ai_count": 1
+  },
+  {
+   "from": 30,
+   "to": 40,
+   "count": 0,
+   "ai_count": 0
+  },
+  {
+   "from": 40,
+   "to": 50,
+   "count": 0,
+   "ai_count": 0
+  },
+  {
+   "from": 50,
+   "to": 60,
+   "count": 0,
+   "ai_count": 0
+  },
+  {
+   "from": 60,
+   "to": 70,
+   "count": 0,
+   "ai_count": 0
+  },
+  {
+   "from": 70,
+   "to": 80,
+   "count": 0,
+   "ai_count": 0
+  },
+  {
+   "from": 80,
+   "to": 90,
+   "count": 2,
+   "ai_count": 2
+  },
+  {
+   "from": 90,
+   "to": 100,
+   "count": 2,
+   "ai_count": 2
+  }
+ ],
+ "by_criterion": [
+  {
+   "key": "01",
+   "title": "Установление контакта",
+   "section": "start",
+   "type": "binary",
+   "weight": 10,
+   "count": 5,
+   "pass_rate": 1.0,
+   "ai_pass_rate": 1.0,
+   "avg_pct": 100.0,
+   "ai_avg_pct": 100.0,
+   "na_rate": 0.0,
+   "answers": {
+    "yes": 5
+   },
+   "not_passed_ids": [],
+   "low_confidence_count": 0,
+   "overridden_count": 0,
+   "appeals_count": 0,
+   "appeals_changed": 0
+  },
+  {
+   "key": "02",
+   "title": "Выявление потребности",
+   "section": "start",
+   "type": "binary",
+   "weight": 15,
+   "count": 5,
+   "pass_rate": 0.8,
+   "ai_pass_rate": 0.8,
+   "avg_pct": 80.0,
+   "ai_avg_pct": 80.0,
+   "na_rate": 0.0,
+   "answers": {
+    "yes": 4,
+    "no": 1
+   },
+   "not_passed_ids": [
+    3
+   ],
+   "low_confidence_count": 0,
+   "overridden_count": 0,
+   "appeals_count": 0,
+   "appeals_changed": 0
+  },
+  {
+   "key": "03",
+   "title": "Идентификация",
+   "section": "safety",
+   "type": "binary",
+   "weight": 20,
+   "count": 5,
+   "pass_rate": 1.0,
+   "ai_pass_rate": 1.0,
+   "avg_pct": 100.0,
+   "ai_avg_pct": 100.0,
+   "na_rate": 0.4,
+   "answers": {
+    "yes": 3,
+    "na": 2
+   },
+   "not_passed_ids": [],
+   "low_confidence_count": 1,
+   "overridden_count": 0,
+   "appeals_count": 0,
+   "appeals_changed": 0
+  },
+  {
+   "key": "04",
+   "title": "Корректная и полная консультация",
+   "section": "safety",
+   "type": "scale",
+   "weight": 20,
+   "count": 5,
+   "pass_rate": 0.25,
+   "ai_pass_rate": 0.0,
+   "avg_pct": 56.25,
+   "ai_avg_pct": 50.0,
+   "na_rate": 0.2,
+   "answers": {
+    "20": 1,
+    "na": 1,
+    "0": 1,
+    "15": 1,
+    "10": 1
+   },
+   "not_passed_ids": [
+    3,
+    4,
+    5
+   ],
+   "low_confidence_count": 2,
+   "overridden_count": 1,
+   "appeals_count": 1,
+   "appeals_changed": 1
+  },
+  {
+   "key": "05",
+   "title": "Эмпатия и клиентоориентированность",
+   "section": "dialog",
+   "type": "binary",
+   "weight": 15,
+   "count": 5,
+   "pass_rate": 0.8,
+   "ai_pass_rate": 0.8,
+   "avg_pct": 80.0,
+   "ai_avg_pct": 80.0,
+   "na_rate": 0.0,
+   "answers": {
+    "yes": 4,
+    "no": 1
+   },
+   "not_passed_ids": [
+    3
+   ],
+   "low_confidence_count": 0,
+   "overridden_count": 0,
+   "appeals_count": 0,
+   "appeals_changed": 0
+  },
+  {
+   "key": "06",
+   "title": "Управление диалогом, скорость и грамотность",
+   "section": "dialog",
+   "type": "scale",
+   "weight": 15,
+   "count": 5,
+   "pass_rate": 0.2,
+   "ai_pass_rate": 0.2,
+   "avg_pct": 70.0,
+   "ai_avg_pct": 70.0,
+   "na_rate": 0.0,
+   "answers": {
+    "10": 1,
+    "7": 3,
+    "4": 1
+   },
+   "not_passed_ids": [
+    2,
+    3,
+    4,
+    5
+   ],
+   "low_confidence_count": 0,
+   "overridden_count": 0,
+   "appeals_count": 0,
+   "appeals_changed": 0
+  },
+  {
+   "key": "07",
+   "title": "Завершение",
+   "section": "dialog",
+   "type": "binary",
+   "weight": 5,
+   "count": 5,
+   "pass_rate": 0.6667,
+   "ai_pass_rate": 0.6667,
+   "avg_pct": 66.67,
+   "ai_avg_pct": 66.67,
+   "na_rate": 0.4,
+   "answers": {
+    "yes": 2,
+    "na": 2,
+    "no": 1
+   },
+   "not_passed_ids": [
+    4
+   ],
+   "low_confidence_count": 0,
+   "overridden_count": 0,
+   "appeals_count": 0,
+   "appeals_changed": 0
+  },
+  {
+   "key": "08",
+   "title": "Грубые ошибки",
+   "section": "critical",
+   "type": "flag",
+   "weight": 0,
+   "count": 5,
+   "pass_rate": 0.8,
+   "ai_pass_rate": 0.8,
+   "avg_pct": null,
+   "ai_avg_pct": null,
+   "na_rate": 0.0,
+   "answers": {
+    "no": 4,
+    "yes": 1
+   },
+   "not_passed_ids": [
+    3
+   ],
+   "low_confidence_count": 0,
+   "overridden_count": 0,
+   "appeals_count": 0,
+   "appeals_changed": 0
+  }
+ ],
+ "by_language": {
+  "EN": {
+   "conversations": 1,
+   "count": 1,
+   "avg_total": 21.33,
+   "avg_ai_total": 21.33,
+   "critical_count": 1,
+   "needs_review_count": 0
+  },
+  "KZ": {
+   "conversations": 1,
+   "count": 1,
+   "avg_total": 91.82,
+   "avg_ai_total": 91.82,
+   "critical_count": 0,
+   "needs_review_count": 0
+  },
+  "RU": {
+   "conversations": 4,
+   "count": 3,
+   "avg_total": 90.33,
+   "avg_ai_total": 88.67,
+   "critical_count": 0,
+   "needs_review_count": 2
+  }
+ },
+ "by_channel": {
+  "agent chat": {
+   "conversations": 5,
+   "count": 4,
+   "avg_total": 74.66,
+   "avg_ai_total": 73.41,
+   "critical_count": 1,
+   "needs_review_count": 1
+  },
+  "voice call": {
+   "conversations": 1,
+   "count": 1,
+   "avg_total": 85.5,
+   "avg_ai_total": 85.5,
+   "critical_count": 0,
+   "needs_review_count": 1
+  }
+ },
+ "critical_count": 1,
+ "ai_critical_count": 1,
+ "critical_ids": [
+  3
+ ],
+ "needs_review_count": 2,
+ "review_queue_count": 3,
+ "appeals": {
+  "open": 1,
+  "confirmed": 0,
+  "changed": 1
+ },
+ "resolved": {
+  "yes": 2,
+  "no": 2,
+  "unclear": 1
+ },
+ "topics": [
+  {
+   "topic": "Вывод средств",
+   "count": 1,
+   "resolved_rate": 1.0,
+   "avg_total": 100.0,
+   "weakest": null,
+   "ids": [
+    1
+   ]
+  },
+  {
+   "topic": "Инвестиционная консультация",
+   "count": 1,
+   "resolved_rate": 0.0,
+   "avg_total": 21.33,
+   "weakest": {
+    "key": "02",
+    "title": "Выявление потребности",
+    "avg_pct": 0.0
+   },
+   "ids": [
+    3
+   ]
+  },
+  {
+   "topic": "Комиссия за маржинальную торговлю",
+   "count": 1,
+   "resolved_rate": 1.0,
+   "avg_total": 85.5,
+   "weakest": {
+    "key": "04",
+    "title": "Корректная и полная консультация",
+    "avg_pct": 50.0
+   },
+   "ids": [
+    5
+   ]
+  },
+  {
+   "topic": "Остаток по счёту и налог на дивиденды",
+   "count": 1,
+   "resolved_rate": 0.0,
+   "avg_total": 85.5,
+   "weakest": {
+    "key": "07",
+    "title": "Завершение",
+    "avg_pct": 0.0
+   },
+   "ids": [
+    4
+   ]
+  },
+  {
+   "topic": "Проблема со входом в приложение",
+   "count": 1,
+   "resolved_rate": 0.0,
+   "avg_total": 91.82,
+   "weakest": {
+    "key": "06",
+    "title": "Управление диалогом, скорость и грамотность",
+    "avg_pct": 70.0
+   },
+   "ids": [
+    2
+   ]
+  }
+ ],
+ "cost": {
+  "latest_usd": 0.252585,
+  "total_usd": 0.30438,
+  "evaluations_total": 6,
+  "avg_per_dialog_usd": 0.050517,
+  "tokens_in": 26000,
+  "tokens_out": 3400,
+  "models": [
+   {
+    "model": "demo/fixture-model",
+    "count": 5
+   }
+  ]
+ }
+}

@@ -173,6 +173,8 @@
 | `POST /appeals/{id}/decision` | `{action: "confirm" \| "change", answer?, reason}` (причина обязательна; `answer` — из `allowed_answers` критерия и не равен текущему) | `{appeal, evaluation}` с пересчитанным `final_score`; 409 — апелляция уже рассмотрена; 422 с `errors` |
 | `GET /export` | `?group_id&checklist_version_id&format=csv\|json` (по умолчанию группа из `.env`, активная версия, csv) | файл (`Content-Disposition: attachment`), §5 |
 | `GET /analytics` | `?group_id&checklist_version_id` (по умолчанию группа из `.env` и активная версия) | `Analytics` (FR-ANL-01…03) |
+| `GET /quality/runs` | — | список прогонов `eval/runs/*.json` (или `CQA_EVAL_RUNS_DIR`): `{id, created_at, provider, model, strategy, split, complete, metrics-сводка}`; битый файл — строка с ошибкой (FR-OPS-05) |
+| `GET /quality/runs/{name}` | — | прогон целиком: метрики, разрезы, стабильность, калибровка, цена; 404 — нет файла или имя вне папки, 422 — файл не разбирается |
 | `GET /review-queue` | `?group_id&checklist_version_id` (по умолчанию — как у аналитики) | `[ReviewItem]` (FR-UX-02), важные сверху |
 | `GET /meta/models` | — | настроенные провайдеры и модели, стратегия по умолчанию |
 | `GET /gold/{conversation_id}`, `PUT /gold/{conversation_id}` | разметка по формату `data/gold/README.md` | для экрана gold-разметки (только DEV) |

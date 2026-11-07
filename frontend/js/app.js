@@ -10,6 +10,8 @@ const NAV = [
   ['appeals', 'Апелляции'], ['checklist', 'Чек-лист'], ['quality', 'Качество'],
 ];
 const ROUTES = {
+  dashboard: { nav: 'dashboard', load: () => import('./components/dashboard-view.js') },
+  quality: { nav: 'quality', load: () => import('./components/quality-view.js') },
   conversations: { nav: 'conversations', load: () => import('./components/conversation-list.js') },
   conversation: { nav: 'conversations', load: () => import('./components/conversation-card.js'), full: true },
   gold: { nav: 'gold', load: () => import('./components/gold-review.js'), full: true },
@@ -19,8 +21,6 @@ const ROUTES = {
   new: { nav: 'conversations', load: () => import('./components/new-dialog.js') },
 };
 const PLACEHOLDERS = {
-  dashboard: ['Дашборд', 'Средний итог, распределение, выполнение по критериям и грубые ошибки. Экран появится на этапе аналитики.'],
-  quality: ['Качество', 'Согласие с эталоном и сравнение моделей и стратегий.'],
   compare: ['Сравнение', 'Два результата одного диалога рядом.'],
 };
 
@@ -34,7 +34,10 @@ const settings = {
   group: store.get('group', 'DEV'),
   mode: store.get('mode', 'analyst'),
   demo: query.get('demo') === '1' || store.get('demo', '0') === '1',
+  theme: ['light', 'dark'].includes(query.get('theme')) ? query.get('theme') : store.get('theme', 'auto'), // auto — как в системе
 };
+const darkMq = window.matchMedia?.('(prefers-color-scheme: dark)');
+const isDark = () => settings.theme === 'dark' || (settings.theme === 'auto' && !!darkMq?.matches);
 
 let current = null; // { name, instance, el }
 let healthEl, groupSel;
@@ -44,12 +47,12 @@ function parseHash() {
   const [path, qs] = raw.split('?');
   const seg = path.split('/').filter(Boolean);
   const q = Object.fromEntries(new URLSearchParams(qs || ''));
-  return { name: seg[0] || 'conversations', arg: seg[1], q };
+  return { name: seg[0] || 'dashboard', arg: seg[1], q };
 }
 
 function buildHeader() {
   const nav = h('nav', { class: 'cqa-nav', 'aria-label': 'Разделы' },
-    [...NAV, ['gold', 'Проверка gold']].map(([id, label]) => h('a', { class: 'cqa-nav__link', href: `#/${id}`, dataset: { nav: id }, hidden: id === 'gold' && settings.group !== 'DEV' }, label,
+    [...NAV, ['gold', 'Gold']].map(([id, label]) => h('a', { class: 'cqa-nav__link', href: `#/${id}`, dataset: { nav: id }, hidden: id === 'gold' && settings.group !== 'DEV', title: id === 'gold' ? 'Проверка эталонной разметки (gold)' : null }, label,
       COUNTED[id] ? h('span', { class: 'cqa-nav__count', hidden: true, title: COUNTED[id] }) : null)));
   // Группы — из реальных данных (loadGroups); до ответа сервера — только текущая.
   groupSel = h('select', { class: 'cqa-select', 'aria-label': 'Группа данных',
@@ -61,14 +64,19 @@ function buildHeader() {
         onclick: () => { settings.mode = id; store.set('mode', id); syncHeader(); route(); } }, label)));
   const demo = h('label', { class: 'cqa-toggle', title: 'Крупнее шрифт и бейджи для проектора' },
     h('input', { type: 'checkbox', checked: settings.demo, onchange: (e) => { settings.demo = e.target.checked; store.set('demo', settings.demo ? '1' : '0'); syncHeader(); } }), 'Демо');
+  const themeBtn = h('button', { type: 'button', class: 'cqa-btn cqa-btn--ghost cqa-btn--sm cqa-themebtn', id: 'cqa-theme',
+    onclick: () => { settings.theme = isDark() ? 'light' : 'dark'; store.set('theme', settings.theme); syncHeader(); } });
   healthEl = h('span', { class: 'cqa-health' }, h('span', { class: 'cqa-health__dot' }), h('span', { class: 'cqa-health__text' }, 'проверка…'));
   return h('header', { class: 'cqa-header' },
-    h('a', { class: 'cqa-brand', href: '#/conversations' }, h('span', { class: 'cqa-brand__mark' }, 'C'), 'CQA', h('small', null, '· Freedom Broker')),
-    nav, h('div', { class: 'cqa-header__tools' }, healthEl, groupSel, modeSeg, demo));
+    h('a', { class: 'cqa-brand', href: '#/dashboard' }, h('span', { class: 'cqa-brand__mark' }, 'C'), 'CQA', h('small', null, '· Freedom Broker')),
+    nav, h('div', { class: 'cqa-header__tools' }, healthEl, groupSel, modeSeg, demo, themeBtn));
 }
 
 function syncHeader() {
   appEl.classList.toggle('cqa-demo', settings.demo);
+  appEl.dataset.theme = isDark() ? 'dark' : 'light';
+  const tb = appEl.querySelector('#cqa-theme');
+  if (tb) { tb.textContent = isDark() ? '☀' : '☾'; tb.title = isDark() ? 'Светлая тема' : 'Тёмная тема'; tb.setAttribute('aria-label', tb.title); }
   const goldLink = appEl.querySelector('.cqa-nav__link[data-nav="gold"]'); // gold размечаем только для DEV
   if (goldLink) goldLink.hidden = settings.group !== 'DEV';
   appEl.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === settings.mode)));
@@ -164,7 +172,9 @@ function init() {
   for (const t of ['cqa:navigate', 'cqa:location', 'cqa:run-request', 'cqa:import-request', 'cqa:counts-changed', 'cqa:groups-changed', 'cqa:mode']) appEl.addEventListener(t, onAppEvent);
   syncHeader();
   window.addEventListener('hashchange', () => { route(); refreshCounts(); });
-  if (!location.hash) location.replace('#/conversations' + (query.has('group') ? `?group=${query.get('group')}` : ''));
+  darkMq?.addEventListener?.('change', syncHeader);
+  // replaceState не вызывает hashchange: первый показ — один раз, после загрузки групп.
+  if (!location.hash) history.replaceState(null, '', '#/dashboard' + (query.has('group') ? `?group=${query.get('group')}` : ''));
   // Сохранённой группы может не быть в данных (другая БД, демо-режим): сначала сверяем список групп.
   loadGroups().finally(() => { route(); refreshCounts(); });
   checkHealth();
