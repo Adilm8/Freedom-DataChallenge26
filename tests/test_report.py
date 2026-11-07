@@ -30,3 +30,12 @@ def test_report_tables_and_best_run(tmp_path):
     assert "## По критериям — m/b / grouped / dev" in text and "m/c" not in text
     assert "| 04 | Консультация | 16 | 75% | 100% |" in text
     assert report.render([]).startswith("Нет завершённых прогонов")
+
+
+def test_report_shows_confidence_interval(tmp_path):
+    p = run(tmp_path, "a", 0.83, 8.3)
+    d = json.loads(p.read_text(encoding="utf-8"))
+    d["metrics"]["ci95"] = {"n_resamples": 2000, "dialogs": 16, "mean_agreement": [0.75, 0.9], "mae": [5.1, 11.6]}
+    p.write_text(json.dumps(d), encoding="utf-8")
+    text = report.render(report.load([p], None))
+    assert "| 83% [75%–90%] | 8.30 [5.10–11.60] |" in text

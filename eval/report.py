@@ -61,6 +61,13 @@ def table(head: list[str], rows: list[list[str]]) -> str:
     return "\n".join(out)
 
 
+def with_ci(value: str, ci: list | None, fmt) -> str:
+    """«83% [70–93%]»: значение и 95 % доверительный интервал, если он посчитан."""
+    if not ci or value == "—":
+        return value
+    return f"{value} [{fmt(ci[0])}–{fmt(ci[1])}]"
+
+
 def runs_table(runs: list[dict]) -> str:
     rows = []
     for d in runs:
@@ -70,7 +77,9 @@ def runs_table(runs: list[dict]) -> str:
         st = None if ch is None else 1 - ch  # доля ответов, совпавших между двумя одинаковыми прогонами
         cost = m.get("cost") or {}
         rows.append([d.get("model", "?"), d.get("strategy", "?"), d.get("split", "?"), str(m.get("dialogs", "—")),
-                     pct(m.get("mean_agreement")), num(t.get("mae")), pct(t.get("within_5")), pct(t.get("within_10")),
+                     with_ci(pct(m.get("mean_agreement")), (m.get("ci95") or {}).get("mean_agreement"), pct),
+                     with_ci(num(t.get("mae")), (m.get("ci95") or {}).get("mae"), num),
+                     pct(t.get("within_5")), pct(t.get("within_10")),
                      f"{pct(flag.get('recall'))} / {pct(flag.get('precision'))}" if flag else "—",
                      pct(st) if st is not None else "—", money(cost.get("per_dialog_usd")),
                      num(cost.get("mean_seconds"), 1)])
@@ -106,7 +115,8 @@ def render(runs: list[dict]) -> str:
     gold = ", ".join(sorted({s for d in runs for s in d["metrics"].get("gold_source", [])})) or "—"
     parts = [
         "## Сравнение прогонов",
-        f"Эталон: {gold}. Согласие — доля критериев с тем же ответом, что в эталоне; MAE — средняя ошибка итога в баллах.",
+        f"Эталон: {gold}. Согласие — доля критериев с тем же ответом, что в эталоне; MAE — средняя ошибка итога в баллах. "
+        "В скобках — 95 % доверительный интервал (бутстреп по диалогам), если он посчитан.",
         runs_table(runs),
         f"## По критериям — {b.get('model')} / {b.get('strategy')} / {b.get('split')}",
         criteria_table(b),

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 from collections import defaultdict
 from statistics import mean
 
@@ -103,3 +104,43 @@ def stability(run_a: dict[str, dict], run_b: dict[str, dict]) -> dict:
             dt.append(abs(run_a[cid]["total"] - run_b[cid]["total"]))
     return {"answers": total, "changed_share": round(changed / total, 4) if total else None,
             "mean_total_delta": round(mean(dt), 2) if dt else None}
+
+
+def bootstrap_ci(
+    pred: dict[str, dict],
+    gold: dict[str, dict],
+    meta: dict[str, dict],
+    criteria: dict[str, dict],
+    n: int = 2000,
+    seed: int = 7,
+) -> dict:
+    """95 % доверительные интервалы (бутстреп по диалогам) для среднего согласия и MAE итога.
+
+    Выборка gold маленькая (16 + 8 диалогов), поэтому одно число без интервала легко переоценить.
+    Диалоги берутся с возвращением, `compare` считается на каждой выборке, границы — 2,5 и 97,5 перцентили.
+    Seed фиксирован: интервалы воспроизводимы."""
+    ids = [cid for cid in gold if cid in pred]
+    if len(ids) < 2:
+        return {}
+    rng = random.Random(seed)
+    agree, mae = [], []
+    for _ in range(n):
+        sample = [rng.choice(ids) for _ in ids]
+        # повторы диалога — отдельные ключи, чтобы compare учёл их столько раз, сколько выпало
+        p = {f"{c}#{i}": pred[c] for i, c in enumerate(sample)}
+        g = {f"{c}#{i}": gold[c] for i, c in enumerate(sample)}
+        m = compare(p, g, {}, criteria)
+        if m["mean_agreement"] is not None:
+            agree.append(m["mean_agreement"])
+        if m["total"]["mae"] is not None:
+            mae.append(m["total"]["mae"])
+
+    def interval(xs: list[float], digits: int) -> list[float] | None:
+        if not xs:
+            return None
+        xs = sorted(xs)
+        lo, hi = xs[int(0.025 * (len(xs) - 1))], xs[int(round(0.975 * (len(xs) - 1)))]
+        return [round(lo, digits), round(hi, digits)]
+
+    return {"n_resamples": n, "dialogs": len(ids),
+            "mean_agreement": interval(agree, 4), "mae": interval(mae, 2)}
