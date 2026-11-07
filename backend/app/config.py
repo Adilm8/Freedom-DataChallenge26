@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434/v1"
     ollama_model: str = ""
 
+    # Параллельность вызовов на провайдера и стратегия по умолчанию (ADR-002)
+    openrouter_concurrency: int = 8
+    gemini_concurrency: int = 2
+    eval_strategy: str = "grouped"  # single | grouped | per_criterion
+
     database_url: str = f"sqlite:///{ROOT / 'data' / 'cqa.db'}"
 
 
