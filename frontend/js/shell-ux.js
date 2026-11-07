@@ -23,7 +23,13 @@ const modalOpen = () => !!document.querySelector('.cqa-modal, .cqa-tour');
 function commands() {
   const a = ctx.actions;
   const nav = Object.entries(GO).map(([k, [to, label]]) => ({ group: 'Перейти', label, hint: `G ${k.toUpperCase()}`, icon: '→', run: () => { location.hash = to; } }));
-  return [...nav,
+  // На карточке диалога — действия этого диалога (кнопки карточки, если они есть).
+  const here = [];
+  const cardBtn = (sel, label, icon, kw) => { const b = document.querySelector(sel); if (b) here.push({ group: 'Этот диалог', label, icon, kw, run: () => b.click() }); };
+  if (location.hash.startsWith('#/conversation/')) {
+    cardBtn('#cqa-card-coach', 'Отчёт оператору', '✎', 'coaching report отчет pdf');
+  }
+  return [...here, ...nav,
     { group: 'Действия', label: 'Оценить группу…', icon: '▶', run: a.runGroup, kw: 'run evaluate оценка прогон' },
     { group: 'Действия', label: 'Импорт набора…', icon: '⇩', run: a.importSet, kw: 'import загрузить api' },
     { group: 'Действия', label: 'Сменить тему (светлая / тёмная)', icon: '◐', hint: 'T', run: a.toggleTheme, kw: 'dark light theme' },
