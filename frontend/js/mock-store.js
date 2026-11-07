@@ -57,6 +57,15 @@ async function evalObj(id) {
 }
 export async function evaluation(id) { return clone(await evalObj(id)); }
 
+// Полоска критериев для списка — как _strip в backend/app/api/conversations.py.
+function strip(ev) {
+  return ev.criteria.map((c) => {
+    const a = c.final_answer, w = Number(c.scale_max ?? c.weight);
+    const pct = c.type === 'flag' || a == null || a === 'na' ? null : a === 'yes' ? 100 : a === 'no' ? 0 : w ? Math.round((100 * Number(a)) / w) : null;
+    return { key: c.key, answer: a, pct };
+  });
+}
+
 export async function conversations(params = {}) {
   const base = await rows();
   const out = [];
@@ -65,7 +74,7 @@ export async function conversations(params = {}) {
     if (r.latest && st.evals.has(r.latest.evaluation_id)) {
       const ev = st.evals.get(r.latest.evaluation_id);
       Object.assign(r.latest, { ai_total: ev.ai_score.total, final_total: ev.final_score.total, critical: !!ev.final_score.critical?.length,
-        open_appeals: ev.open_appeals, appeals: ev.criteria.reduce((s, c) => s + (c.appeal_history?.length || 0), 0) });
+        open_appeals: ev.open_appeals, appeals: ev.criteria.reduce((s, c) => s + (c.appeal_history?.length || 0), 0), criteria: strip(ev) });
     }
     out.push(r);
   }

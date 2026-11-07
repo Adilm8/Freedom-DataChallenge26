@@ -3,6 +3,7 @@ import { h, clear, emptyState } from './ui.js';
 import { getHealth, isMock, listGroups, listAppeals, getReviewQueue } from './api.js';
 import { openRunDialog } from './components/run-dialog.js';
 import { openImportDialog } from './components/import-dialog.js';
+import { initShellUx, openPalette } from './shell-ux.js';
 
 const appEl = document.getElementById('app');
 
@@ -68,10 +69,13 @@ function buildHeader() {
     h('input', { type: 'checkbox', checked: settings.demo, onchange: (e) => { settings.demo = e.target.checked; store.set('demo', settings.demo ? '1' : '0'); syncHeader(); } }), 'Демо');
   const themeBtn = h('button', { type: 'button', class: 'cqa-btn cqa-btn--ghost cqa-btn--sm cqa-themebtn', id: 'cqa-theme',
     onclick: () => { settings.theme = isDark() ? 'light' : 'dark'; store.set('theme', settings.theme); syncHeader(); } });
+  const searchBtn = h('button', { type: 'button', class: 'cqa-search-btn', title: 'Палитра команд: диалог, экран или действие', onclick: () => openPalette() },
+    h('span', { class: 'cqa-search-btn__ico', 'aria-hidden': 'true' }, '⌕'), h('span', { class: 'cqa-search-btn__text' }, 'Поиск'),
+    h('kbd', null, /Mac|iPhone|iPad/.test(navigator.platform || '') ? '⌘K' : 'Ctrl K'));
   healthEl = h('span', { class: 'cqa-health' }, h('span', { class: 'cqa-health__dot' }), h('span', { class: 'cqa-health__text' }, 'проверка…'));
   return h('header', { class: 'cqa-header' },
     h('a', { class: 'cqa-brand', href: '#/dashboard' }, h('span', { class: 'cqa-brand__mark' }, 'C'), 'CQA', h('small', null, '· Freedom Broker')),
-    nav, h('div', { class: 'cqa-header__tools' }, healthEl, groupSel, modeSeg, demo, themeBtn));
+    nav, h('div', { class: 'cqa-header__tools' }, searchBtn, healthEl, groupSel, modeSeg, demo, themeBtn));
 }
 
 // Иконки темы — inline SVG (юникод ☾/☀ в разных шрифтах обрезается и прыгает по базовой линии).
@@ -214,5 +218,19 @@ function init() {
   // Сохранённой группы может не быть в данных (другая БД, демо-режим): сначала сверяем список групп.
   loadGroups().finally(() => { route(); refreshCounts(); });
   checkHealth();
+  initShellUx({
+    appEl, getGroup: () => settings.group,
+    actions: {
+      toggleTheme: () => { settings.theme = isDark() ? 'light' : 'dark'; store.set('theme', settings.theme); syncHeader(); },
+      toggleDemo: () => { settings.demo = !settings.demo; store.set('demo', settings.demo ? '1' : '0'); const cb = appEl.querySelector('.cqa-toggle input'); if (cb) cb.checked = settings.demo; syncHeader(); },
+      setMode: (mode) => onAppEvent(new CustomEvent('cqa:mode', { detail: { mode } })),
+      runGroup: async () => {
+        const rows = await import('./api.js').then((m) => m.listConversations({ group_id: settings.group })).catch(() => null);
+        onAppEvent(new CustomEvent('cqa:run-request', { detail: { ids: [], group: settings.group, rows } }));
+      },
+      importSet: () => onAppEvent(new CustomEvent('cqa:import-request', { detail: { group: '' } })),
+      startTour: () => import('./tour.js').then((m) => m.startTour(appEl)),
+    },
+  });
 }
 init();
