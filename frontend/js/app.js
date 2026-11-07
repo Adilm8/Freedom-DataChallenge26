@@ -1,7 +1,8 @@
 // Оболочка: шапка, переключатели, hash-роутинг. Экраны монтируются как самостоятельные компоненты.
-import { h, clear, emptyState, toast } from './ui.js';
+import { h, clear, emptyState } from './ui.js';
 import { getHealth, isMock, listGroups, listAppeals, getReviewQueue } from './api.js';
 import { openRunDialog } from './components/run-dialog.js';
+import { openImportDialog } from './components/import-dialog.js';
 
 const appEl = document.getElementById('app');
 
@@ -39,6 +40,7 @@ const darkMq = window.matchMedia?.('(prefers-color-scheme: dark)');
 const isDark = () => settings.theme === 'dark' || (settings.theme === 'auto' && !!darkMq?.matches);
 
 let current = null; // { name, instance, el }
+let importDlg = null; // открытое окно импорта набора
 let healthEl, groupSel;
 
 function parseHash() {
@@ -155,9 +157,23 @@ function onAppEvent(e) {
     // По завершении прогона обновляем тот экран, который открыт в этот момент (карточка или список).
     openRunDialog(appEl, { group: settings.group, ...e.detail,
       onFinished: () => { current?.el?.dispatchEvent(new CustomEvent('cqa:refresh')); refreshCounts(); } });
-  } else if (e.type === 'cqa:import-request') toast(appEl, 'Импорт набора появится вместе с бэкендом.');
-  else if (e.type === 'cqa:counts-changed') refreshCounts();
-  else if (e.type === 'cqa:groups-changed') loadGroups(e.detail?.select).then(refreshCounts); // без перехода: экран остаётся
+  } else if (e.type === 'cqa:import-request') {
+    // Импорт набора: новая группа сразу появляется в селекторе; экран той же группы перечитывается. Окно одно.
+    if (importDlg?.isOpen()) return;
+    importDlg = openImportDialog(appEl, { group: e.detail?.group || '',
+      onImported: (res) => {
+        loadGroups().then(refreshCounts);
+        if (res.group_id === (parseHash().q.group || settings.group)) current?.el?.dispatchEvent(new CustomEvent('cqa:refresh'));
+      } });
+  } else if (e.type === 'cqa:counts-changed') refreshCounts();
+  else if (e.type === 'cqa:groups-changed') {
+    // select — сделать группу текущей; to — после этого открыть экран (без to экран остаётся).
+    const to = e.detail?.to;
+    loadGroups(e.detail?.select).then(() => {
+      refreshCounts();
+      if (to) { if (location.hash === to) route(); else location.hash = to; }
+    });
+  }
   else if (e.type === 'cqa:mode' && e.detail?.mode) { settings.mode = e.detail.mode; store.set('mode', settings.mode); syncHeader(); route(); }
 }
 

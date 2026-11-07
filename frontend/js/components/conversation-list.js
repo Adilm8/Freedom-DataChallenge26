@@ -1,4 +1,4 @@
-// Таблица диалогов: фильтры, сортировка по итогу, выбор строк и запуск оценки, экспорт (FR-EXP-01), новый диалог.
+// Таблица диалогов: фильтры, сортировка по итогу, выбор строк и запуск оценки, экспорт (FR-EXP-01), импорт набора, новый диалог.
 // Параметры: group, appeal ('open' | 'any' | 'none' — фильтр апелляций по последней оценке).
 import { h, clear, emit, channelBadge, langChip, score, skeletonRows, errorState, emptyState, toast } from '../ui.js';
 import { listConversations, downloadExport } from '../api.js';
@@ -52,7 +52,7 @@ export function mount(el, params = {}) {
     const list = visible();
     clear(body);
     if (!rows.length) {
-      body.append(emptyState({ title: 'В этой группе пока нет диалогов', text: 'Импортируйте набор диалогов организаторов, чтобы начать оценку.', actionLabel: 'Импорт набора', onAction: () => emit(root, 'cqa:import-request', {}), icon: '⇩' }));
+      body.append(emptyState({ title: 'В этой группе пока нет диалогов', text: 'Импортируйте набор диалогов организаторов (по group_id из API или из JSON-файла), чтобы начать оценку.', actionLabel: 'Импорт набора', onAction: () => emit(root, 'cqa:import-request', { group: p.group }), icon: '⇩' }));
       return;
     }
     const toolbar = h('div', { class: 'cqa-toolbar' },
@@ -197,6 +197,8 @@ export function mount(el, params = {}) {
     h('div', { class: 'cqa-pagehead' },
       h('div', null, h('h1', { class: 'cqa-h1' }, 'Диалоги'), h('div', { class: 'cqa-pagehead__sub' }, `Группа ${p.group || 'DEV'}: оценки AI, финальные итоги и метки для проверки`)),
       h('div', { class: 'cqa-pagehead__actions cqa-list__actions' }, exportBar(),
+        h('button', { type: 'button', class: 'cqa-btn', id: 'cqa-list-import', title: 'Набор диалогов по group_id из API организаторов или из JSON-файла',
+          onclick: () => emit(root, 'cqa:import-request', {}) }, 'Импорт набора'),
         h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-list-new', title: 'Вставить переписку и оценить её сразу', onclick: () => emit(root, 'cqa:navigate', { to: '#/new' }) }, '+ Новый диалог'))),
     h('div', { class: 'cqa-panel' }, body));
   load();
