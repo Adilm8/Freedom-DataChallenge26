@@ -20,6 +20,7 @@
 | Точные схемы, API, сигнатуры | [`CONTRACTS.md`](CONTRACTS.md) | только с записью в журнал версий |
 | Почему решили именно так | [`DECISIONS.md`](DECISIONS.md) → [`decisions/`](decisions/) | при каждом решении |
 | План по часам, вехи, что режем | [`PLAN.md`](PLAN.md) | каждые 2–3 часа |
+| Задачи для Antigravity (вставить целиком) | [`briefs/`](briefs/README.md) | по мере появления задач |
 | Что сделано, что сломано | [`PROGRESS.md`](PROGRESS.md) | после каждого шага |
 | Факты и уроки на будущее | [`MEMORY.md`](MEMORY.md) | по мере появления |
 | Как коммитим, ветки, PR | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) | редко |

@@ -24,8 +24,9 @@
 |---|---|---|
 | Бэкенд | `backend-dev` по брифу от Claude | `db.py`, `models.py`, `ingest` + `normalize` (тесты), `POST /datasets/import|upload`, `GET /conversations*`, `data/checklists/default.json` + seed, `GET/POST /checklists` с валидацией |
 | Ядро | Claude сам | `scoring.py` + тесты построчно по чек-листу; `providers/` (OpenRouter, Gemini, запрет звонков в Gemini free, цена) |
-| Оценка | `llm-eval-engineer` | `facts/` + `lexicons.json` + тесты; шаблоны промптов; черновик gold на 24 диалога (Claude в сессии, без API) |
+| Оценка | `llm-eval-engineer` | `facts/` + тесты (словари — из AG-01); шаблоны промптов; черновик gold на 24 диалога (Claude в сессии, без API) |
 | Фронт | `frontend-dev` | оболочка, роутер, `api.js` с `?mock=1`, фикстуры по контракту, список, каркас карточки (транскрипт + панель результата) |
+| Antigravity | Лида запускает брифы | AG-01 словари фраз, AG-03 синтетические диалоги, AG-04 справка для 04 (`docs/briefs/`) |
 | Лида | — | ответы на открытые вопросы, ключи, выбор и проверка набора gold (с ~12:30) |
 
 ### Ф2 · Оценщик и eval (13:00–16:30)
@@ -33,7 +34,8 @@
 |---|---|---|
 | Оценка | `llm-eval-engineer` + Claude | `prompt_builder`, `judge`, `validator`, `evaluator` (стратегии), `POST /runs`, `GET /runs/{id}`, `GET /evaluations/{id}`; `eval/run_eval.py`; смоук и bake-off после согласия Лиды на модели и расход |
 | Фронт | `frontend-dev` | клик по доказательству → реплика, `checked_range`, окно запуска и прогресс, экран gold-разметки ([Q-12](spec/open-questions.md)) |
-| Лида | — | проверка 24 gold (≈ 1.5–2 ч), отметки `uncertain` |
+| Antigravity | Лида запускает бриф | AG-02 вторая независимая разметка тех же чатов; Claude сравнивает с черновиком |
+| Лида | — | проверка 24 gold (≈ 1.5–2 ч, при второй разметке — в основном расхождения), отметки `uncertain` |
 
 ### Ф3 · Интерфейс целиком (16:30–20:00)
 | Трек | Кто | Задачи |
