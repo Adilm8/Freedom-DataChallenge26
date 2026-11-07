@@ -13,6 +13,7 @@ import { createWave, loadPeaks } from './waveform.js';
 const RATES = [1, 1.25, 1.5, 2];
 const SEG_LABEL = { hold: 'Удержание', consult: 'Консультация с коллегой', recording_paused: 'Пауза записи' };
 const FIX_LIMIT = 3600;
+const SKIP = 3; // кнопки «−3 / +3»: время в расшифровке звонка бывает неточным на пару секунд
 const SPEAKERS = new Set(['client', 'operator', 'bot']);
 const OWN_MAX = 90; // дольше реплика на волне не тянется: дальше, скорее всего, удержание или тишина
 const OWN_TAIL = 6;
@@ -121,6 +122,9 @@ export function mount(el, params = {}) {
     for (const [ev, fn] of Object.entries(mediaHandlers)) audio.addEventListener(ev, fn);
 
     ui.play = h('button', { type: 'button', class: 'cqa-ap__play', 'aria-label': 'Воспроизвести', onclick: toggle }, icon('play'));
+    const skip = (d) => h('button', { type: 'button', class: 'cqa-ap__skip', title: `${d < 0 ? 'Назад' : 'Вперёд'} на ${SKIP} с`,
+      'aria-label': `${d < 0 ? 'Назад' : 'Вперёд'} на ${SKIP} секунды`, onclick: () => seekTo(pos() + d) }, `${d < 0 ? '−' : '+'}${SKIP}`);
+    ui.skips = [skip(-SKIP), skip(SKIP)];
     ui.now = h('span', { class: 'cqa-ap__now' });
     ui.time = h('span', { class: 'cqa-ap__time' });
     ui.fixChip = h('button', { type: 'button', class: 'cqa-chip cqa-ap__fixchip cqa-tip', 'data-tip': 'Ручная поправка смещения: все реплики сдвинуты на это время. Нажмите, чтобы сбросить', onclick: () => setFix(0) });
@@ -161,7 +165,7 @@ export function mount(el, params = {}) {
     ui.hover = h('div', { class: 'cqa-ap__hover', hidden: true });
     ui.waveBox = h('div', { class: 'cqa-ap__wave', title: 'Волна записи: нажмите или протяните, чтобы перемотать' }, ui.hover);
     ui.main = h('div', { class: 'cqa-ap__main' },
-        ui.play,
+        h('div', { class: 'cqa-ap__ctrl' }, ui.skips[0], ui.play, ui.skips[1]),
         h('div', { class: 'cqa-ap__mid' },
           h('div', { class: 'cqa-ap__top' },
             h('span', { class: 'cqa-ap__title' }, 'Запись звонка'), ui.now, ui.fixChip, ui.time),
@@ -298,6 +302,7 @@ export function mount(el, params = {}) {
     if (ui.err) ui.err.hidden = s !== 'error';
     const off = s === 'error';
     if (ui.play) ui.play.disabled = off;
+    ui.skips?.forEach((b) => { b.disabled = off; });
     ui.rates?.querySelectorAll('button').forEach((b) => { b.disabled = off; });
     if (ui.track) ui.track.setAttribute('aria-disabled', String(off));
     if (ui.anchor) ui.anchor.disabled = off || !selected || s !== 'ready';
