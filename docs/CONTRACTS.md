@@ -163,7 +163,6 @@
 | `POST /runs` | `{conversation_ids? \| group_id, checklist_version_id?, provider?, model?, strategy?, reuse?: "auto" \| "none"}` | `{run_id}` (202); `reuse: auto` — инкрементальная переоценка (FR-CHK-10), «Оценить повторно» = те же параметры и `reuse: none` |
 | `POST /runs/estimate` | то же тело, что у `POST /runs` | `{dialogs, dialogs_with_calls, calls, tokens_in, tokens_out, cost_usd \| null, seconds, cost_source: history \| pricing \| unknown}`; LLM не вызывается (FR-UX-03) |
 | `GET /meta/facts` | — | `{labels: {имя факта: подпись}}` |
-| `POST /runs/estimate` | то же, что `POST /runs` | `{calls, tokens_in, tokens_out, cost_usd, seconds}` (FR-UX-03) |
 | `GET /runs/{run_id}` | — | `{status, total, done, failed, cost_usd, started_at, finished_at}` |
 | `GET /evaluations/{id}` | — | `Evaluation` |
 | `GET /evaluations/{id}/calls` | — | `[LLMCall]` с сырыми ответами |
