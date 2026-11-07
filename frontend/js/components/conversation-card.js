@@ -2,11 +2,13 @@
 // Параметры: id (суррогатный id диалога), eval (id оценки; без него — последняя), group, mode.
 // Наружу: cqa:navigate {to}, cqa:location {to} (сменить адрес без перехода), cqa:run-request {ids, label, channel, preset, ...}.
 // Внутрь: cqa:refresh на el — перечитать диалог и показать последнюю оценку (после прогона).
+// Звонок: плеер над транскриптом; клик по реплике или доказательству переводит запись на секунду реплики (с поправкой).
 import { h, clear, emit, channelBadge, langChip, score, fmtScore, fmtDate, skeletonRows, errorState } from '../ui.js';
 import { getConversation, getEvaluation, listConversations } from '../api.js';
 import { mount as mountTranscript } from './transcript-view.js';
 import { mount as mountResult } from './result-panel.js';
 import { mount as mountFacts } from './facts-panel.js';
+import { mount as mountPlayer } from './audio-player.js';
 
 export function mount(el, params = {}) {
   let p = { ...params };
@@ -14,7 +16,7 @@ export function mount(el, params = {}) {
   el.append(root);
   let kids = [];
   let token = 0;
-  let trEl = null, resEl = null;
+  let trEl = null, resEl = null, playerEl = null;
   let conv = null, ev = null;
 
   function evidenceMap(e) {
@@ -71,7 +73,7 @@ export function mount(el, params = {}) {
     const next = idx >= 0 && idx < rows.length - 1 ? rows[idx + 1] : null;
     const go = (to) => emit(root, 'cqa:navigate', { to });
     const isCall = conv.channel === 'voice call';
-    const duration = Math.round(Math.max(0, ...conv.messages.map((m) => m.t_sec || 0)));
+    const withAudio = isCall && (conv.has_audio ?? !!conv.audio_url) === true;
     const newest = conv.evaluations?.[0]?.id;
     const old = ev && newest && ev.id !== newest;
 
@@ -96,37 +98,53 @@ export function mount(el, params = {}) {
     const right = h('div', { class: 'cqa-card__col', id: 'cqa-col-right' });
     root.append(h('div', { class: 'cqa-card__cols' }, left, right));
 
+    // У звонка плеер стоит над прокручиваемой частью колонки и не уезжает при прокрутке транскрипта.
+    let scrollEl = left;
+    playerEl = null;
     if (isCall) {
-      left.append(h('div', { class: 'cqa-player', id: 'cqa-player-slot' },
-        h('div', { class: 'cqa-player__icon' }, '▶'),
-        h('div', { style: 'flex:1;min-width:0' },
-          h('div', { style: 'font-weight:600;font-size:var(--cqa-text-sm)' }, 'Запись звонка'),
-          h('div', { class: 'cqa-faint', style: 'font-size:var(--cqa-text-xs)' }, conv.has_audio || conv.audio_url ? 'Плеер подключим на следующем шаге' : 'Запись недоступна: ссылки на аудио нет'),
-          h('div', { class: 'cqa-player__bar', style: 'margin-top:6px' })),
-        duration ? h('span', { class: 'cqa-chip' }, `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`) : null));
+      playerEl = h('div', { class: 'cqa-card__player', id: 'cqa-player-slot' });
+      scrollEl = h('div', { class: 'cqa-card__scroll' });
+      left.classList.add('cqa-card__col--call');
+      left.append(playerEl, scrollEl);
     }
     const factsEl = h('div');
     trEl = h('div');
     resEl = h('div');
-    left.append(factsEl, h('div', { class: 'cqa-panel' },
+    scrollEl.append(factsEl, h('div', { class: 'cqa-panel' },
       h('div', { class: 'cqa-panel__head cqa-trhead' }, h('h3', { class: 'cqa-h3' }, 'Транскрипт'),
         h('span', { class: 'cqa-faint cqa-trhead__n' }, `${conv.messages.length} реплик`),
-        isCall ? h('span', { class: 'cqa-faint cqa-trhead__hint' }, 'расшифровка устной речи') : null),
+        isCall ? h('span', { class: 'cqa-faint cqa-trhead__hint' }, withAudio ? 'расшифровка устной речи · клик по реплике — слушать' : 'расшифровка устной речи') : null),
       trEl));
     right.append(resEl);
 
     const fx = ev ? mountFacts(factsEl, { facts: ev.facts }) : null;
-    const tr = mountTranscript(trEl, { messages: conv.messages, evidence: evidenceMap(ev) });
+    const tr = mountTranscript(trEl, { messages: conv.messages, evidence: evidenceMap(ev),
+      audio: isCall ? (withAudio ? 'seek' : 'times') : undefined, segments: conv.segments });
     const rs = mountResult(resEl, { evaluation: ev, mode: p.mode, conversationId: conv.id });
-    kids = [tr, rs, fx].filter(Boolean);
+    const pl = playerEl ? mountPlayer(playerEl, { conversation: conv, evidence: evidenceMap(ev) }) : null;
+    kids = [tr, rs, fx, pl].filter(Boolean);
   }
 
   // Результат и факты -> транскрипт, транскрипт -> результат. Слушатели вешаются один раз.
+  const toPlayer = (detail) => playerEl?.dispatchEvent(new CustomEvent('cqa:seek', { detail }));
   root.addEventListener('cqa:evidence-click', (e) => {
     if (!trEl || trEl.contains(e.target)) return;
     const d = e.detail || {};
     trEl.dispatchEvent(new CustomEvent('cqa:highlight', { detail: { ...d, msg_ids: d.msg_ids || (d.msg_id ? [d.msg_id] : []) } }));
+    // Доказательство звонка: запись встаёт на эту реплику (не запускаем звук сами — если уже играет, продолжит отсюда).
+    const id = d.msg_id || d.msg_ids?.[0] || d.from;
+    if (id && playerEl && !playerEl.contains(e.target)) toPlayer({ msg_id: id, play: false });
   });
+  // Транскрипт звонка -> плеер: клик по реплике — слушать с неё; плеер -> транскрипт: звучащая реплика и поправка.
+  root.addEventListener('cqa:msg-click', (e) => toPlayer({ msg_id: e.detail?.msg_id, play: true }));
+  root.addEventListener('cqa:audio-time', (e) => {
+    const d = e.detail || {};
+    trEl?.dispatchEvent(new CustomEvent('cqa:playing', { detail: { msg_id: d.msg_id, scroll: d.playing && d.follow } }));
+  });
+  root.addEventListener('cqa:audio-fix', (e) => trEl?.dispatchEvent(new CustomEvent('cqa:audio-fix', { detail: e.detail })));
+  // Переход к секунде или реплике записи извне (хост web resource, будущий таймлайн): {msg_id | sec, play}.
+  const onSeek = (e) => { if (playerEl && !playerEl.contains(e.target)) toPlayer(e.detail); };
+  el.addEventListener('cqa:seek', onSeek);
   root.addEventListener('cqa:criterion-click', (e) => {
     resEl?.dispatchEvent(new CustomEvent('cqa:focus-criterion', { detail: e.detail }));
   });
@@ -150,6 +168,6 @@ export function mount(el, params = {}) {
       p = { ...p, ...np };
       if (changed) load();
     },
-    unmount() { token++; el.removeEventListener('cqa:refresh', onRefresh); kids.forEach((k) => k.unmount()); root.remove(); },
+    unmount() { token++; el.removeEventListener('cqa:refresh', onRefresh); el.removeEventListener('cqa:seek', onSeek); kids.forEach((k) => k.unmount()); root.remove(); },
   };
 }

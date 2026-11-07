@@ -74,6 +74,34 @@ export async function getConversation(id) {
   return http(`/conversations/${encodeURIComponent(id)}`);
 }
 
+// ---------- Запись звонка ----------
+/** Источник для <audio>: {url, mock, revoke()} или null. Запись идёт через прокси бэкенда (`conv.audio_url`
+ *  = `/api/conversations/{id}/audio`), подписанная ссылка в браузер не попадает. В mock-режиме — синтетический WAV в памяти. */
+export async function audioSource(conv) {
+  if (isMock()) {
+    const { makeMockWav } = await import('./mock-audio.js');
+    const url = URL.createObjectURL(makeMockWav(conv.messages || []));
+    return { url, mock: true, revoke: () => URL.revokeObjectURL(url) };
+  }
+  if (!conv.audio_url) return null;
+  const url = new URL(apiBase() + conv.audio_url.replace(/^\/api(?=\/)/, ''), window.location.href).href;
+  return { url, mock: false, revoke() {} };
+}
+
+/** Причина, по которой <audio> не открыл запись: {ok, status, message}. Запрашивает первый байт через прокси. */
+export async function probeAudio(url) {
+  let res;
+  try { res = await fetch(url, { headers: { Range: 'bytes=0-0' } }); }
+  catch { return { ok: false, status: 0, message: 'нет связи с сервером' }; }
+  if (res.ok) {
+    try { await res.body?.cancel(); } catch { /* уже закрыт */ }
+    return { ok: true, status: res.status, message: '' };
+  }
+  let detail = '';
+  try { detail = (await res.json()).detail || ''; } catch { /* тело не JSON */ }
+  return { ok: false, status: res.status, message: `${detail || (res.status === 404 ? 'запись не найдена' : 'ошибка сервера')} (${res.status})` };
+}
+
 export async function getEvaluation(id) {
   if (isMock()) return fixture(`evaluation-${id}`);
   return http(`/evaluations/${encodeURIComponent(id)}`);
