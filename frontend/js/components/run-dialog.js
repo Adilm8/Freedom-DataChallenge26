@@ -1,10 +1,11 @@
-// Запуск оценки и прогресс прогона (FR-EVAL-01, 08; FR-CHK-10, FR-EVAL-20).
+// Запуск оценки и прогресс прогона (FR-EVAL-01, 08; FR-CHK-04, 06, 10; FR-EVAL-20; FR-UX-03).
 // openRunDialog(host, opts) — модальное окно поверх host (корень .cqa-root); mount(el, params) — то же внутри el
 // (отдельная страница / web resource). opts: {ids: [pk], group, rows?: [ConversationRow], channel?, label?,
-// preset?: {provider, model, strategy, reuse}, title?, onFinished?(run)}.
-// Модель и провайдер — из GET /meta/models; запуск — POST /runs; прогресс — GET /runs/{id} раз в секунду.
+// preset?: {provider, model, strategy, reuse}, checklistVersionId?, title?, intro?, onFinished?(run)}.
+// Модель и провайдер — из GET /meta/models; версии чек-листа — GET /checklists (по умолчанию активная);
+// оценка стоимости — POST /runs/estimate (без LLM); запуск — POST /runs; прогресс — GET /runs/{id} раз в секунду.
 import { h, clear, fmtMoney, toast, skeletonRows, errorState } from '../ui.js';
-import { getMetaModels, createRun, getRun } from '../api.js';
+import { getMetaModels, listChecklists, estimateRun, createRun, getRun } from '../api.js';
 
 const PROVIDER = { openrouter: 'OpenRouter', gemini: 'Gemini', ollama: 'Ollama (локально)', mock: 'Демо' };
 const STRATEGY = {
@@ -18,6 +19,16 @@ const STATUS = {
 };
 const FINAL = new Set(['done', 'partial', 'failed']);
 const POLL_MS = 1000;
+const ESTIMATE_DEBOUNCE_MS = 350;
+const COST_SOURCE = {
+  history: 'по средней цене прошлых вызовов этой модели',
+  pricing: 'по прайсу провайдера',
+  unknown: 'цены модели нет ни в истории, ни в прайсе',
+};
+const approxMoney = (v) => (v == null ? 'цена неизвестна' : v === 0 ? '$0' : `≈ $${v >= 0.01 ? v.toFixed(2) : v.toFixed(4)}`);
+const approxTime = (s) => (s < 60 ? `≈ ${Math.max(1, Math.round(s))} с` : `≈ ${Math.round(s / 60)} мин`);
+const kTokens = (n) => (n >= 1000 ? `${Math.round(n / 1000)}k` : String(n));
+export const versionLabel = (v) => `v${v.version} · ${v.name || v.key}${v.is_active ? ' · активная' : ''}`;
 
 export function plural(n, one, few, many) {
   const a = Math.abs(n) % 100, b = a % 10;
@@ -25,6 +36,7 @@ export function plural(n, one, few, many) {
 }
 const nDialogs = (n) => `${n} ${plural(n, 'диалог', 'диалога', 'диалогов')}`;
 const nCalls = (n) => `${n} ${plural(n, 'звонок', 'звонка', 'звонков')}`;
+const nLLM = (n) => `${n} ${plural(n, 'вызов', 'вызова', 'вызовов')}`;
 const clock = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
 /** Рисует форму запуска и прогресс внутри box. Возвращает {destroy, minimize?}. */
@@ -35,8 +47,10 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
     scope: ids.length ? 'selected' : 'group',
     provider: null, model: '', strategy: opts.preset?.strategy || null,
     reuse: opts.preset?.reuse === 'auto', meta: null, error: null, busy: false,
+    versions: null, version: opts.checklistVersionId != null ? Number(opts.checklistVersionId) : null,
+    est: { sig: null, data: null, error: null, loading: false },
   };
-  let pollTimer = null, alive = true, run = null, runStarted = 0, fails = 0, finishedFired = false;
+  let pollTimer = null, estTimer = null, estSeq = 0, alive = true, run = null, runStarted = 0, fails = 0, finishedFired = false;
 
   const scopeRows = () => {
     if (!rows) return null;
@@ -53,8 +67,11 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
   async function loadMeta() {
     clear(box).append(skeletonRows(5));
     try {
-      st.meta = await getMetaModels();
+      const [meta, versions] = await Promise.all([getMetaModels(), listChecklists().catch(() => null)]);
+      st.meta = meta;
       if (!alive) return;
+      st.versions = versions;
+      if (versions?.length && !versions.some((v) => v.id === st.version)) st.version = (versions.find((v) => v.is_active) || versions[0]).id;
       const usable = st.meta.models.filter((m) => m.model);
       const pre = opts.preset?.provider && modelInfo(opts.preset.provider)?.model ? opts.preset.provider : null;
       const def = modelInfo(st.meta.default_provider)?.model ? st.meta.default_provider : usable[0]?.provider;
@@ -103,7 +120,7 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
     meta.models.map((m) => h('option', { value: m.provider, selected: m.provider === st.provider, disabled: !m.model },
       `${PROVIDER[m.provider] || m.provider}${m.paid ? ' · платный' : m.paid === false ? ' · бесплатный' : ''}${m.model ? '' : ' · модель не задана'}`)));
     const modelIn = h('input', { class: 'cqa-input cqa-mono', id: 'cqa-run-model', 'aria-label': 'Модель', value: st.model, spellcheck: 'false', autocomplete: 'off',
-      placeholder: 'например, anthropic/claude-sonnet-4.5', oninput: (e) => { st.model = e.target.value.trim(); syncSubmit(); } });
+      placeholder: 'например, anthropic/claude-sonnet-4.5', oninput: (e) => { st.model = e.target.value.trim(); syncSubmit(); scheduleEstimate(!st.model || allVoiceBlocked); } });
     const conf = info?.model;
     const pre = opts.preset;
     const modelHint = [
@@ -121,11 +138,20 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
       h('input', { type: 'checkbox', id: 'cqa-run-reuse', checked: st.reuse, onchange: (e) => { st.reuse = e.target.checked; renderForm(); } }),
       h('span', null, h('b', null, 'Использовать прошлые ответы'),
         h('span', { class: 'cqa-field__hint' }, st.reuse
-          ? 'Критерии, которые не менялись, возьмём из прошлой оценки той же модели и версии промпта (подпись «ответ из оценки #N»). Остальные оценим заново.'
+          ? 'Вызовы только по изменённым критериям: ответы по остальным возьмём из прошлой оценки той же модели и версии промпта (подпись «ответ из оценки #N»). Смена весов — без вызовов модели.'
           : 'Выключено: все критерии оцениваются заново (как «Оценить повторно»).')));
 
+    const vers = st.versions || [];
+    const curVer = vers.find((v) => v.id === st.version);
+    const versionField = vers.length
+      ? field('Версия чек-листа', h('select', { class: 'cqa-select', id: 'cqa-run-version', 'aria-label': 'Версия чек-листа',
+        onchange: (e) => { st.version = Number(e.target.value); renderForm(); } },
+      vers.map((v) => h('option', { value: v.id, selected: v.id === st.version }, `${versionLabel(v)}${v.note ? ` — ${v.note}` : ''}`))),
+      curVer && !curVer.is_active ? 'Версия не активная: оценки сохранятся с ней, а файл сдачи и дашборд по умолчанию берут активную.' : 'По умолчанию — активная версия.')
+      : null;
+
     const warns = [];
-    if (info?.paid) warns.push(h('div', { class: 'cqa-banner cqa-banner--warn' }, h('span', { class: 'cqa-banner__icon' }, '$'),
+    if (info?.paid) warns.push(h('div', { class: 'cqa-banner cqa-banner--warn cqa-run-paid', hidden: st.est.data?.calls === 0 }, h('span', { class: 'cqa-banner__icon' }, '$'),
       h('div', null, h('div', { class: 'cqa-banner__title' }, 'Платный провайдер'), `Вызовы спишут средства с баланса ${PROVIDER[st.provider] || st.provider}. Стоимость каждого вызова сохраняется и видна в прогрессе.`)));
     if (voiceBlocked) warns.push(h('div', { class: `cqa-banner ${allVoiceBlocked ? 'cqa-banner--flag' : 'cqa-banner--warn'}` }, h('span', { class: 'cqa-banner__icon' }, '!'),
       h('div', null, h('div', { class: 'cqa-banner__title' }, `${PROVIDER[st.provider] || st.provider} не принимает звонки`),
@@ -149,24 +175,86 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
       h('div', { class: 'cqa-field-row' },
         field('Провайдер', provSel),
         field('Модель', modelIn, modelHint.length ? h('span', { class: 'cqa-field__hints' }, modelHint) : null)),
+      versionField,
       field('Стратегия', strat, STRATEGY[st.strategy]?.[1]),
       reuse,
+      h('div', { class: 'cqa-runest', id: 'cqa-run-estimate', 'aria-live': 'polite' }),
       warns,
       h('div', { class: 'cqa-modal__foot' },
         inline ? null : h('button', { type: 'button', class: 'cqa-btn', onclick: onClose }, 'Отмена'),
         submit));
-    box.append(head(), form);
+    box.append(...[head(), opts.intro ? h('div', { class: 'cqa-banner cqa-banner--info cqa-runintro' }, h('span', { class: 'cqa-banner__icon' }, 'i'), h('div', null, opts.intro)) : null, form].filter(Boolean));
     if (!inline) provSel.focus({ preventScroll: true });
+    scheduleEstimate(!st.model || allVoiceBlocked);
+  }
+
+  function runBody() {
+    const body = { provider: st.provider, model: st.model, strategy: st.strategy, reuse: st.reuse ? 'auto' : 'none' };
+    if (st.version != null) body.checklist_version_id = st.version;
+    if (st.scope === 'group') body.group_id = opts.group; else body.conversation_ids = ids;
+    return body;
+  }
+
+  // Оценка стоимости до запуска: пересчитывается при смене версии, стратегии, reuse, модели или области (с задержкой).
+  function scheduleEstimate(skip) {
+    const body = runBody();
+    const sig = JSON.stringify(body);
+    if (skip) { st.est = { sig: null, data: null, error: null, loading: false }; clearTimeout(estTimer); paintEstimate(); return; }
+    if (sig === st.est.sig && (st.est.data || st.est.error || st.est.loading)) { paintEstimate(); return; }
+    st.est = { sig, data: null, error: null, loading: true };
+    paintEstimate();
+    clearTimeout(estTimer);
+    const my = ++estSeq;
+    estTimer = setTimeout(async () => {
+      try {
+        const data = await estimateRun(body);
+        if (alive && my === estSeq) st.est = { sig, data, error: null, loading: false };
+      } catch (e) {
+        if (alive && my === estSeq) st.est = { sig, data: null, error: e, loading: false };
+      }
+      if (alive && my === estSeq && !run) paintEstimate();
+    }, ESTIMATE_DEBOUNCE_MS);
+  }
+
+  function paintEstimate() {
+    const el = box.querySelector('#cqa-run-estimate');
+    if (!el) return;
+    const { data, error, loading } = st.est;
+    clear(el);
+    el.className = 'cqa-runest';
+    el.hidden = false;
+    // без вызовов модели предупреждение о платном провайдере не нужно
+    const paid = box.querySelector('.cqa-run-paid');
+    if (paid) paid.hidden = !!data && !data.calls;
+    if (loading) { el.classList.add('cqa-runest--loading'); el.append(h('span', { class: 'cqa-runest__icon' }, '≈'), h('span', null, 'Считаем стоимость и время…')); return; }
+    if (error) { el.classList.add('cqa-runest--muted'); el.append(h('span', { class: 'cqa-runest__icon' }, '?'), h('span', null, `Оценка стоимости недоступна. ${error.message || ''}`)); return; }
+    if (!data) { el.hidden = true; return; }
+    if (!data.calls) {
+      el.classList.add('cqa-runest--free');
+      el.append(h('span', { class: 'cqa-runest__icon' }, '✓'),
+        h('span', null, h('b', null, 'Без вызовов модели, только пересчёт баллов'),
+          h('span', { class: 'cqa-runest__sub' }, `${nDialogs(data.dialogs)}: ответы по всем критериям уже есть в прошлых оценках.`)));
+      return;
+    }
+    const partial = data.dialogs_with_calls < data.dialogs;
+    el.append(h('span', { class: 'cqa-runest__icon' }, '≈'),
+      h('span', null,
+        h('b', { class: 'cqa-runest__main', title: COST_SOURCE[data.cost_source] || '' },
+          `${approxMoney(data.cost_usd)} · ${approxTime(data.seconds || 0)} · ${nLLM(data.calls)}`),
+        h('span', { class: 'cqa-runest__sub' },
+          `${partial ? `вызовы нужны в ${data.dialogs_with_calls} из ${nDialogs(data.dialogs)}` : nDialogs(data.dialogs)} · ≈ ${kTokens(data.tokens_in)} вх. / ${kTokens(data.tokens_out)} вых. токенов`,
+          data.cost_usd == null ? ' · цены модели нет в истории и прайсе' : data.cost_source === 'history' ? ' · по прошлым вызовам' : data.cost_source === 'pricing' ? ' · по прайсу' : '')));
   }
 
   async function start() {
     st.busy = true; st.error = null; renderForm();
-    const body = { provider: st.provider, model: st.model, strategy: st.strategy, reuse: st.reuse ? 'auto' : 'none' };
-    if (st.scope === 'group') body.group_id = opts.group; else body.conversation_ids = ids;
+    const body = runBody();
+    clearTimeout(estTimer);
     try {
       const { run_id } = await createRun(body);
       if (!alive) return;
-      run = { run_id, status: 'queued', total: scopeCount() || 0, done: 0, failed: 0, cost_usd: 0, provider: body.provider, model: body.model, strategy: body.strategy };
+      run = { run_id, status: 'queued', total: scopeCount() || 0, done: 0, failed: 0, cost_usd: 0, provider: body.provider, model: body.model, strategy: body.strategy,
+        checklist_version_id: body.checklist_version_id ?? null };
       runStarted = Date.now();
       renderProgress();
       poll();
@@ -223,7 +311,7 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
           stat('Оценено', `${run.done} из ${total}`),
           stat('С ошибкой', String(run.failed), run.failed ? 'cqa-run__stat--bad' : ''),
           stat('Стоимость', fmtMoney(run.cost_usd)),
-          stat('Модель', `${PROVIDER[run.provider] || run.provider || '—'} · ${run.model || '—'}`, 'cqa-run__stat--wide')),
+          stat('Модель', `${PROVIDER[run.provider] || run.provider || '—'} · ${run.model || '—'}${verText(run.checklist_version_id)}`, 'cqa-run__stat--wide')),
         run.pollStopped
           ? h('div', { class: 'cqa-banner cqa-banner--flag', role: 'alert' }, h('span', { class: 'cqa-banner__icon' }, '!'),
             h('div', null, h('div', { class: 'cqa-banner__title' }, 'Нет ответа о прогрессе'), run.pollError?.message || '', ' Прогон на сервере продолжается.',
@@ -239,7 +327,12 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
         fin ? null : h('span', { class: 'cqa-faint cqa-run__note' }, 'Окно можно свернуть: прогон идёт на сервере.'),
         !fin && !inline ? h('button', { type: 'button', class: 'cqa-btn', onclick: onMinimize }, 'Свернуть') : null,
         fin && !inline ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-run-close', onclick: onClose }, 'Закрыть') : null,
-        fin && inline ? h('button', { type: 'button', class: 'cqa-btn', onclick: () => { run = null; finishedFired = false; st.busy = false; renderForm(); } }, 'Новый запуск') : null));
+        fin && inline ? h('button', { type: 'button', class: 'cqa-btn', onclick: () => { run = null; finishedFired = false; st.busy = false; st.est = { sig: null, data: null, error: null, loading: false }; renderForm(); } }, 'Новый запуск') : null));
+  }
+
+  function verText(id) {
+    const v = id != null && (st.versions || []).find((x) => x.id === Number(id));
+    return v ? ` · чек-лист v${v.version}` : '';
   }
 
   function stat(label, value, cls = '') {
@@ -250,7 +343,7 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
   return {
     running: () => !!run && !FINAL.has(run.status),
     state: () => run,
-    destroy() { alive = false; clearTimeout(pollTimer); },
+    destroy() { alive = false; clearTimeout(pollTimer); clearTimeout(estTimer); },
   };
 }
 
@@ -304,6 +397,6 @@ export function mount(el, params = {}) {
   const ids = Array.isArray(params.ids) ? params.ids : String(params.ids || '').split(',').filter(Boolean);
   const box = h('div', { class: 'cqa-panel cqa-modal__box cqa-modal__box--inline' });
   el.append(box);
-  const panel = runPanel(box, { ...params, ids, group: params.group || 'DEV' }, { onClose: () => {}, onMinimize: () => {}, inline: true });
+  const panel = runPanel(box, { ...params, ids, group: params.group || 'DEV', checklistVersionId: params.checklistVersionId ?? params.version }, { onClose: () => {}, onMinimize: () => {}, inline: true });
   return { update() {}, unmount() { panel.destroy(); box.remove(); } };
 }

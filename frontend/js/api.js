@@ -91,14 +91,71 @@ export async function getMetaModels() {
   return http('/meta/models');
 }
 
+// ---------- Чек-листы (версии неизменяемы: сохранение = новая версия) ----------
+// В mock-режиме сохранённые версии живут в памяти вкладки поверх фикстур checklists.json / checklist-<id>.json.
+const mockChk = { list: null, bodies: new Map() };
+async function mockChecklists() {
+  if (!mockChk.list) mockChk.list = (await fixture('checklists')).map((v) => ({ parent_id: null, ...v }));
+  return mockChk.list;
+}
+function mockWarnings(body) {
+  const total = (body.criteria || []).filter((c) => c.enabled !== false && c.type !== 'flag').reduce((s, c) => s + Number(c.weight || 0), 0);
+  return Math.abs(total - 100) > 1e-9 ? [`сумма весов ${+total.toFixed(4)}, а не 100: итог всё равно нормируется к 100`] : [];
+}
+
+/** GET /checklists → [{id, key, version, name, note, is_active, parent_id, created_at}] (новые версии первыми). */
 export async function listChecklists() {
-  if (isMock()) return fixture('checklists');
+  if (isMock()) return (await mockChecklists()).slice().sort((a, b) => b.version - a.version);
   return http('/checklists');
 }
 
+/** GET /checklists/{id} → версия с телом `body` (формат CONTRACTS.md §1). */
 export async function getChecklist(versionId) {
-  if (isMock()) return fixture(`checklist-${versionId}`);
+  if (isMock()) {
+    const id = Number(versionId);
+    if (mockChk.bodies.has(id)) return structuredClone(mockChk.bodies.get(id));
+    const v = await fixture(`checklist-${id}`);
+    const meta = (await mockChecklists()).find((x) => x.id === id);
+    return meta ? { ...v, ...meta } : v;
+  }
   return http(`/checklists/${encodeURIComponent(versionId)}`);
+}
+
+/** POST /checklists {body, note, parent_id?, activate?} → версия + `warnings`; 422 → ApiError с errors [{path, message}]. */
+export async function createChecklist(payload) {
+  if (isMock()) {
+    const list = await mockChecklists();
+    const body = structuredClone(payload.body);
+    const id = Math.max(0, ...list.map((v) => v.id)) + 1;
+    const version = Math.max(0, ...list.filter((v) => v.key === body.key).map((v) => v.version)) + 1;
+    const meta = { id, key: body.key, version, name: body.name, note: payload.note || '', is_active: false, parent_id: payload.parent_id ?? null, created_at: new Date().toISOString() };
+    list.push(meta);
+    mockChk.bodies.set(id, { ...meta, body });
+    if (payload.activate) await activateChecklist(id);
+    return { ...(await getChecklist(id)), warnings: mockWarnings(body) };
+  }
+  return request('POST', '/checklists', { body: payload, failText: 'Версия не сохранена', netText: 'Нет связи с сервером: версия не сохранена.' });
+}
+
+/** POST /checklists/{id}/activate → версия. Активная версия одна на систему: по ней идут прогоны и файл сдачи. */
+export async function activateChecklist(versionId) {
+  if (isMock()) {
+    const list = await mockChecklists();
+    const id = Number(versionId);
+    if (!list.some((v) => v.id === id)) throw new ApiError('Не найдено: версия чек-листа не найдена (404)', 404, { detail: 'версия чек-листа не найдена' });
+    list.forEach((v) => { v.is_active = v.id === id; });
+    for (const b of mockChk.bodies.values()) b.is_active = b.id === id;
+    return getChecklist(id);
+  }
+  return request('POST', `/checklists/${encodeURIComponent(versionId)}/activate`, { failText: 'Версия не активирована', netText: 'Нет связи с сервером: версия не активирована.' });
+}
+
+/** Подписи фактов {labels: {имя: подпись}} из реестра бэкенда; один запрос на вкладку. */
+let factLabels = null;
+export function getFactLabels() {
+  if (isMock()) return Promise.resolve({ labels: {} });
+  factLabels ||= http('/meta/facts').catch((e) => { factLabels = null; throw e; });
+  return factLabels;
 }
 
 // ---------- Прогоны оценки ----------
@@ -116,6 +173,19 @@ export async function createRun(body) {
     return { run_id: id };
   }
   return request('POST', '/runs', { body, failText: 'Оценка не запущена', netText: 'Нет связи с сервером: оценка не запущена.' });
+}
+
+/** POST /runs/estimate (тело как у POST /runs, без вызовов LLM) →
+ * {dialogs, dialogs_with_calls, calls, tokens_in, tokens_out, cost_usd | null, seconds, cost_source: history | pricing | unknown}. */
+export async function estimateRun(body) {
+  if (isMock()) {
+    const n = body.conversation_ids?.length || (await fixture('conversations')).filter((r) => !body.group_id || r.group_id === body.group_id).length;
+    const per = body.reuse === 'auto' ? 1 : body.strategy === 'single' ? 1 : body.strategy === 'per_criterion' ? 8 : 4;
+    const calls = n * per;
+    return { dialogs: n, dialogs_with_calls: n, calls, tokens_in: calls * 5200, tokens_out: calls * 700,
+      cost_usd: +(calls * 0.0021).toFixed(4), seconds: Math.ceil(n / 4) * 8, cost_source: 'history' };
+  }
+  return request('POST', '/runs/estimate', { body, failText: 'Оценка стоимости недоступна', netText: 'Нет связи с сервером: оценка стоимости недоступна.' });
 }
 
 /** GET /runs/{id} → {status, total, done, failed, cost_usd, started_at, finished_at, ...}. */

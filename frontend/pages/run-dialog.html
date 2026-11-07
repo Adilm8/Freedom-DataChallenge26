@@ -8,7 +8,7 @@
   <style>html, body { margin: 0; background: #f4f5f9; } #cqa-host { padding: 16px; }</style>
 </head>
 <body>
-  <!-- Встроенный запуск оценки: ?ids=1,2,3 (диалоги) или ?group=DEV (вся группа). -->
+  <!-- Встроенный запуск оценки: ?ids=1,2,3 (диалоги) или ?group=DEV (вся группа), ?version=<id> — версия чек-листа. -->
   <div id="cqa-host" class="cqa-root"></div>
   <script type="module">
     import { mount } from '../js/components/run-dialog.js';
@@ -16,7 +16,7 @@
     const q = paramsFromQuery();
     const el = document.getElementById('cqa-host');
     if (q.demo === '1') el.classList.add('cqa-demo');
-    mount(el, { group: q.group || 'DEV', ids: q.ids || '' });
+    mount(el, { group: q.group || 'DEV', ids: q.ids || '', version: q.version });
   </script>
 </body>
 </html>

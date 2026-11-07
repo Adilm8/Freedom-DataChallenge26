@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CQA · Чек-лист</title>
+  <link rel="stylesheet" href="../css/cqa.css">
+  <style>html, body { margin: 0; background: #f4f5f9; }</style>
+</head>
+<body>
+  <!-- Конструктор чек-листа отдельно (будущий web resource): ?version=<id>&group=DEV, ?mock=1 — на фикстурах. -->
+  <div id="cqa-host" class="cqa-root"></div>
+  <script type="module">
+    import { mount } from '../js/components/checklist-editor.js';
+    import { openRunDialog } from '../js/components/run-dialog.js';
+    import { paramsFromQuery } from '../js/ui.js';
+    const q = paramsFromQuery();
+    const el = document.getElementById('cqa-host');
+    if (q.demo === '1') el.classList.add('cqa-demo');
+    el.addEventListener('cqa:run-request', (e) => openRunDialog(el, { group: q.group || 'DEV', ...e.detail,
+      onFinished: () => el.dispatchEvent(new CustomEvent('cqa:refresh')) }));
+    el.addEventListener('cqa:location', (e) => {
+      const m = /version=(\d+)/.exec(e.detail?.to || '');
+      if (!m) return;
+      const u = new URL(location.href);
+      u.searchParams.set('version', m[1]);
+      history.replaceState(null, '', u);
+    });
+    el.addEventListener('cqa:navigate', (e) => { if (e.detail?.to) location.href = '../index.html' + location.search + e.detail.to; });
+    mount(el, { group: q.group || 'DEV', version: q.version });
+  </script>
+</body>
+</html>

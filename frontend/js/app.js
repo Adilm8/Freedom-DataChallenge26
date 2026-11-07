@@ -13,12 +13,12 @@ const ROUTES = {
   conversations: { nav: 'conversations', load: () => import('./components/conversation-list.js') },
   conversation: { nav: 'conversations', load: () => import('./components/conversation-card.js'), full: true },
   gold: { nav: 'gold', load: () => import('./components/gold-review.js'), full: true },
+  checklist: { nav: 'checklist', load: () => import('./components/checklist-editor.js') },
 };
 const PLACEHOLDERS = {
   dashboard: ['Дашборд', 'Средний итог, распределение, выполнение по критериям и грубые ошибки. Экран появится на этапе аналитики.'],
   review: ['Требует проверки', 'Очередь критериев с низкой уверенностью и предупреждениями валидатора.'],
   appeals: ['Апелляции', 'Очередь проверяющего: спорные оценки, фрагмент диалога и форма решения.'],
-  checklist: ['Чек-лист', 'Версии, редактор критериев и применение к набору диалогов.'],
   quality: ['Качество', 'Согласие с эталоном и сравнение моделей и стратегий.'],
   compare: ['Сравнение', 'Два результата одного диалога рядом.'],
 };

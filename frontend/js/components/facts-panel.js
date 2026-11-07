@@ -1,7 +1,9 @@
 // Факты, которые код посчитал по транскрипту до вызова модели: {имя: {value, msg_ids, note}}.
 // Сворачиваемый блок рядом с транскриптом; номера реплик кликабельны (событие cqa:evidence-click {msg_ids}).
-// Подписи — из реестра бэкенда (services/facts); неизвестный факт показывается по имени, ничего не теряется.
+// Подписи — из реестра бэкенда (GET /meta/facts, services/facts), запасной вариант — FACT_LABELS ниже;
+// неизвестный факт показывается по имени, ничего не теряется.
 import { h, clear, emit, EVENT_LABEL, LANG } from '../ui.js';
+import { getFactLabels } from '../api.js';
 
 export const FACT_LABELS = {
   has_operator: 'Оператор отвечал клиенту',
@@ -86,6 +88,12 @@ export function mount(el, params = {}) {
   const root = h('div', { class: 'cqa-facts-root' });
   el.append(root);
   let open = !!p.open;
+  let labels = FACT_LABELS, alive = true;
+  getFactLabels().then((r) => {
+    if (!alive || !r?.labels || !Object.keys(r.labels).length) return;
+    labels = { ...FACT_LABELS, ...r.labels };
+    render();
+  }).catch(() => { /* остаются встроенные подписи */ });
 
   const ref = (id) => h('button', { type: 'button', class: 'cqa-chip cqa-tip', 'data-tip': 'Показать реплику', onclick: () => emit(root, 'cqa:evidence-click', { msg_ids: [id], source: 'facts' }) }, id);
 
@@ -135,7 +143,7 @@ export function mount(el, params = {}) {
     const shown = new Set(JSON.stringify(fact.value ?? null).match(/m\d+/g) || []);
     const extra = (fact.msg_ids || []).filter((id) => !shown.has(id));
     return h('div', { class: 'cqa-facts__row', dataset: { fact: name } },
-      h('div', { class: 'cqa-facts__label' }, FACT_LABELS[name] || humanize(name)),
+      h('div', { class: 'cqa-facts__label' }, labels[name] || humanize(name)),
       h('div', { class: 'cqa-facts__val' },
         value(name, fact.value),
         extra.length ? h('span', { class: 'cqa-facts__refs' }, extra.map(ref)) : null,
@@ -176,6 +184,6 @@ export function mount(el, params = {}) {
   render();
   return {
     update(np) { p = { ...p, ...np }; render(); },
-    unmount() { root.remove(); },
+    unmount() { alive = false; root.remove(); },
   };
 }
