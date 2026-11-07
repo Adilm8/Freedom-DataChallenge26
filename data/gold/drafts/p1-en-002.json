@@ -1,0 +1,80 @@
+{
+  "conversation_id": "p1-en-002",
+  "drafted_by": "claude-session",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "yes",
+      "reasoning": "«Hi, I'm Noah» — приветствие на английском и имя.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "na",
+      "reasoning": "Клиент сразу назвал сайт (Freedom Finance Global); оператор дал оба способа входа (tradernet.global и приложение), не переспрашивая.",
+      "evidence": [
+        "m0",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "03": {
+      "answer": "na",
+      "reasoning": "Вопрос о входе; данные счёта не раскрывались.",
+      "evidence": [
+        "m0",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "04": {
+      "answer": 20,
+      "reasoning": "Верно: информационный сайт без входа, вход через tradernet.global или приложение; клиент вошёл («The web version works»).",
+      "evidence": [
+        "m9",
+        "m10"
+      ],
+      "confidence": "high"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Вежливо; недовольства не было.",
+      "evidence": [
+        "m9",
+        "m11"
+      ],
+      "confidence": "high"
+    },
+    "06": {
+      "answer": 10,
+      "reasoning": "Ответ ясный, клиент не переспрашивал.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "07": {
+      "answer": "no",
+      "reasoning": "«Glad you got in. Have a good day!» — реакция на решение и прощание; итога и предложения помощи нет, при строгом прочтении — «Нет».",
+      "evidence": [
+        "m10",
+        "m11"
+      ],
+      "confidence": "medium"
+    },
+    "08": {
+      "answer": "no",
+      "reasoning": "Нарушений нет: оскорблений, услуг в обход компании и раскрытия данных нет.",
+      "evidence": [
+        "m9",
+        "m11"
+      ],
+      "confidence": "high"
+    }
+  },
+  "total": 92.31,
+  "critical": false,
+  "notes": "Аналог p1-kz-008 / p1-ru-014, но без повторного вопроса. 07: «Glad you got in» — не итог (строгое прочтение)."
+}

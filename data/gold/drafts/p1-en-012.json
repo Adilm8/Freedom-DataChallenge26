@@ -1,0 +1,82 @@
+{
+  "conversation_id": "p1-en-012",
+  "drafted_by": "claude-session",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "yes",
+      "reasoning": "«Hello, I'm Daniel» — приветствие на английском и имя.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "na",
+      "reasoning": "Клиент сразу объяснил, что ищет отчётность компании, а не отчёты по счёту; оператор ответил без уточнений.",
+      "evidence": [
+        "m0",
+        "m4",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "03": {
+      "answer": "na",
+      "reasoning": "Общий вопрос о публичной отчётности компании; данные клиента не раскрывались.",
+      "evidence": [
+        "m0",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "04": {
+      "answer": 20,
+      "reasoning": "Верный путь: сайт Freedom Holding Corp. → Investors → Financial Information; клиент: «That's the page I was after».",
+      "evidence": [
+        "m9",
+        "m10"
+      ],
+      "confidence": "high"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Вежливо; на неудобство (всё время попадает в отчёты по счёту) оператор ответил точным путём к нужной странице.",
+      "evidence": [
+        "m0",
+        "m9",
+        "m11"
+      ],
+      "confidence": "medium"
+    },
+    "06": {
+      "answer": 10,
+      "reasoning": "Один ясный ответ, первый ответ через 1 мин 54 с — в пределах порога.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "07": {
+      "answer": "no",
+      "reasoning": "«You're welcome. Have a good day!» — прощание без итога и без предложения помощи. По тексту чек-листа нужен итог или предложение помощи и прощание, одного прощания мало → «Нет».",
+      "evidence": [
+        "m10",
+        "m11"
+      ],
+      "confidence": "medium"
+    },
+    "08": {
+      "answer": "no",
+      "reasoning": "Нарушений нет.",
+      "evidence": [
+        "m9",
+        "m11"
+      ],
+      "confidence": "high"
+    }
+  },
+  "total": 92.31,
+  "critical": false,
+  "notes": "07 — строгое прочтение."
+}

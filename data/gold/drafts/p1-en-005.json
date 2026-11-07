@@ -1,0 +1,84 @@
+{
+  "conversation_id": "p1-en-005",
+  "drafted_by": "claude-session",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "yes",
+      "reasoning": "«Hi, I'm Lina» — приветствие на английском и имя.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "na",
+      "reasoning": "Клиент сразу сообщил, что идёт в отделение банка и нужны реквизиты; оператор дал путь без лишних вопросов, валюту клиент назвал сам.",
+      "evidence": [
+        "m0",
+        "m4",
+        "m9"
+      ],
+      "confidence": "medium"
+    },
+    "03": {
+      "answer": "na",
+      "reasoning": "Общий вопрос, где взять реквизиты; данные счёта не раскрывались.",
+      "evidence": [
+        "m0",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "04": {
+      "answer": 20,
+      "reasoning": "Путь «Menu → Add Funds → bank transfer details» и ответ про евро («Select the currency… Take those details to the branch»); клиент: «Got them».",
+      "evidence": [
+        "m9",
+        "m11",
+        "m12"
+      ],
+      "confidence": "high"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Вежливо; беспокойство «не хочу взять не те реквизиты» снято точным ответом про валюту.",
+      "evidence": [
+        "m4",
+        "m11"
+      ],
+      "confidence": "high"
+    },
+    "06": {
+      "answer": 10,
+      "reasoning": "Ответы ясные и по порядку; вопрос про евро — новый вопрос клиента.",
+      "evidence": [
+        "m9",
+        "m11"
+      ],
+      "confidence": "high"
+    },
+    "07": {
+      "answer": "no",
+      "reasoning": "«You're welcome. Goodbye!» — прощание без итога и без предложения помощи.",
+      "evidence": [
+        "m12",
+        "m13"
+      ],
+      "confidence": "high"
+    },
+    "08": {
+      "answer": "no",
+      "reasoning": "Нарушений нет: оскорблений, услуг в обход компании и раскрытия данных нет.",
+      "evidence": [
+        "m9",
+        "m11",
+        "m13"
+      ],
+      "confidence": "high"
+    }
+  },
+  "total": 92.31,
+  "critical": false,
+  "notes": "Пара к p1-ru-004: оценки должны совпасть. 02: N/A или «Да»."
+}

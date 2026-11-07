@@ -1,0 +1,81 @@
+{
+  "conversation_id": "p1-en-011",
+  "drafted_by": "claude-session",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "yes",
+      "reasoning": "«Hi, I'm Julia» — приветствие на английском и имя.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "na",
+      "reasoning": "Вопрос конкретный (на каком языке форма 1042-S); уточнять было нечего.",
+      "evidence": [
+        "m0",
+        "m4",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "03": {
+      "answer": "na",
+      "reasoning": "Общий вопрос о форме; данные счёта не раскрывались.",
+      "evidence": [
+        "m0",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "04": {
+      "answer": 20,
+      "reasoning": "Подтверждено: форма 1042-S выдаётся на английском; клиент: «That's all I needed».",
+      "evidence": [
+        "m9",
+        "m10"
+      ],
+      "confidence": "high"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Вежливо; недовольства клиент не выражал.",
+      "evidence": [
+        "m9",
+        "m11"
+      ],
+      "confidence": "high"
+    },
+    "06": {
+      "answer": 10,
+      "reasoning": "Ответ ясный, клиент не переспрашивал; первый ответ через 1 мин 35 с.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "07": {
+      "answer": "no",
+      "reasoning": "«Happy to help. Goodbye!» — прощание после решения, без итога и предложения дальнейшей помощи. По тексту чек-листа нужен итог или предложение помощи и прощание, одного прощания мало → «Нет».",
+      "evidence": [
+        "m10",
+        "m11"
+      ],
+      "confidence": "medium"
+    },
+    "08": {
+      "answer": "no",
+      "reasoning": "Нарушений нет.",
+      "evidence": [
+        "m9",
+        "m11"
+      ],
+      "confidence": "high"
+    }
+  },
+  "total": 92.31,
+  "critical": false,
+  "notes": "Пара к p1-kz-014. 07 — строгое прочтение (клиент сам сказал, что больше ничего не нужно, но итога нет)."
+}
