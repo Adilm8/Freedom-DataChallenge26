@@ -11,14 +11,19 @@ class Settings(BaseSettings):
     organizer_api_url: str = ""
     dataset_group_id: str = "DEV"
 
-    anthropic_api_key: str = ""
-    cloud_model: str = "claude-opus-5-5"
-    cloud_effort: str = "high"
+    llm_provider: str = "openrouter"  # openrouter | gemini | ollama
 
-    ollama_base_url: str = "http://localhost:11434"
-    local_model: str = "qwen3:8b"
+    openrouter_api_key: str = ""
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    openrouter_model: str = ""
 
-    llm_provider: str = "cloud"
+    gemini_api_key: str = ""
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
+    gemini_model: str = ""
+
+    ollama_base_url: str = "http://localhost:11434/v1"
+    ollama_model: str = ""
+
     database_url: str = f"sqlite:///{ROOT / 'data' / 'cqa.db'}"
 
 

@@ -1,17 +1,24 @@
 # PROGRESS
 
-Память между сессиями. Обновляется после каждого шага (см. CLAUDE.md).
+Статус работы. Подключён в `CLAUDE.md`, обновляется после каждого шага.
+
+## Сейчас
+Фаза 0 — совместное исследование. Код решения не пишем, пока не утверждена архитектура.
 
 ## Готово
-- 2026-11-07 — среда: CLAUDE.md, `.claude/agents/`, скелет `backend/` (FastAPI, `/api/health`), `frontend/index.html`, `scripts/fetch_dataset.py`, `docs/checklist.md`, `.env.example`, pytest зелёный.
-- Снапшот DEV: `data/raw/DEV.json` (65 записей; в git не коммитится).
+- 2026-11-07 — среда: CLAUDE.md (работа вдвоём, OpenRouter + Gemini), `docs/MEMORY.md`, подагенты, скелет FastAPI (`/api/health`), `scripts/fetch_dataset.py`, `scripts/render_dataset.py`, `docs/checklist.md`, `docs/task/`, pytest зелёный.
+- 2026-11-07 — облачная среда `Freedom-DataChallenge26` (OpenRouter + API организаторов, установка зависимостей при старте).
+- 2026-11-07 — черновик исследования данных: `docs/research/01-data-overview.md`.
+
+## Ждёт Лиду
+- Ключи `OPENROUTER_API_KEY`, `GEMINI_API_KEY` в `.env`.
+- Ответы на вопросы в конце `docs/research/01-data-overview.md`.
 
 ## Сломано / ограничения
-- Облачный контейнер Claude Code не видит хост API организаторов (`*.powerplatform.com`, прокси 403). В облаке работать от снапшота, живые запросы — с ноутбука или после добавления домена в allowlist окружения.
+- В Default-среде закрыты `openrouter.ai`, API организаторов и Gemini. Gemini (`generativelanguage.googleapis.com`) ещё не добавлен и в среду `Freedom-DataChallenge26`.
 
-## Дальше (Час 0–2)
-- [ ] `docs/CONTRACTS.md` — заполнить схемы.
-- [ ] `data/checklist_default.json` из `docs/checklist.md`.
-- [ ] `backend/app/services/scoring.py` + тесты (пример 94.38 из `docs/checklist.md`).
-- [ ] Быстрый тест моделей на KZ-диалогах (`llm-eval-engineer`).
-- [ ] Команда: начать gold-разметку `data/gold_labels.json`.
+## Дальше
+- [ ] Обсудить 01 → решения в `docs/DECISIONS.md`.
+- [ ] 02-models: короткий тест 2–3 моделей на KZ и звонке (после ключей).
+- [ ] `docs/architecture/` + `docs/CONTRACTS.md`.
+- [ ] План gold-разметки: какие 20–25 диалогов, черновик моделью.
