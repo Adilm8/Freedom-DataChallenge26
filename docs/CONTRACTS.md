@@ -221,11 +221,17 @@ LLMProvider.complete(messages, *, model, json_schema, max_tokens, temperature, t
 
 CSV, UTF-8 с BOM, `;` как разделитель (Excel в RU-локали). Колонки: `conversation_id, channel, language, checklist_version, model, c<key>_answer, c<key>_points …, ai_total, final_total, critical, cost_usd`. JSON — массив тех же объектов плюс обоснования.
 
+### 5.1 Файл сдачи (`results/<dev|prod>/results.json`, `GET /api/export/results?group_id=`)
+
+Формат организаторов 1.0 — [`docs/task/results-format.md`](task/results-format.md). У критерия чек-листа есть `export_id` (`contact`, `discovery`, `identification`, `consultation`, `empathy`, `dialogue`, `closure`, `critical`); заменённый на контроле критерий наследует `export_id` того, что заменил. В файл идут ответы AI последней оценки со статусом `done` по активной версии чек-листа; без неё — `status: error` с причиной. `evidence_turns = idx + 1`. CLI: `python scripts/export_results.py --group <id> --out results/<dev|prod>/results.json [--expect-count 10]`, `--check <файл>` — только проверка.
+
 ## 6. Gold
 
 Формат — `data/gold/README.md`. Разбиение dev/holdout — `data/gold/split.json`: `{"dev": [...], "holdout": [...]}`.
 
 ## Журнал версий
+
+- 0.4 — 2026-11-07 — формат сдачи организаторов: `export_id` у критерия, `results.json` 1.0, `GET /api/export/results`.
 
 - 0.3 — 2026-11-07 — `ConversationDetail` по факту бэкенда, `scale_max` в `CriterionResult`, `needs_review` в `Evaluation`, `errors` у 422.
 - 0.2 — 2026-11-07 — уточнение организаторов: `confidence`, `advice`, `overview` в ответе LLM; `quote_threshold` по каналу; вставка диалога, оценка стоимости, `reuse` в запуске, аналитика, очередь «требует проверки».
