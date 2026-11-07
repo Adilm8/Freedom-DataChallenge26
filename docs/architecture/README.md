@@ -66,7 +66,7 @@ data/
   checklists/default.json   config/lexicons.json  config/system_events.json
   gold/gold_labels.json     raw/ (не в git)  cqa.db (не в git)
 eval/         run_eval.py  runs/ (не в git)
-scripts/      fetch_dataset.py render_dataset.py model_smoke.py reset_db.py draft_gold.py
+scripts/      fetch_dataset.py render_dataset.py model_smoke.py reset_db.py
 frontend/
   index.html                        оболочка с навигацией (hash-роутинг)
   pages/*.html                      по странице на компонент — заготовка под web resource D365
