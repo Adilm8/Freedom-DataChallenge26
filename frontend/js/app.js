@@ -8,10 +8,11 @@ const appEl = document.getElementById('app');
 
 const NAV = [
   ['dashboard', 'Дашборд'], ['conversations', 'Диалоги'], ['review', 'Требует проверки'],
-  ['appeals', 'Апелляции'], ['checklist', 'Чек-лист'], ['quality', 'Качество'],
+  ['appeals', 'Апелляции'], ['checklist', 'Чек-лист'],
 ];
 const ROUTES = {
   dashboard: { nav: 'dashboard', load: () => import('./components/dashboard-view.js') },
+  // Служебные экраны команды, без пункта в меню: точность против эталона (#/quality) и проверка эталона (#/gold).
   quality: { nav: 'quality', load: () => import('./components/quality-view.js') },
   conversations: { nav: 'conversations', load: () => import('./components/conversation-list.js') },
   conversation: { nav: 'conversations', load: () => import('./components/conversation-card.js'), full: true },
@@ -53,7 +54,7 @@ function parseHash() {
 
 function buildHeader() {
   const nav = h('nav', { class: 'cqa-nav', 'aria-label': 'Разделы' },
-    [...NAV, ['gold', 'Эталон']].map(([id, label]) => h('a', { class: 'cqa-nav__link', href: `#/${id}`, dataset: { nav: id }, hidden: id === 'gold' && !goldVisible(), title: id === 'gold' ? 'Проверка эталонной разметки, по которой меряем точность' : null }, label,
+    NAV.map(([id, label]) => h('a', { class: 'cqa-nav__link', href: `#/${id}`, dataset: { nav: id } }, label,
       COUNTED[id] ? h('span', { class: 'cqa-nav__count', hidden: true, title: COUNTED[id] }) : null)));
   // Группы — из реальных данных (loadGroups); до ответа сервера — только текущая.
   groupSel = h('select', { class: 'cqa-select', 'aria-label': 'Группа данных',
@@ -86,15 +87,12 @@ function themeIcon(dark) {
   return svg;
 }
 // Эталон размечаем только для DEV; в режиме «Демо» пункт скрыт (это рабочий инструмент команды, а не экран для жюри).
-const goldVisible = () => settings.group === 'DEV' && !settings.demo;
 
 function syncHeader() {
   appEl.classList.toggle('cqa-demo', settings.demo);
   appEl.dataset.theme = isDark() ? 'dark' : 'light';
   const tb = appEl.querySelector('#cqa-theme');
   if (tb) { tb.replaceChildren(themeIcon(isDark())); tb.title = isDark() ? 'Светлая тема' : 'Тёмная тема'; tb.setAttribute('aria-label', tb.title); }
-  const goldLink = appEl.querySelector('.cqa-nav__link[data-nav="gold"]');
-  if (goldLink) goldLink.hidden = !goldVisible();
   appEl.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === settings.mode)));
 }
 function markNav(name) {

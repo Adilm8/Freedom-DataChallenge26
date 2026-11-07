@@ -5,7 +5,7 @@
 // Наружу: cqa:navigate {to}, cqa:run-request {ids: [], group, rows}, cqa:import-request {group} (пустая группа). Внутрь: cqa:refresh на el — перечитать.
 import { h, clear, emit, errorState, emptyState, fmtScore, scoreClass, LANG, channelLabel } from '../ui.js';
 import { getAnalytics, listConversations } from '../api.js';
-import { createTip, fmtPct, fmtPct100, fmtUsd, plural, tableToggle, vpanel, legend, clamp01 } from './viz.js';
+import { createTip, fmtPct, fmtPct100, plural, tableToggle, vpanel, legend, clamp01 } from './viz.js';
 
 const C1 = 'var(--cqa-viz-1)', C2 = 'var(--cqa-viz-2)';
 const RESOLVED = [['yes', 'решён', 'var(--cqa-viz-good)'], ['unclear', 'неясно', 'var(--cqa-viz-neutral)'], ['no', 'не решён', 'var(--cqa-viz-bad)']];
@@ -60,7 +60,9 @@ export function mount(el, params = {}) {
     const st = a.status_counts || {};
     const delta = a.avg_final_total != null && a.avg_ai_total != null ? +(a.avg_final_total - a.avg_ai_total).toFixed(2) : null;
     const notDone = (st.partial || 0) + (st.failed || 0);
-    const cost = a.cost || {};
+    const r = a.resolved || {};
+    const rs = { yes: r.yes || 0, no: r.no || 0, unclear: r.unclear || 0 };
+    rs.total = rs.yes + rs.no + rs.unclear;
     return h('div', { class: 'cqa-kpis' },
       tile({ hero: true, label: 'Средний итог', aria: `Средний финальный итог ${fmtScore(a.avg_final_total)} из 100`,
         value: h('span', { class: `cqa-kpi__hero ${scoreClass(a.avg_final_total)}` }, fmtScore(a.avg_final_total), h('small', null, ' / 100')),
@@ -79,10 +81,9 @@ export function mount(el, params = {}) {
       tile({ label: 'Открытые апелляции', value: String(a.appeals?.open ?? 0),
         sub: `решено: без изменений ${a.appeals?.confirmed ?? 0}, изменено ${a.appeals?.changed ?? 0}`,
         onClick: a.appeals?.open ? () => go(listUrl({ appeal: 'open' })) : null, aria: `Открытые апелляции: ${a.appeals?.open ?? 0}. Открыть список` }),
-      tile({ label: 'Стоимость оценок', value: fmtUsd(cost.latest_usd),
-        sub: [`≈ ${fmtUsd(cost.avg_per_dialog_usd)} на диалог`,
-          cost.evaluations_total > a.count ? ` · всего с повторами ${fmtUsd(cost.total_usd)}` : '',
-          (cost.models || []).length ? h('span', { class: 'cqa-kpi__models' }, cost.models.map((m) => `${m.model} × ${m.count}`).join(', ')) : null] }));
+      tile({ label: 'Вопрос клиента решён', value: rs.total ? fmtPct(rs.yes / rs.total) : '—',
+        sub: rs.total ? `не решён ${rs.no} · неясно ${rs.unclear} · из ${rs.total} ${plural(rs.total, 'диалога', 'диалогов', 'диалогов')}` : 'по резюме диалогов',
+        aria: rs.total ? `Вопрос клиента решён в ${fmtPct(rs.yes / rs.total)} диалогов` : null }));
   }
 
   // ---------- Главное: вывод из цифр за 10 секунд ----------
