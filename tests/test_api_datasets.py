@@ -98,6 +98,75 @@ def test_import_from_api_mocked(client, monkeypatch):
     assert "SECRET" not in r.text
 
 
+SECRET_URL = "https://api.test/x?sig=SECRET0SIG42&group_id=DEV"
+
+
+def _leaks(text):
+    return any(s in text for s in ("SECRET0SIG42", "api.test", "sig="))
+
+
+def test_import_api_errors_hide_url(client, monkeypatch):
+    """Ни один текст ошибки импорта из API не содержит адрес с подписью sig."""
+    import httpx
+
+    from backend.app.config import settings
+    from backend.app.services import ingest
+    monkeypatch.setattr(settings, "organizer_api_url", SECRET_URL)
+
+    def conn_error(url, timeout):
+        raise httpx.ConnectError(f"cannot connect to {url}")
+    monkeypatch.setattr(ingest.httpx, "get", conn_error)
+    r = client.post("/api/datasets/import", json={"group_id": "CTRL"})
+    assert r.status_code == 502 and not _leaks(r.text)
+
+    def status_error(url, timeout):
+        req = httpx.Request("GET", url)
+        raise httpx.HTTPStatusError(f"403 for {url}", request=req, response=httpx.Response(403, request=req))
+    monkeypatch.setattr(ingest.httpx, "get", status_error)
+    r = client.post("/api/datasets/import", json={"group_id": "CTRL"})
+    assert r.status_code == 502 and "403" in r.json()["detail"] and not _leaks(r.text)
+
+    class Echo:  # API вернул ошибку и повторил в ней адрес запроса
+        def __init__(self, url): self.url = url
+        def raise_for_status(self): pass
+        def json(self): return {"isSuccess": False, "error": f"bad signature for {self.url}", "data": None}
+    monkeypatch.setattr(ingest.httpx, "get", lambda url, timeout: Echo(url))
+    r = client.post("/api/datasets/import", json={"group_id": "CTRL"})
+    assert r.status_code == 502 and "bad signature" in r.json()["detail"] and not _leaks(r.text)
+
+
+def test_import_blank_group_uses_default(client, monkeypatch):
+    from backend.app.config import settings
+    from backend.app.services import ingest
+    monkeypatch.setattr(settings, "organizer_api_url", SECRET_URL)
+    monkeypatch.setattr(settings, "dataset_group_id", "DEV")
+    seen = {}
+
+    class R:
+        def raise_for_status(self): pass
+        def json(self): return payload()
+
+    def fake_get(url, timeout):
+        seen["url"] = url
+        return R()
+    monkeypatch.setattr(ingest.httpx, "get", fake_get)
+    r = client.post("/api/datasets/import", json={"group_id": "  "})
+    assert r.status_code == 200 and r.json()["group_id"] == "DEV" and seen["url"].endswith("group_id=DEV")
+
+
+def test_upload_too_large(client, monkeypatch):
+    from backend.app.api import datasets
+    assert datasets.MAX_UPLOAD_BYTES == 25 * 1024 * 1024
+    monkeypatch.setattr(datasets, "MAX_UPLOAD_BYTES", 2048)
+    monkeypatch.setattr(datasets, "CHUNK", 512)  # лимит срабатывает посреди чтения, а не после
+    big = payload([{"conversation_id": f"t-big-{i}", "channel": "Chat", "language": "RU",
+                    "transcript": [{"timestamp": "00:00", "speaker": "operator", "text": "x" * 200}]} for i in range(20)])
+    r = upload(client, big)
+    assert r.status_code == 413 and "МБ" in r.json()["detail"]
+    assert client.get("/api/conversations?group_id=T").json() == []  # ничего не импортировано
+    assert upload(client, payload()).status_code == 200  # маленький файл проходит
+
+
 DEV = Path(__file__).resolve().parents[1] / "data" / "raw" / "DEV.json"
 
 
