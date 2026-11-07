@@ -9,6 +9,7 @@
 - 2026-11-07 — среда: CLAUDE.md (работа вдвоём, OpenRouter + Gemini), `docs/MEMORY.md`, подагенты, скелет FastAPI (`/api/health`), `scripts/fetch_dataset.py`, `scripts/render_dataset.py`, `docs/checklist.md`, `docs/task/`, pytest зелёный.
 - 2026-11-07 — облачная среда `Freedom-DataChallenge26` (OpenRouter + API организаторов, установка зависимостей при старте).
 - 2026-11-07 — черновик исследования данных: `docs/research/01-data-overview.md`.
+- 2026-11-07 — учтено уточнение организаторов: ТЗ v0.3 (FR-EVAL-16…20, FR-CHK-10, раздел 5.10 ANL/UX, NFR-13, 14), контракты v0.2, план v0.3 (35 шагов, около половины — интерфейс и доп. функции).
 - 2026-11-07 — ТЗ `docs/spec/requirements.md` (FR/NFR с ID), архитектура `docs/architecture/*`, `docs/CONTRACTS.md` v0.1, ADR-001…012, `docs/PLAN.md` (вехи M0–M6), сценарий демо, открытые вопросы.
 
 ## Ждёт Лиду

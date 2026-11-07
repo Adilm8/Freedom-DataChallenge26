@@ -22,6 +22,7 @@ evaluation_run 1─* evaluation
 | `conversation_id` | str | из набора; уникален вместе с `group_id` |
 | `channel`, `language` | str | как в наборе |
 | `audio_url` | str? | у звонков |
+| `source` | str | `api` / `upload` / `manual` (вставлен в UI, FR-DATA-07) |
 | `transcript` | JSON | исходный массив без изменений |
 | `normalized` | JSON | `msg_id`, `t_sec`, `internal`, сегменты (пересчитывается из `transcript`) |
 | `audio_offset_fix_sec` | float | ручная поправка смещения записи, по умолчанию 0 |
@@ -60,6 +61,8 @@ evaluation_run 1─* evaluation
 | `provider`, `model`, `strategy`, `prompt_version` | str | для честности процесса (FR-EVAL-06) |
 | `status` | str | `done / partial / failed` |
 | `facts` | JSON | что код передал модели |
+| `overview` | JSON? | резюме, тема, решён ли вопрос (FR-EVAL-19) |
+| `params` | JSON | `temperature`, `seed`, `reuse` — для повтора (FR-EVAL-20) |
 | `ai_score` | JSON | `ScoreResult` по ответам AI: итог, секции, применимый вес, флаги |
 | `final_score` | JSON | то же с решениями по апелляциям; сначала копия `ai_score` |
 | `ai_total`, `final_total` | float? | дублируем из JSON для сортировки в списке |
@@ -82,6 +85,10 @@ evaluation_run 1─* evaluation
 | `evidence` | JSON | `[{msg_id, quote, quote_ok}]` |
 | `checked_range` | JSON? | `{from, to}` |
 | `issues` | JSON | предупреждения валидатора и страховок |
+| `confidence` | str | `high / medium / low` (FR-EVAL-16) |
+| `advice` | str? | подсказка оператору (FR-EVAL-18) |
+| `criterion_hash` | str | для инкрементальной переоценки (FR-CHK-10) |
+| `reused_from_evaluation_id` | int? | откуда взят ответ, если переиспользован |
 | `final_answer`, `final_points` | | меняются только решением по апелляции |
 | `overridden` | bool | |
 
@@ -118,4 +125,5 @@ evaluation_run 1─* evaluation
 
 ## Журнал изменений
 
+- 2026-11-07 — v0.2: `conversation.source`, `evaluation.overview`, `evaluation.params`, у `criterion_result` — `confidence`, `advice`, `criterion_hash`, `reused_from_evaluation_id`.
 - 2026-11-07 — v0.1, первая версия.

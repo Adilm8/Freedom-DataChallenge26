@@ -44,6 +44,8 @@
 | `services/evaluator.py` | Конвейер целиком, стратегии, параллельность, запись в БД | диалог, версия, модель → `evaluation` | нет |
 | `services/appeals.py` | Апелляция, решение, пересчёт финального итога | решение → обновлённые `final_*` | нет |
 | `services/export.py` | JSON/CSV по группе | фильтры → файл | да |
+| `services/reuse.py` | Хеш критерия и план переиспользования ответов (FR-CHK-10) | критерии, прошлая оценка → переиспользуем / вызываем | да |
+| `services/analytics.py` | Агрегаты для дашборда, очередь «требует проверки», оценка стоимости запуска | группа → `Analytics`, `[ReviewItem]` | нет (БД) |
 | `providers/` | `LLMProvider.complete()`, цена, лимиты, запрет звонков в Gemini free | сообщения → `LLMResult` | нет (сеть) |
 | `prompts/*.md` | Тексты промптов как шаблоны | — | данные |
 | `data/config/*.json` | Словари: системные события, приветствия, прощания, фразы ожидания, рискованные слова (RU/KZ/EN) | — | данные |
@@ -56,12 +58,12 @@
 ```
 backend/app/
   main.py  config.py  db.py  models.py  schemas.py
-  api/        datasets.py conversations.py checklists.py runs.py evaluations.py appeals.py export.py meta.py
+  api/        datasets.py conversations.py checklists.py runs.py evaluations.py appeals.py export.py meta.py analytics.py
   services/   ingest.py normalize.py prompt_builder.py judge.py validator.py guards.py scoring.py
-              evaluator.py appeals.py export.py
+              evaluator.py appeals.py export.py reuse.py analytics.py
               facts/  __init__.py (реестр) timing.py events.py greeting.py language.py risk_terms.py
   providers/  base.py openai_compat.py pricing.py
-  prompts/    system.md transcript.md criterion.md output_rules.md
+  prompts/    system.md channel_voice.md transcript.md criterion.md output_rules.md
 data/
   checklists/default.json   config/lexicons.json  config/system_events.json
   gold/gold_labels.json     raw/ (не в git)  cqa.db (не в git)
@@ -92,6 +94,7 @@ tests/        test_scoring.py test_normalize.py test_facts.py test_validator.py 
 |---|---|---|---|
 | Формулировка, вес, тип, шкала, N/A критерия; новый критерий | UI «Чек-лист» → новая версия → «Применить» | ничего в коде | 2–5 мин |
 | Общие правила оценки («Нет» против N/A, только оператор) | `backend/app/prompts/system.md`, поднять `PROMPT_VERSION` | `run_eval` до/после | 10 мин |
+| Правила для звонков (устная речь) | `backend/app/prompts/channel_voice.md`, поднять `PROMPT_VERSION` | `run_eval` по звонкам | 10 мин |
 | Модель или провайдер | `.env`: `LLM_PROVIDER`, `*_MODEL` или выбор при запуске | `run_eval`, цена в `pricing.py` если провайдер не вернул | 2 мин |
 | Стратегия вызовов | `.env` `EVAL_STRATEGY` или параметр запуска | `run_eval` | 1 мин |
 | Новая фраза системного события или приветствия | `data/config/system_events.json`, `lexicons.json` | `pytest tests/test_facts.py` | 5 мин |
@@ -114,4 +117,5 @@ tests/        test_scoring.py test_normalize.py test_facts.py test_validator.py 
 
 ## Журнал изменений
 
+- 2026-11-07 — v0.2: модули `reuse` и `analytics`, шаблон `channel_voice.md`.
 - 2026-11-07 — v0.1, первая версия.

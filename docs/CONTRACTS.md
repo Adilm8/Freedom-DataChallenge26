@@ -14,7 +14,10 @@
     "output_language": "ru",
     "rounding": 2,
     "critical_policy": "flag",
-    "first_response_threshold_sec": 180
+    "first_response_threshold_sec": 180,
+    "advice": true,
+    "overview": true,
+    "quote_threshold": {"chat": 0.85, "voice": 0.75}
   },
   "sections": [
     {"id": "start",    "title": "Начало и понимание запроса"},
@@ -104,19 +107,29 @@
     "properties": {
       "01": {
         "type": "object", "additionalProperties": false,
-        "required": ["reasoning", "answer", "evidence", "checked_range", "na_reason"],
+        "required": ["reasoning", "answer", "confidence", "evidence", "checked_range", "na_reason", "advice"],
         "properties": {
           "reasoning": {"type": "string"},
           "answer": {"type": "string", "enum": ["yes", "no"]},
+          "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
           "evidence": {"type": "array", "items": {
             "type": "object", "additionalProperties": false, "required": ["msg_id", "quote"],
             "properties": {"msg_id": {"type": "string"}, "quote": {"type": "string"}}}},
           "checked_range": {"anyOf": [{"type": "null"}, {
             "type": "object", "additionalProperties": false, "required": ["from", "to"],
             "properties": {"from": {"type": "string"}, "to": {"type": "string"}}}]},
-          "na_reason": {"anyOf": [{"type": "null"}, {"type": "string"}]}
+          "na_reason": {"anyOf": [{"type": "null"}, {"type": "string"}]},
+          "advice": {"anyOf": [{"type": "null"}, {"type": "string"}]}
         }
       }
+    }
+  },
+  "overview": {
+    "type": "object", "additionalProperties": false, "required": ["summary", "topic", "resolved"],
+    "properties": {
+      "summary": {"type": "string"},
+      "topic": {"type": "string"},
+      "resolved": {"type": "string", "enum": ["yes", "no", "unclear"]}
     }
   }}
 }
@@ -125,6 +138,9 @@
 - `answer` enum: `binary` → `yes`, `no` (+ `na`); `scale` → значения ступеней строками (`"20"`, `"15"`, …) (+ `na`); `flag` → `yes`, `no`.
 - В БД и API ответ хранится как `"yes" | "no" | "na" | <int>` (ступень — число), как в gold.
 - `msg_id` — `m<idx>`; `quote` — дословный фрагмент реплики `msg_id`.
+- `confidence` — уверенность модели; `low` ставится, когда данных для вывода не хватает (FR-EVAL-16), и даёт пометку «требует проверки».
+- `advice` — подсказка оператору, только если ответ не даёт полного балла (FR-EVAL-18), иначе `null`; при `settings.advice = false` поле не входит в схему.
+- `overview` (FR-EVAL-19) входит только в схему первого вызова оценки и только при `settings.overview = true`; в `required` верхнего уровня его добавляет `prompt_builder`.
 
 ## 3. API
 
@@ -136,6 +152,7 @@
 | `POST /datasets/import` | `{group_id}` | `{group_id, imported, updated, warnings[]}` |
 | `POST /datasets/upload` | файл JSON (формат API организаторов) | то же |
 | `GET /conversations` | `?group_id&language&channel&critical&appeal&checklist_version_id` | `[ConversationRow]` |
+| `POST /conversations` | `{group_id?: "MANUAL", conversation_id?, channel, language, transcript: [] \| text}` (текст — строки `роль: текст`) | `ConversationDetail` (FR-DATA-07) |
 | `GET /conversations/{id}` | — | `ConversationDetail` (транскрипт с `msg_id`, `t_sec`, `audio_offset_sec`; список оценок) |
 | `PATCH /conversations/{id}` | `{audio_offset_fix_sec}` | `ConversationDetail` |
 | `GET /conversations/{id}/audio` | — | прокси записи (если браузер не может открыть `audio_url` напрямую) |
@@ -143,7 +160,8 @@
 | `GET /checklists/{version_id}` | — | `{id, key, version, ..., body}` |
 | `POST /checklists` | `{body, note, parent_id?, activate?: bool}` | версия; 422 с `[{path, message}]`, если невалидно |
 | `POST /checklists/{version_id}/activate` | — | версия |
-| `POST /runs` | `{conversation_ids? \| group_id, checklist_version_id?, provider?, model?, strategy?}` | `{run_id}` (202) |
+| `POST /runs` | `{conversation_ids? \| group_id, checklist_version_id?, provider?, model?, strategy?, reuse?: "auto" \| "none"}` | `{run_id}` (202); `reuse: auto` — инкрементальная переоценка (FR-CHK-10), «Оценить повторно» = те же параметры и `reuse: none` |
+| `POST /runs/estimate` | то же, что `POST /runs` | `{calls, tokens_in, tokens_out, cost_usd, seconds}` (FR-UX-03) |
 | `GET /runs/{run_id}` | — | `{status, total, done, failed, cost_usd, started_at, finished_at}` |
 | `GET /evaluations/{id}` | — | `Evaluation` |
 | `GET /evaluations/{id}/calls` | — | `[LLMCall]` с сырыми ответами |
@@ -151,6 +169,8 @@
 | `GET /appeals` | `?status=open` | `[AppealRow]` (с фрагментом диалога) |
 | `POST /appeals/{id}/decision` | `{action: "confirm" \| "change", answer?, reason}` | `{appeal, evaluation}` (с пересчитанным `final_score`) |
 | `GET /export` | `?group_id&checklist_version_id&format=json\|csv` | файл |
+| `GET /analytics` | `?group_id&checklist_version_id` | `Analytics` (FR-ANL-01) |
+| `GET /review-queue` | `?group_id` | `[ReviewItem]` (FR-UX-02) |
 | `GET /meta/models` | — | настроенные провайдеры и модели, стратегия по умолчанию |
 | `GET /gold/{conversation_id}`, `PUT /gold/{conversation_id}` | разметка по формату `data/gold/README.md` | для экрана gold-разметки (только DEV) |
 
@@ -159,13 +179,18 @@
 ```text
 ConversationRow  = {id, conversation_id, group_id, channel, language, latest: {evaluation_id, ai_total, final_total, critical, needs_review, open_appeals} | null}
 Evaluation       = {id, conversation_id, checklist_version_id, provider, model, strategy, prompt_version, status,
-                    facts, ai_score: ScoreResult, final_score: ScoreResult, criteria: [CriterionResult],
+                    facts, overview: {summary, topic, resolved} | null, params: {temperature, seed, reuse},
+                    ai_score: ScoreResult, final_score: ScoreResult, criteria: [CriterionResult],
                     tokens_in, tokens_out, cost_usd, latency_ms, created_at}
 CriterionResult  = {key, title, section, type, weight, ai_answer, ai_points, final_answer, final_points, overridden,
-                    reasoning, evidence: [{msg_id, quote, quote_ok}], checked_range: {from, to} | null, na_reason, issues: [str],
+                    reasoning, confidence, advice, evidence: [{msg_id, quote, quote_ok}], checked_range: {from, to} | null, na_reason, issues: [str],
+                    reused_from_evaluation_id: int | null,
                     appeal: Appeal | null}
 ScoreResult      = {total: float | null, applicable_weight, points_sum, sections: [{id, title, points, applicable_weight, pct}],
                     criteria: {key: {points, contribution}}, critical: [key]}
+Analytics        = {count, avg_total, histogram: [{from, to, count}], by_criterion: [{key, title, pass_rate, avg_pct, na_rate}],
+                    by_language: {lang: {count, avg_total}}, by_channel: {...}, critical_count, needs_review_count, topics: [{topic, count, resolved_rate}]}
+ReviewItem       = {evaluation_id, conversation_id, criterion_key, reason: "low_confidence" | "validator" | "guard", issues: [str]}
 Appeal           = {id, evaluation_id, criterion_key, comment, status, ai_answer_snapshot, decision_answer, decision_reason, created_at, decided_at}
 ```
 
@@ -180,6 +205,9 @@ judge.run(provider: LLMProvider, messages, schema, *, model) -> tuple[JudgeOutpu
 validator.validate(output: dict, criteria: list[Criterion], conv) -> list[Issue]
 guards.apply(answers: dict, facts: dict, criteria: list[Criterion]) -> tuple[dict, list[Issue]]
 scoring.compute(checklist: Checklist, answers: dict[str, Answer]) -> ScoreResult
+reuse.criterion_hash(criterion: Criterion, prompt_version: str, model: str) -> str   # только поля, которые попадают в промпт
+reuse.plan(criteria: list[Criterion], previous: Evaluation | None, *, model: str, prompt_version: str) -> tuple[dict[str, CriterionResult], list[Criterion]]   # переиспользуем, вызываем
+analytics.summarize(group_id: str, checklist_version_id: int | None) -> Analytics
 evaluator.evaluate(conversation_pk: int, checklist_version_id: int, *, provider: str, model: str, strategy: str) -> int   # evaluation_id
 appeals.decide(appeal_id: int, action: str, answer: Answer | None, reason: str) -> Evaluation
 LLMProvider.complete(messages, *, model, json_schema, max_tokens, temperature, timeout_s) -> LLMResult
@@ -195,4 +223,5 @@ CSV, UTF-8 с BOM, `;` как разделитель (Excel в RU-локали).
 
 ## Журнал версий
 
+- 0.2 — 2026-11-07 — уточнение организаторов: `confidence`, `advice`, `overview` в ответе LLM; `quote_threshold` по каналу; вставка диалога, оценка стоимости, `reuse` в запуске, аналитика, очередь «требует проверки».
 - 0.1 — 2026-11-07 — первая версия: чек-лист, схема ответа LLM, API, сигнатуры, экспорт.
