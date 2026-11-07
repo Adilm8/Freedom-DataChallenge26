@@ -10,6 +10,7 @@
 <body>
   <!-- Встроенный плеер записи звонка: ?id=<id диалога>[&mock=1]. Переход к секунде — событие cqa:seek на #cqa-host. -->
   <div id="cqa-host" class="cqa-root"></div>
+  <script type="module" src="../js/i18n.js"></script>
   <script type="module">
     import { mount } from '../js/components/audio-player.js';
     import { paramsFromQuery } from '../js/ui.js';

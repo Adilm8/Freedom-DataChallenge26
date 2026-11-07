@@ -1,6 +1,7 @@
 // Сквозной UX оболочки: палитра команд (Ctrl+K), горячие клавиши, окно справки «?».
 // Не знает об устройстве экранов: действует через hash-переходы, события cqa:* и разметку (кнопки, строки с tabindex).
 import { icon } from './icons.js';
+import { t } from './i18n.js';
 import { h, fmtScore, scoreClass, channelLabel, LANG } from './ui.js';
 import { listConversations, getAnalytics } from './api.js';
 
@@ -82,7 +83,7 @@ export function openPalette() {
 
   function render() {
     const q = input.value.trim();
-    const cmd = commands().filter((c) => !q || matches(q, `${c.label} ${c.group} ${c.kw || ''}`));
+    const cmd = commands().filter((c) => !q || matches(q, `${c.label} ${t(c.label)} ${c.group} ${t(c.group)} ${c.kw || ''}`));
     let dlg = [];
     if (convs) {
       dlg = convs.filter((r) => !q || matches(q, `${r.conversation_id} ${r.topic} ${LANG[norm(r.language)] || r.language} ${channelLabel(r.channel)}`));

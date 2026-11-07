@@ -5,6 +5,7 @@ import { getHealth, isMock, listGroups, listAppeals, getReviewQueue } from './ap
 import { openRunDialog } from './components/run-dialog.js';
 import { openImportDialog } from './components/import-dialog.js';
 import { initShellUx, openPalette } from './shell-ux.js';
+import { LANGS, getLang, setLang } from './i18n.js';
 
 const appEl = document.getElementById('app');
 
@@ -71,6 +72,11 @@ function buildHeader() {
     [['analyst', 'Аналитик'], ['reviewer', 'Проверяющий']].map(([id, label]) =>
       h('button', { type: 'button', class: 'cqa-seg__btn', dataset: { mode: id }, 'aria-pressed': String(settings.mode === id),
         onclick: () => { settings.mode = id; store.set('mode', id); syncHeader(); route(); } }, label)));
+  // Язык интерфейса: подписи кнопок не переводятся (data-i18n-skip), смена — с перезагрузкой страницы.
+  const langSeg = h('div', { class: 'cqa-seg cqa-side__seg', role: 'group', 'aria-label': 'Язык интерфейса' },
+    LANGS.map(([id, short, name]) => h('button', { type: 'button', class: 'cqa-seg__btn', title: name, lang: id,
+      'aria-pressed': String(getLang() === id), 'data-i18n-skip': true,
+      onclick: () => { if (getLang() !== id) setLang(id); } }, short)));
   const demo = h('label', { class: 'cqa-toggle', title: 'Крупнее шрифт для проектора' },
     h('input', { type: 'checkbox', checked: settings.demo, onchange: (e) => { settings.demo = e.target.checked; store.set('demo', settings.demo ? '1' : '0'); syncHeader(); } }), 'Крупный шрифт');
   const themeBtn = h('button', { type: 'button', class: 'cqa-btn cqa-btn--ghost cqa-btn--sm cqa-themebtn', id: 'cqa-theme',
@@ -86,7 +92,8 @@ function buildHeader() {
     nav,
     h('div', { class: 'cqa-side__foot' },
       h('label', { class: 'cqa-side__field' }, h('span', { class: 'cqa-side__label' }, 'Группа данных'), groupSel),
-      h('div', { class: 'cqa-side__field' }, h('span', { class: 'cqa-side__label' }, 'Роль'), modeSeg)));
+      h('div', { class: 'cqa-side__field' }, h('span', { class: 'cqa-side__label' }, 'Роль'), modeSeg),
+      h('div', { class: 'cqa-side__field' }, h('span', { class: 'cqa-side__label' }, 'Язык интерфейса'), langSeg)));
   const top = h('header', { class: 'cqa-header' }, searchBtn, h('div', { class: 'cqa-header__tools' }, healthEl, demo, themeBtn));
   return { side, top };
 }
