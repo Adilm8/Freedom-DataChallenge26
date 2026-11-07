@@ -173,3 +173,26 @@ class CriterionTrial(SQLModel, table=True):
     calls: list = J([])
     cost_usd: float = 0.0
     created_at: datetime = Field(default_factory=utcnow)
+
+
+class AppealSecondOpinion(SQLModel, table=True):
+    """«Второе мнение ИИ» по апелляции (services/second_opinion.py): независимая перепроверка одного спорного
+    критерия тем же конвейером. Модель не видит ответ AI и комментарий аналитика; оценку не меняет.
+    Отдельная таблица, чтобы `create_all` поднял её и на уже существующей БД (миграций нет)."""
+    __tablename__ = "appeal_second_opinion"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    appeal_id: int = Field(foreign_key="appeal.id", index=True)
+    evaluation_id: int = Field(foreign_key="evaluation.id", index=True)
+    criterion_key: str = ""
+    provider: str = ""
+    model: str = ""
+    ai_answer: str = ""              # ответ AI на момент перепроверки (для `agrees`)
+    status: str = "done"             # done / failed
+    error: Optional[str] = None
+    result: dict = J({})             # answer, reasoning, confidence, evidence, na_reason, checked_range, issues
+    calls: list = J([])              # вызовы LLM целиком: промпт, сырой ответ, токены, стоимость
+    cost_usd: float = 0.0
+    tokens_in: int = 0
+    tokens_out: int = 0
+    latency_ms: int = 0
+    created_at: datetime = Field(default_factory=utcnow)
