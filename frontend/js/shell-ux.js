@@ -1,5 +1,6 @@
 // Сквозной UX оболочки: палитра команд (Ctrl+K), горячие клавиши, окно справки «?».
 // Не знает об устройстве экранов: действует через hash-переходы, события cqa:* и разметку (кнопки, строки с tabindex).
+import { icon } from './icons.js';
 import { h, fmtScore, scoreClass, channelLabel, LANG } from './ui.js';
 import { listConversations, getAnalytics } from './api.js';
 
@@ -71,7 +72,7 @@ export function openPalette() {
     h('span', null, h('kbd', null, '↑'), h('kbd', null, '↓'), ' выбор'), h('span', null, h('kbd', null, 'Enter'), ' открыть'),
     h('span', null, h('kbd', null, 'Esc'), ' закрыть'), h('span', { class: 'cqa-pal__group' }, `группа ${ctx.getGroup()}`));
   const box = h('div', { class: 'cqa-pal__box', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Палитра команд' },
-    h('div', { class: 'cqa-pal__search' }, h('span', { class: 'cqa-pal__icon', 'aria-hidden': 'true' }, '⌕'), input, h('kbd', null, `${MOD} K`)), list, foot);
+    h('div', { class: 'cqa-pal__search' }, h('span', { class: 'cqa-pal__icon' }, icon('search', 18)), input, h('kbd', null, `${MOD} K`)), list, foot);
   paletteEl = h('div', { class: 'cqa-pal', onmousedown: (e) => { if (e.target === paletteEl) closePalette(); } }, box);
   ctx.appEl.append(paletteEl);
   input.focus();
