@@ -6,6 +6,7 @@ from ..config import settings
 from ..db import get_session
 from ..models import ChecklistVersion, Conversation, EvaluationRun
 from ..providers import configured_models
+from ..services import estimate as estimate_svc
 from ..services import runs as runs_svc
 from ..services.evaluations import REUSE_MODES
 from ..services.evaluator import STRATEGIES
@@ -23,8 +24,8 @@ class RunBody(BaseModel):
     reuse: str = "none"
 
 
-@router.post("/runs", status_code=202)
-def create_run(body: RunBody, session: Session = Depends(get_session)) -> dict:
+def _resolve(body: RunBody, session: Session) -> tuple[list[int], str, int, str, str, str]:
+    """Общая проверка тела запуска и оценки: (диалоги, группа, версия, провайдер, модель, стратегия)."""
     strategy = body.strategy or settings.eval_strategy
     if strategy not in STRATEGIES:
         raise HTTPException(400, f"неизвестная стратегия «{strategy}»: {', '.join(STRATEGIES)}")
@@ -48,11 +49,26 @@ def create_run(body: RunBody, session: Session = Depends(get_session)) -> dict:
     pks = list(session.exec(q))
     if not pks:
         raise HTTPException(400, "нет диалогов для оценки")
-    if not (body.checklist_version_id or runs_svc.active_version_id(session)):
+    version_id = body.checklist_version_id or runs_svc.active_version_id(session)
+    if not version_id:
         raise HTTPException(400, "нет активной версии чек-листа")
-    run_id = runs_svc.start_run(session, pks, group_id=group, checklist_version_id=body.checklist_version_id,
+    return pks, group, version_id, provider, model, strategy
+
+
+@router.post("/runs", status_code=202)
+def create_run(body: RunBody, session: Session = Depends(get_session)) -> dict:
+    pks, group, version_id, provider, model, strategy = _resolve(body, session)
+    run_id = runs_svc.start_run(session, pks, group_id=group, checklist_version_id=version_id,
                                 provider=provider, model=model, strategy=strategy, reuse=body.reuse)
     return {"run_id": run_id}
+
+
+@router.post("/runs/estimate")
+def estimate_run(body: RunBody, session: Session = Depends(get_session)) -> dict:
+    """Сколько вызовов, токенов, денег и времени займёт запуск с этими параметрами (FR-UX-03). LLM не вызывается."""
+    pks, _, version_id, provider, model, strategy = _resolve(body, session)
+    return estimate_svc.estimate(session, pks, version_id, provider_name=provider, model=model, strategy=strategy,
+                                 reuse=body.reuse)
 
 
 @router.get("/runs/{run_id}")

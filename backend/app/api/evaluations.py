@@ -32,6 +32,14 @@ def get_calls(eid: int, session: Session = Depends(get_session)) -> list[dict]:
     } for c in rows]
 
 
+@router.get("/meta/facts")
+def meta_facts() -> dict:
+    """Русские подписи фактов для интерфейса (источник — реестр `services/facts`)."""
+    from ..services import facts
+
+    return {"labels": dict(facts.LABELS)}
+
+
 @router.get("/meta/models")
 def meta_models() -> dict:
     return {
