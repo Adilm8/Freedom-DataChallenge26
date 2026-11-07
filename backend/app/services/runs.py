@@ -5,7 +5,7 @@ import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from .. import db
 from ..models import Evaluation, EvaluationRun, utcnow
@@ -36,7 +36,9 @@ def _execute(run_id: int, conv_pks: list[int], version_id: int, provider: str, m
                 eid = evaluations.evaluate_one(s, pk, version_id, provider_name=provider, model=model,
                                                strategy=strategy, run_id=run_id, reuse=reuse)
                 ev = s.get(Evaluation, eid)
-                ok, cost = ev.status != "failed", ev.cost_usd or 0.0
+                # неполная оценка (у части критериев нет ответа) — не готовый результат: в файл сдачи она идёт
+                # как error, поэтому и в прогрессе считается ошибкой, а не «оценено»
+                ok, cost = ev.status == "done", ev.cost_usd or 0.0
         except Exception as e:  # noqa: BLE001  один диалог не валит прогон, но причина остаётся в БД
             log.exception("оценка диалога %s в прогоне %s упала", pk, run_id)
             ok = False
@@ -63,6 +65,22 @@ def _execute(run_id: int, conv_pks: list[int], version_id: int, provider: str, m
         run.finished_at = utcnow()
         s.add(run)
         s.commit()
+
+
+def close_interrupted(session: Session) -> int:
+    """Прогоны, оборванные остановкой сервера (потоки не переживают перезапуск): `queued`/`running` при старте
+    закрываются, необработанные диалоги считаются ошибкой. Иначе окно прогресса ждёт их вечно.
+    Дооценить такие диалоги — тот же запуск с `reuse: auto`: готовые ответы возьмутся из БД без вызовов."""
+    stale = list(session.exec(select(EvaluationRun).where(EvaluationRun.status.in_(("queued", "running")))))
+    for run in stale:
+        run.failed = max(run.failed, run.total - run.done)
+        run.status = "failed" if run.done == 0 else "partial"
+        run.finished_at = utcnow()
+        session.add(run)
+    if stale:
+        session.commit()
+        log.warning("закрыты прерванные прогоны: %s", [r.id for r in stale])
+    return len(stale)
 
 
 def create_run(session: Session, conv_pks: list[int], *, group_id: str, version_id: int | None, provider: str,

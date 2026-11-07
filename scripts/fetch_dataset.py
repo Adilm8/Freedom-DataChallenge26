@@ -2,7 +2,7 @@
 
     python scripts/fetch_dataset.py              # group_id из .env (DEV)
     python scripts/fetch_dataset.py --group CTRL # контрольный набор
-    python scripts/fetch_dataset.py --from-file "Starting files/Data.txt"  # без сети
+    python scripts/fetch_dataset.py --from-file <файл.json>  # без сети, файл в формате ответа API
 
 Снапшот нужен, чтобы eval и разработка не зависели от доступности API.
 """
@@ -11,19 +11,12 @@ import json
 import sys
 from collections import Counter
 from pathlib import Path
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from backend.app.config import settings  # noqa: E402
-
-
-def with_group(url: str, group: str) -> str:
-    parts = urlsplit(url)
-    q = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if k != "group_id"]
-    q.append(("group_id", group))
-    return urlunsplit(parts._replace(query=urlencode(q)))
+from backend.app.services import ingest  # noqa: E402
 
 
 def main() -> None:
@@ -32,19 +25,15 @@ def main() -> None:
     ap.add_argument("--from-file", type=Path)
     args = ap.parse_args()
 
-    if args.from_file:
-        payload = json.loads(args.from_file.read_text(encoding="utf-8"))
-    else:
-        import httpx
+    # Ошибки — без трейсбека: в тексте исключения httpx полный адрес запроса с подписью sig (секрет).
+    try:
+        payload = (json.loads(args.from_file.read_text(encoding="utf-8-sig")) if args.from_file
+                   else ingest.fetch_payload(args.group))
+    except (ingest.IngestError, OSError, ValueError) as e:
+        sys.exit(f"набор не получен: {ingest.scrub(str(e))}")
 
-        if not settings.organizer_api_url:
-            sys.exit("ORGANIZER_API_URL не задан в .env")
-        r = httpx.get(with_group(settings.organizer_api_url, args.group), timeout=60)
-        r.raise_for_status()
-        payload = r.json()
-
-    if not payload.get("isSuccess"):
-        sys.exit(f"API вернул ошибку: {payload.get('error')}")
+    if not isinstance(payload, dict) or not payload.get("isSuccess"):
+        sys.exit(f"API вернул ошибку: {ingest.scrub(str(payload.get('error') if isinstance(payload, dict) else payload))}")
     data = payload["data"]
     out = ROOT / "data" / "raw" / f"{data['dataset_group_id']}.json"
     out.parent.mkdir(parents=True, exist_ok=True)

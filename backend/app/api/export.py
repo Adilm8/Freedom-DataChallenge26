@@ -13,15 +13,19 @@ router = APIRouter(tags=["export"])
 @router.get("/export/results")
 def export_results(group_id: str = Query(default=None), team: str | None = None, mode: str | None = None,
                    session: Session = Depends(get_session)) -> JSONResponse:
-    """results.json в формате организаторов (1.0) и итог проверки в заголовке `X-Validation-Errors`."""
+    """results.json в формате организаторов (1.0) по активной версии чек-листа. Заголовки: `X-Validation-Errors` —
+    ошибок проверки формата (пустой TEAM_NAME тоже ошибка), `X-Results-Ok` / `X-Results-Error` — записей со статусом
+    ok и error: формат может быть верным, даже если ни один диалог не оценён."""
     group = group_id or settings.dataset_group_id
-    doc = results_export.build(session, group, team_name=team or settings.team_name or "—",
+    doc = results_export.build(session, group, team_name=team or settings.team_name,
                                mode=mode if mode in results_export.MODES else settings.model_mode)
     ids = list(session.exec(select(Conversation.conversation_id).where(
         Conversation.group_id == group, Conversation.source != "manual")))
     errs = results_export.validate(doc, expected_ids=ids)
+    ok = sum(r["status"] == "ok" for r in doc["results"])
     return JSONResponse(doc, headers={"Content-Disposition": f'attachment; filename="results-{group}.json"',
-                                      "X-Validation-Errors": str(len(errs))})
+                                      "X-Validation-Errors": str(len(errs)), "X-Results-Ok": str(ok),
+                                      "X-Results-Error": str(len(doc["results"]) - ok)})
 
 
 @router.get("/export")

@@ -91,6 +91,10 @@ def import_payload(session: Session, payload: Any, source: str = "upload", group
             skipped[cid] = f"Запись набора не разобрана: {e}"
             continue
         warnings.extend(f"{cid}: {w}" for w in norm.warnings)
+        if not norm.messages:
+            warnings.append(f"{cid}: транскрипт пуст — оценивать нечего, проверьте запись")
+        elif not any(m.speaker == "operator" for m in norm.messages):
+            warnings.append(f"{cid}: нет ни одной реплики оператора — проверьте оценку вручную")
         row = session.exec(
             select(Conversation).where(Conversation.group_id == group, Conversation.conversation_id == cid)
         ).first()

@@ -257,13 +257,15 @@ CSV, UTF-8 с BOM, `;` как разделитель, запятая в дроб
 
 ### 5.1 Файл сдачи (`results/<dev|prod>/results.json`, `GET /api/export/results?group_id=`)
 
-Формат организаторов 1.0 — [`docs/task/results-format.md`](task/results-format.md). У критерия чек-листа есть `export_id` (`contact`, `discovery`, `identification`, `consultation`, `empathy`, `dialogue`, `closure`, `critical`); заменённый на контроле критерий наследует `export_id` того, что заменил. В файл идут ответы AI последней оценки со статусом `done` по активной версии чек-листа; без неё — `status: error` с причиной. `evidence_turns = idx + 1`. CLI: `python scripts/export_results.py --group <id> --out results/<dev|prod>/results.json [--expect-count 10]`, `--check <файл>` — только проверка.
+Формат организаторов 1.0 — [`docs/task/results-format.md`](task/results-format.md). У критерия чек-листа есть `export_id` (`contact`, `discovery`, `identification`, `consultation`, `empathy`, `dialogue`, `closure`, `critical`); заменённый на контроле критерий наследует `export_id` того, что заменил. В файл идут ответы AI последней оценки со статусом `done` по активной версии чек-листа; без неё — `status: error` с причиной. `evidence_turns = idx + 1`. CLI: `python scripts/export_results.py --group <id> --out results/<dev|prod>/results.json [--expect-count 10]`, `--check <файл>` — только проверка. Заголовки ответа: `X-Validation-Errors` (ошибок проверки формата, пустой `TEAM_NAME` — ошибка), `X-Results-Ok`, `X-Results-Error` (записей ok и error). Неполная оценка (`partial`) в файле — `error` и в прогоне (`GET /runs/{id}`) считается в `failed`. Сохранение версии предупреждает, если она не ложится в формат сдачи (`warnings` с префиксом «файл сдачи:»). Прогоны `queued`/`running` при старте сервера закрываются: необработанные диалоги — `failed`.
 
 ## 6. Gold
 
 Формат — `data/gold/README.md`. Разбиение dev/holdout — `data/gold/split.json`: `{"dev": [...], "holdout": [...]}`.
 
 ## Журнал версий
+
+- 0.5.2 — 2026-11-07 — заголовки `X-Results-Ok`/`X-Results-Error` у файла сдачи, `partial` считается ошибкой прогона, закрытие прерванных прогонов при старте, предупреждения о формате сдачи при сохранении версии.
 
 - 0.5.1 — 2026-11-07 — импорт из интерфейса: `organizer_api` в `GET /health`, лимит 25 МБ у `POST /datasets/upload` (413), тексты ошибок импорта без адреса API.
 

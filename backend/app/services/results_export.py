@@ -36,6 +36,36 @@ def export_value(c: Criterion, answer):
     return answer == "yes"
 
 
+def _show(v) -> str:
+    return "N/A" if v is None else ("true" if v is True else "false" if v is False else str(v))
+
+
+def format_issues(cl: Checklist) -> list[str]:
+    """Чем включённые критерии чек-листа не ложатся в формат сдачи организаторов: нет или повторяется код,
+    или критерий может дать значение, которого нет у кода (N/A у `empathy`, ступень 5 у `dialogue`).
+    Такой файл не пройдёт `validate`, поэтому скрипт контроля проверяет это до платного прогона."""
+    out: list[str] = []
+    by_code: dict[str, list[str]] = {}
+    for c in cl.enabled_criteria():
+        code = c.export_id or c.key
+        by_code.setdefault(code, []).append(c.key)
+        if code not in ORGANIZER_CRITERIA:
+            out.append(f"{c.key}: код «{code}» не из формата сдачи (нужны {', '.join(ORGANIZER_CRITERIA)})")
+            continue
+        bad = [v for v in (export_value(c, a) for a in c.allowed_answers()) if not _value_ok(code, v)]
+        if bad:
+            allowed = ", ".join(sorted((_show(v) for v in ORGANIZER_CRITERIA[code]), key=str))
+            out.append(f"{c.key} → {code}: значения {', '.join(_show(v) for v in bad)} недопустимы в файле сдачи "
+                       f"(для {code} допустимо: {allowed})")
+    for code, keys in by_code.items():
+        if len(keys) > 1:
+            out.append(f"код «{code}» у нескольких включённых критериев: {', '.join(keys)}")
+    missing = [code for code in ORGANIZER_CRITERIA if code not in by_code]
+    if missing:
+        out.append(f"в файле сдачи не будет кодов: {', '.join(missing)}")
+    return out
+
+
 def turns(evidence: list[dict]) -> list[int]:
     out = set()
     for e in evidence or []:
@@ -61,8 +91,16 @@ def _pick(session: Session, conv_pk: int, version_id: int | None) -> tuple[Evalu
     return next((e for e in evs if e.status == "done"), None), (evs[0] if evs else None)
 
 
-def _error_reason(session: Session, ev: Evaluation | None) -> str:
+def _error_reason(session: Session, ev: Evaluation | None, conv_pk: int | None = None,
+                  version_id: int | None = None) -> str:
     if ev is None:
+        other = session.exec(select(Evaluation).where(Evaluation.conversation_pk == conv_pk, Evaluation.status == "done")
+                             .order_by(Evaluation.id.desc())).first() if conv_pk is not None and version_id else None
+        if other:  # оценён, но по другой версии: файл собирается по одной версии чек-листа
+            have, want = session.get(ChecklistVersion, other.checklist_version_id), session.get(ChecklistVersion, version_id)
+            return (f"Нет оценки по версии чек-листа v{want.version if want else version_id} (id {version_id}); "
+                    f"последняя полная оценка — по v{have.version if have else other.checklist_version_id} "
+                    f"(id {other.checklist_version_id}).")
         return "Диалог не оценивался."
     errs = [c.error for c in session.exec(select(LLMCall).where(LLMCall.evaluation_id == ev.id)) if c.error]
     if ev.status == "partial":
@@ -84,12 +122,15 @@ def build(session: Session, group_id: str, *, team_name: str, mode: str = "exter
                                                     Conversation.source != "manual")  # ручные — не часть набора
                          .order_by(Conversation.conversation_id)).all()
     models: list[str] = []
+    tried: list[str] = []  # модели неудачных попыток: model.name не пуст, даже если ни один диалог не оценён
     results = []
     for conv in convs:
         ev, last = _pick(session, conv.id, version_id)
         if ev is None:
+            if last and last.model and last.model not in tried:
+                tried.append(last.model)
             results.append({"conversation_id": conv.conversation_id, "status": "error", "criteria": [],
-                            "score": None, "error": _error_reason(session, last)})
+                            "score": None, "error": _error_reason(session, last, conv.id, version_id)})
             continue
         cl = Checklist.model_validate(session.get(ChecklistVersion, ev.checklist_version_id).body)
         rows = {r.criterion_key: r for r in session.exec(select(CriterionResult).where(CriterionResult.evaluation_id == ev.id))}
@@ -113,7 +154,7 @@ def build(session: Session, group_id: str, *, team_name: str, mode: str = "exter
             results.append({"conversation_id": cid, "status": "error", "criteria": [], "score": None,
                             "error": (skipped or {}).get(cid) or "Запись набора не импортирована."})
     return {"schema_version": SCHEMA_VERSION, "team_name": team_name,
-            "model": {"mode": mode, "name": ", ".join(models)}, "results": results}
+            "model": {"mode": mode, "name": ", ".join(models or tried)}, "results": results}
 
 
 def _value_ok(code: str, v) -> bool:
