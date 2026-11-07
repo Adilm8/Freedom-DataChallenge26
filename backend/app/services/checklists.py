@@ -10,6 +10,7 @@ from sqlmodel import Session, select
 
 from ..domain import Checklist
 from ..models import ChecklistVersion
+from . import results_export
 
 DEFAULT_PATH = Path(__file__).resolve().parents[3] / "data" / "checklists" / "default.json"
 
@@ -50,6 +51,9 @@ def create_version(
     """Возвращает (версия, предупреждения). Одинаковое тело с той же базой не плодит версию."""
     cl = validate(body)
     warnings = cl.warnings()
+    if any(c.export_id in results_export.ORGANIZER_CRITERIA for c in cl.enabled_criteria()):
+        # чек-лист для сдачи организаторам: сразу сказать, если файл по нему не пройдёт проверку формата
+        warnings += [f"файл сдачи: {w}" for w in results_export.format_issues(cl)]
     h = body_hash(body)
     existing = session.exec(
         select(ChecklistVersion).where(

@@ -44,9 +44,14 @@ def main() -> None:
         snap = ROOT / "data" / "raw" / f"{args.group}.json" if args.group else None
         payload_ids = ingest.payload_ids(json.loads(snap.read_text(encoding="utf-8"))) if snap and snap.exists() else None
         if args.check:
-            doc = json.loads(args.check.read_text(encoding="utf-8"))
+            try:  # строго UTF-8 без BOM и без лишних запятых — как просят организаторы
+                doc = json.loads(args.check.read_text(encoding="utf-8"))
+            except (OSError, ValueError) as e:
+                sys.exit(f"{args.check}: не читается как JSON в UTF-8 без BOM — {e}")
             group = args.group
         else:
+            print(f"чек-лист: v{ver.version} (id {ver.id}){'' if ver.is_active else ' — НЕ активная'}"
+                  f"{f' · «{ver.note}»' if ver.note else ''}")
             if not (args.group and args.out):
                 sys.exit("нужны --group и --out (или --check)")
             if not args.team:

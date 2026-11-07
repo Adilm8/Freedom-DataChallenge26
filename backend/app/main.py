@@ -20,6 +20,7 @@ from .api import runs as runs_api
 from .config import settings
 from .models import Conversation
 from .services import checklists as checklists_svc
+from .services import runs as runs_svc
 
 FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
 
@@ -29,6 +30,7 @@ async def lifespan(app: FastAPI):
     db.init_db()
     with Session(db.engine) as s:
         checklists_svc.seed_default(s)
+        runs_svc.close_interrupted(s)  # фоновые потоки не пережили перезапуск
     yield
 
 

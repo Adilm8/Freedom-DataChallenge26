@@ -3,6 +3,10 @@
     python scripts/control.py --group <id> --target prod --expect-count 10 --approved "Лида, 23:05"
     python scripts/control.py --file data/raw/CTRL.json --group CTRL --target prod --expect-count 10 --approved "…"
     python scripts/control.py --group DEV --target dev --approved "…"            # DEV-файл, все 65 диалогов
+    python scripts/control.py --group <id> --target prod --expect-count 10 --reuse auto --approved "…"  # повтор после сбоя
+
+`--version <id>` — оценить по этой версии чек-листа, а не по активной. До импорта и вызовов скрипт проверяет, что
+версия ложится в формат сдачи (8 кодов организаторов, допустимые значения), иначе выходит с объяснением.
 
 Шаги: набор из API организаторов (или файла) → снапшот `data/raw/<group>.json` → импорт с исходными ID →
 оценка всех диалогов → повтор неудачных (`reuse: auto` дозапрашивает только недостающие критерии) →
@@ -23,9 +27,9 @@ from sqlmodel import Session, select  # noqa: E402
 from backend.app import db  # noqa: E402
 from backend.app.config import settings  # noqa: E402
 from backend.app.domain import Checklist  # noqa: E402
-from backend.app.models import Conversation, Evaluation, EvaluationRun  # noqa: E402
+from backend.app.models import ChecklistVersion, Conversation, Evaluation, EvaluationRun  # noqa: E402
 from backend.app.providers import configured_models  # noqa: E402
-from backend.app.services import checklists, ingest, results_export, runs  # noqa: E402
+from backend.app.services import checklists, evaluations, ingest, results_export, runs  # noqa: E402
 
 
 def latest_ok(session: Session, pks: list[int], version_id: int) -> set[int]:
@@ -47,6 +51,10 @@ def main() -> None:
     ap.add_argument("--expect-count", type=int)
     ap.add_argument("--retries", type=int, default=1)
     ap.add_argument("--skip-import", action="store_true", help="набор уже в БД")
+    ap.add_argument("--version", type=int, help="id версии чек-листа (по умолчанию активная)")
+    ap.add_argument("--reuse", choices=evaluations.REUSE_MODES, default="none",
+                    help="auto — ответы с тем же хешем (модель, промпт, транскрипт, критерий) взять из прошлых оценок "
+                         "без вызовов: повторный запуск после сбоя не платит второй раз")
     ap.add_argument("--approved", help="кто и когда разрешил платный прогон")
     args = ap.parse_args()
 
@@ -63,17 +71,27 @@ def main() -> None:
     raw = ROOT / "data" / "raw" / f"{args.group}.json"
     with Session(db.engine) as s:
         checklists.seed_default(s)
-        ver = checklists.get_active(s)
-        codes = sorted(c.export_id or c.key for c in Checklist.model_validate(ver.body).enabled_criteria())
-        if codes != sorted(results_export.ORGANIZER_CRITERIA):
-            sys.exit(f"у активного чек-листа (v{ver.id}) коды для сдачи {codes}, нужны {sorted(results_export.ORGANIZER_CRITERIA)}:"
-                     " задайте export_id заменённому критерию в редакторе чек-листа")
+        ver = s.get(ChecklistVersion, args.version) if args.version else checklists.get_active(s)
+        if not ver:
+            sys.exit(f"нет версии чек-листа с id {args.version}")
+        # до любого платного вызова: файл по этой версии должен пройти проверку формата организаторов
+        issues = results_export.format_issues(Checklist.model_validate(ver.body))
+        if issues:
+            sys.exit(f"чек-лист v{ver.version} (id {ver.id}) не ложится в формат сдачи, файл не пройдёт проверку:\n  "
+                     + "\n  ".join(issues) + "\nВыберите другую версию (--version <id>) или поправьте критерий в редакторе"
+                     " (код в файле сдачи, N/A, ступени шкалы).")
+        print(f"чек-лист: v{ver.version} (id {ver.id}){'' if ver.is_active else ' — НЕ активная'}"
+              f"{f' · «{ver.note}»' if ver.note else ''}")
         skipped: dict[str, str] = {}
         if not args.skip_import:
-            payload = json.loads(args.file.read_text(encoding="utf-8")) if args.file else ingest.fetch_payload(args.group)
-            raw.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                payload = (json.loads(args.file.read_text(encoding="utf-8-sig")) if args.file
+                           else ingest.fetch_payload(args.group))
+                rep = ingest.import_payload(s, payload, "file" if args.file else "api", group_id=args.group)
+            except (ingest.IngestError, ValueError) as e:  # текст ошибки API может повторить адрес с подписью
+                sys.exit(f"импорт не выполнен: {ingest.scrub(str(e))}")
+            raw.parent.mkdir(parents=True, exist_ok=True)  # снапшот — только удачного ответа API
             raw.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-            rep = ingest.import_payload(s, payload, "file" if args.file else "api", group_id=args.group)
             skipped = rep["skipped"]
             print(f"импорт: {rep['imported']} новых, {rep['updated']} обновлено, пропущено {len(skipped)}, "
                   f"предупреждений {len(rep['warnings'])}")
@@ -85,9 +103,10 @@ def main() -> None:
         pks = list(s.exec(select(Conversation.id).where(Conversation.group_id == args.group, Conversation.source != "manual")))
         if not pks:
             sys.exit("в группе нет диалогов")
-        print(f"оценка: {len(pks)} диалогов · {args.provider} / {model} / {args.strategy} · чек-лист v{ver.id}")
+        print(f"оценка: {len(pks)} диалогов · {args.provider} / {model} / {args.strategy} · чек-лист v{ver.version}"
+              f"{' · reuse auto' if args.reuse == 'auto' else ''}")
         run_id = runs.run_sync(s, pks, group_id=args.group, checklist_version_id=ver.id, provider=args.provider,
-                               model=model, strategy=args.strategy)
+                               model=model, strategy=args.strategy, reuse=args.reuse)
         cost = s.get(EvaluationRun, run_id).cost_usd
         for i in range(args.retries):
             s.expire_all()
