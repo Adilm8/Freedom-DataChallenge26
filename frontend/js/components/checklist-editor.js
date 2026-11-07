@@ -1,7 +1,7 @@
 // Конструктор чек-листа (FR-CHK-02…10, PLAN шаг 13). Экран #/checklist?version=<id>.
 // mount(el, {version?, group}) — активная (или выбранная) версия, критерии по секциям, редактор критерия,
 // «Заменить критерий» (новый на месте старого: та же секция, вес и export_id, старый выключается), настройки и секции,
-// сохранение новой версией (POST /checklists с parent_id), «Сделать активной», «Применить к…» (событие cqa:run-request
+// сохранение новой версией (POST /checklists с parent_id), «Переоценить диалоги…» (событие cqa:run-request
 // с версией и reuse auto), история версий с отличиями, импорт и экспорт JSON.
 // Проверки — checklist-model.js (повторяют domain.py), 422 бэкенда подсвечивает поле по path.
 import { h, clear, emit, toast, fmtDate, skeletonRows, errorState, emptyState, channelBadge, langChip, score } from '../ui.js';
@@ -200,13 +200,16 @@ export function mount(el, params = {}) {
   async function activate(id) {
     try {
       await activateChecklist(id);
-      st.versions = await listChecklists();
-      const m = meta(id);
-      if (st.cur?.id === id) st.cur.is_active = true;
-      for (const b of st.bodies.values()) b.is_active = b.id === id;
-      toast(host(), `Версия v${m?.version ?? ''} активна: по ней идут прогоны и файл сдачи.`);
+      await markActive(id);
+      toast(host(), `Версия v${meta(id)?.version ?? ''} активна: по ней идут прогоны и файл сдачи.`);
     } catch (e) { toast(host(), e.message || String(e)); }
     if (alive) renderAll();
+  }
+  /** Версию уже активировали (здесь или в окне запуска): обновить список версий и флаги без повторного запроса активации. */
+  async function markActive(id) {
+    try { st.versions = await listChecklists(); } catch { st.versions = st.versions.map((v) => ({ ...v, is_active: v.id === id })); }
+    if (st.cur?.id === id) st.cur.is_active = true;
+    for (const b of st.bodies.values()) b.is_active = b.id === id;
   }
 
   // ---------------------------------------------------------------- применить к диалогам
@@ -214,19 +217,22 @@ export function mount(el, params = {}) {
     if (!st.rows) st.rows = await listConversations({ group_id: group() });
     return st.rows;
   }
+  // Одна кнопка «Переоценить диалоги…»: окно запуска по всей группе (выбор отдельных диалогов — ссылкой в окне),
+  // с галочкой «Сделать версию активной» (включена по умолчанию; активация — до запуска прогона).
   function runRequest(versionId, ids, rows) {
     const v = meta(versionId);
     emit(root, 'cqa:run-request', { ids, rows, group: group(), checklistVersionId: versionId, preset: { reuse: 'auto' },
-      title: `Применить чек-лист v${v?.version ?? ''}`,
-      intro: `${v?.note ? `«${v.note}». ` : ''}С прошлыми ответами модель оценит только новые и изменённые критерии, остальное возьмём из прошлых оценок.` });
+      title: `Переоценить по чек-листу v${v?.version ?? ''}`,
+      intro: `${v?.note ? `«${v.note}». ` : ''}С прошлыми ответами модель оценит только новые и изменённые критерии, остальное возьмём из прошлых оценок.`,
+      offerActivate: true,
+      onActivated: (id) => { markActive(id).then(() => { if (alive) renderAll(); }); },
+      onPick: () => pickThenRun(versionId, rows, ids) });
   }
-  async function applyGroup(versionId) {
+  async function rerun(versionId) {
     try { runRequest(versionId, [], await ensureRows()); } catch (e) { toast(host(), e.message || String(e)); }
   }
-  async function applyPick(versionId) {
-    let rows;
-    try { rows = await ensureRows(); } catch (e) { toast(host(), e.message || String(e)); return; }
-    openPicker(rows, (ids) => runRequest(versionId, ids, rows));
+  function pickThenRun(versionId, rows, preselected) {
+    openPicker(rows, (ids) => runRequest(versionId, ids, rows), preselected);
   }
 
   // ---------------------------------------------------------------- импорт и экспорт
@@ -289,11 +295,12 @@ export function mount(el, params = {}) {
     if (!c || st.loading) return;
     const isDirty = dirty();
     box.append(...[
-      !c.is_active && !isDirty ? h('button', { type: 'button', class: 'cqa-btn', id: 'cqa-chk-activate-head', onclick: () => activate(c.id) }, 'Сделать активной') : null,
       h('button', { type: 'button', class: 'cqa-btn', onclick: importClick, title: 'Загрузить чек-лист из JSON и сохранить как новую версию' }, 'Импорт JSON'),
       h('button', { type: 'button', class: 'cqa-btn', onclick: () => exportJson(isDirty ? st.draft : st.cur.body, c), title: isDirty ? 'Скачать черновик с несохранёнными правками' : 'Скачать тело этой версии' }, 'Экспорт JSON'),
-      h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-chk-apply', disabled: isDirty,
-        title: isDirty ? 'Сначала сохраните изменения как новую версию' : `Оценить диалоги группы ${group()} по версии v${c.version}`, onclick: () => applyPick(c.id) }, 'Применить к…')].filter(Boolean));
+      // Пока открыта панель «Сохранена версия», её кнопка — единственное основное действие: в шапке не дублируем.
+      st.saved ? null : h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-chk-apply', disabled: isDirty,
+        title: isDirty ? 'Сначала сохраните изменения как новую версию' : `Оценить диалоги группы ${group()} по версии v${c.version}${c.is_active ? '' : ' (в окне запуска её можно сразу сделать активной)'}`,
+        onclick: () => rerun(c.id) }, 'Переоценить диалоги…')].filter(Boolean));
   }
 
   function renderStats() {
@@ -340,14 +347,14 @@ export function mount(el, params = {}) {
         h('span', { class: 'cqa-banner__icon' }, '✓'),
         h('div', { class: 'cqa-chk-banner__body' },
           h('div', { class: 'cqa-banner__title', id: 'cqa-chk-saved-title' }, sv.existed ? `Такая версия уже есть — v${sv.version}, новая не создана.` : `Сохранена версия v${sv.version}${sv.note ? ` «${sv.note}»` : ''}.`),
-          m?.is_active ? h('div', null, 'Она активная: по ней идут прогоны, дашборд и файл сдачи.') : h('div', null, 'Чтобы прогоны и файл сдачи шли по ней, сделайте её активной.'),
+          m?.is_active ? h('div', null, 'Она активная: по ней идут прогоны, дашборд и файл сдачи.')
+            : h('div', null, 'Переоцените диалоги по ней — в окне запуска версия сразу станет активной. Прошлые оценки останутся на своей версии.'),
           sv.warnings.length ? h('ul', { class: 'cqa-errlist' }, sv.warnings.map((w) => h('li', null, w))) : null,
           isMock() ? h('div', { class: 'cqa-faint' }, 'Демо-режим: версия хранится только в этой вкладке.') : null,
           h('div', { class: 'cqa-chk-saved__acts' },
-            m && !m.is_active ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-chk-activate', onclick: () => activate(sv.id) }, 'Сделать активной') : null,
-            h('button', { type: 'button', class: `cqa-btn ${m?.is_active ? 'cqa-btn--primary' : ''}`, id: 'cqa-chk-apply-group', onclick: () => applyGroup(sv.id) },
-              `Применить ко всей группе ${group()}${st.rows ? ` (${st.rows.length})` : ''}`),
-            h('button', { type: 'button', class: 'cqa-btn', id: 'cqa-chk-apply-pick', onclick: () => applyPick(sv.id) }, 'Выбрать диалоги…'),
+            h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-chk-rerun', onclick: () => rerun(sv.id),
+              title: `Окно запуска по группе ${group()}${st.rows ? ` (${nDialogs(st.rows.length)})` : ''}; отдельные диалоги — ссылкой в окне` }, 'Переоценить диалоги…'),
+            m && !m.is_active ? h('button', { type: 'button', class: 'cqa-linkbtn', id: 'cqa-chk-activate', onclick: () => activate(sv.id) }, 'Только сделать активной') : null,
             h('button', { type: 'button', class: 'cqa-btn cqa-btn--ghost', onclick: () => { st.saved = null; renderChrome(); } }, 'Скрыть')),
           h('div', { class: 'cqa-field__hint' }, 'По умолчанию переоценка с прошлыми ответами: вызовы модели только по изменённым критериям.'))));
       if (!st.rows) ensureRows().then(() => { if (alive && st.saved) renderBanners(); }).catch(() => {});
@@ -679,8 +686,8 @@ export function mount(el, params = {}) {
   }
 
   // ---------------------------------------------------------------- выбор диалогов
-  function openPicker(rows, onNext) {
-    const sel = new Set();
+  function openPicker(rows, onNext, preselected = []) {
+    const sel = new Set((preselected || []).map(Number));
     const box = h('div', { class: 'cqa-modal__box cqa-chk-picker', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'cqa-chk-pick-title' });
     const overlay = h('div', { class: 'cqa-modal', onmousedown: (e) => { if (e.target === overlay) close(); } }, box);
     const onKey = (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
@@ -707,7 +714,7 @@ export function mount(el, params = {}) {
       sync();
     }
     box.append(
-      h('div', { class: 'cqa-modal__head' }, h('h2', { class: 'cqa-h2', id: 'cqa-chk-pick-title' }, 'Применить к диалогам'),
+      h('div', { class: 'cqa-modal__head' }, h('h2', { class: 'cqa-h2', id: 'cqa-chk-pick-title' }, 'Выбрать диалоги'),
         h('button', { type: 'button', class: 'cqa-modal__x', 'aria-label': 'Закрыть', onclick: close }, '×')),
       h('div', { class: 'cqa-chk-picker__tools' }, search, h('label', { class: 'cqa-toggle' }, allBox, 'Выбрать все')),
       listEl,

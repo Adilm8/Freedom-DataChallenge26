@@ -1,11 +1,12 @@
 // Запуск оценки и прогресс прогона (FR-EVAL-01, 08; FR-CHK-04, 06, 10; FR-EVAL-20; FR-UX-03).
 // openRunDialog(host, opts) — модальное окно поверх host (корень .cqa-root); mount(el, params) — то же внутри el
 // (отдельная страница / web resource). opts: {ids: [pk], group, rows?: [ConversationRow], channel?, label?,
-// preset?: {provider, model, strategy, reuse}, checklistVersionId?, title?, intro?, onFinished?(run)}.
+// preset?: {provider, model, strategy, reuse}, checklistVersionId?, title?, intro?, onFinished?(run),
+// offerActivate? (галочка «Сделать версию активной», по умолчанию включена), onActivated?(versionId), onPick?() (ссылка «выбрать диалоги…»)}.
 // Модель и провайдер — из GET /meta/models; версии чек-листа — GET /checklists (по умолчанию активная);
 // оценка стоимости — POST /runs/estimate (без LLM); запуск — POST /runs; прогресс — GET /runs/{id} раз в секунду.
 import { h, clear, fmtMoney, toast, skeletonRows, errorState } from '../ui.js';
-import { getMetaModels, listChecklists, estimateRun, createRun, getRun } from '../api.js';
+import { getMetaModels, listChecklists, activateChecklist, estimateRun, createRun, getRun } from '../api.js';
 
 const PROVIDER = { openrouter: 'OpenRouter', gemini: 'Gemini', ollama: 'Ollama (локально)', mock: 'Демо' };
 const STRATEGY = {
@@ -47,7 +48,7 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
     scope: ids.length ? 'selected' : 'group',
     provider: null, model: '', strategy: opts.preset?.strategy || null,
     reuse: opts.preset?.reuse === 'auto', meta: null, error: null, busy: false,
-    versions: null, version: opts.checklistVersionId != null ? Number(opts.checklistVersionId) : null,
+    versions: null, version: opts.checklistVersionId != null ? Number(opts.checklistVersionId) : null, activate: !!opts.offerActivate,
     est: { sig: null, data: null, error: null, loading: false },
   };
   let pollTimer = null, estTimer = null, estSeq = 0, alive = true, run = null, runStarted = 0, fails = 0, finishedFired = false;
@@ -114,6 +115,8 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
             onchange: () => { st.scope = v; renderForm(); } }), t))))
       : field('Что оценить', h('div', { class: 'cqa-field__static' },
         st.scope === 'group' ? `Вся группа ${opts.group || ''}${rows ? ` · ${nDialogs(rows.length)}` : ''}` : ids.length === 1 && opts.label ? `Диалог ${opts.label}` : nDialogs(ids.length)));
+    if (opts.onPick) scope.append(h('button', { type: 'button', class: 'cqa-linkbtn cqa-runform__pick', id: 'cqa-run-pick',
+      onclick: () => { onClose(); opts.onPick(); } }, ids.length ? 'изменить выбор…' : 'выбрать отдельные диалоги…'));
 
     const provSel = h('select', { class: 'cqa-select', id: 'cqa-run-provider', 'aria-label': 'Провайдер',
       onchange: (e) => { st.provider = e.target.value; st.model = modelInfo(st.provider)?.model || ''; st.error = null; renderForm(); } },
@@ -143,11 +146,18 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
 
     const vers = st.versions || [];
     const curVer = vers.find((v) => v.id === st.version);
+    const canActivate = !!opts.offerActivate && !!curVer && !curVer.is_active;
+    const activateBox = canActivate ? h('label', { class: 'cqa-toggle cqa-toggle--block' },
+      h('input', { type: 'checkbox', id: 'cqa-run-activate', checked: st.activate, onchange: (e) => { st.activate = e.target.checked; renderForm(); } }),
+      h('span', null, h('b', null, `Сделать версию v${curVer.version} активной`),
+        h('span', { class: 'cqa-field__hint' }, st.activate
+          ? 'Перед запуском: по ней пойдут следующие прогоны, дашборд и файл сдачи. Прошлые оценки останутся на своей версии.'
+          : 'Выключено: оценки сохранятся с этой версией, а дашборд и файл сдачи останутся на активной.'))) : null;
     const versionField = vers.length
       ? field('Версия чек-листа', h('select', { class: 'cqa-select', id: 'cqa-run-version', 'aria-label': 'Версия чек-листа',
         onchange: (e) => { st.version = Number(e.target.value); renderForm(); } },
       vers.map((v) => h('option', { value: v.id, selected: v.id === st.version }, `${versionLabel(v)}${v.note ? ` — ${v.note}` : ''}`))),
-      curVer && !curVer.is_active ? 'Версия не активная: оценки сохранятся с ней, а файл сдачи и дашборд по умолчанию берут активную.' : 'По умолчанию — активная версия.')
+      canActivate ? null : curVer && !curVer.is_active ? 'Версия не активная: оценки сохранятся с ней, а файл сдачи и дашборд по умолчанию берут активную.' : 'По умолчанию — активная версия.')
       : null;
 
     const warns = [];
@@ -176,6 +186,7 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
         field('Провайдер', provSel),
         field('Модель', modelIn, modelHint.length ? h('span', { class: 'cqa-field__hints' }, modelHint) : null)),
       versionField,
+      activateBox,
       field('Стратегия', strat, STRATEGY[st.strategy]?.[1]),
       reuse,
       h('div', { class: 'cqa-runest', id: 'cqa-run-estimate', 'aria-live': 'polite' }),
@@ -251,6 +262,13 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
     const body = runBody();
     clearTimeout(estTimer);
     try {
+      const cur = (st.versions || []).find((v) => v.id === st.version);
+      if (opts.offerActivate && st.activate && cur && !cur.is_active) { // сначала активация версии, потом прогон
+        await activateChecklist(cur.id);
+        st.versions = st.versions.map((v) => ({ ...v, is_active: v.id === cur.id }));
+        opts.onActivated?.(cur.id);
+        if (!alive) return;
+      }
       const { run_id } = await createRun(body);
       if (!alive) return;
       run = { run_id, status: 'queued', total: scopeCount() || 0, done: 0, failed: 0, cost_usd: 0, provider: body.provider, model: body.model, strategy: body.strategy,

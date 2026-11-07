@@ -444,6 +444,7 @@ button.cqa-card__old { cursor: pointer; }
 .cqa-modal__foot { display: flex; justify-content: flex-end; align-items: center; gap: var(--cqa-s-2); margin-top: var(--cqa-s-4); flex-wrap: wrap; }
 .cqa-runform { display: grid; gap: var(--cqa-s-4); }
 .cqa-runform > .cqa-banner { margin: 0; }
+.cqa-runform__pick { justify-self: start; }
 .cqa-field { display: grid; gap: 5px; min-width: 0; align-content: start; }
 .cqa-field__label { font-size: var(--cqa-text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--cqa-faint); }
 .cqa-field__hint, .cqa-field__hints { font-size: var(--cqa-text-xs); color: var(--cqa-muted); }
