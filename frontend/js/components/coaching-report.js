@@ -68,7 +68,7 @@ export function mount(el, params = {}) {
 
     root.append(
       h('div', { class: 'cqa-coach__bar cqa-noprint' }, back,
-        h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-coach-print', onclick: () => window.print() }, '🖨 Печать / PDF')),
+        h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-coach-print', onclick: () => window.print() }, 'Печать / PDF')),
       h('article', { class: 'cqa-panel cqa-coach__sheet' },
         h('header', { class: 'cqa-coach__head' },
           h('div', null,
@@ -81,7 +81,7 @@ export function mount(el, params = {}) {
             lostSum > 0.004 ? h('div', { class: 'cqa-faint' }, `до 100 не хватает ${fmtScore(lostSum)}`) : h('div', { class: 'cqa-coach__ok' }, 'максимум'))),
         ov.summary ? h('p', { class: 'cqa-coach__summary' }, ov.summary) : null,
         flags.length ? h('section', { class: 'cqa-coach__sec cqa-coach__sec--flag' },
-          h('h2', { class: 'cqa-h3' }, '⚠ Грубое нарушение'),
+          h('h2', { class: 'cqa-h3' }, 'Грубое нарушение'),
           flags.map((c) => h('div', { class: 'cqa-coach__item' }, h('b', null, c.title), c.reasoning ? h('p', null, c.reasoning) : null, quotes(c, msgs),
             c.advice ? h('p', { class: 'cqa-coach__advice' }, h('b', null, 'Как правильно: '), c.advice) : null))) : null,
         h('section', { class: 'cqa-coach__sec' },

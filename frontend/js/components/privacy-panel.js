@@ -30,20 +30,20 @@ export function mount(el, props = {}) {
     const pr = p.privacy;
     if (!pr) return;
     if (!pr.enabled) {
-      root.append(h('div', { class: 'cqa-panel cqa-privacy__line cqa-faint' }, '🔓 Маскирование персональных данных выключено (PII_MASKING=false): диалог уходит в модель как есть.'));
+      root.append(h('div', { class: 'cqa-panel cqa-privacy__line cqa-faint' }, 'Маскирование персональных данных выключено (PII_MASKING=false): диалог уходит в модель как есть.'));
       return;
     }
     const n = pr.masked_total || 0;
     if (!n) {
       root.append(h('div', { class: 'cqa-panel cqa-privacy__line' },
-        h('span', { class: 'cqa-privacy__icon', 'aria-hidden': 'true' }, '🛡'),
+        h('span', { class: 'cqa-privacy__icon', 'aria-hidden': 'true' }, 'PII'),
         h('span', null, 'Персональные данные: '),
         h('span', { class: 'cqa-faint' }, 'номеров карт, ИИН, телефонов, email и кодов не найдено. Если появятся, система скроет их до отправки в модель.')));
       return;
     }
     const details = h('details', { class: 'cqa-panel cqa-facts cqa-privacy__box', open, ontoggle: (e) => { open = e.target.open; } });
     details.append(h('summary', { class: 'cqa-facts__sum' },
-      h('span', { class: 'cqa-facts__title' }, '🛡 Персональные данные скрыты'),
+      h('span', { class: 'cqa-facts__title' }, 'Персональные данные скрыты'),
       h('span', { class: 'cqa-chip' }, String(n)),
       h('span', { class: 'cqa-facts__head' }, (pr.by_kind || []).map((k) => `${k.label} ×${k.count}`).join(' · '))));
     const ids = Object.keys(pr.masked_messages || {}).sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)));

@@ -182,7 +182,7 @@ export function mount(el, params = {}) {
     trEl = h('div');
     resEl = h('div');
     scrollEl.append(tlEl, factsEl, privEl, h('div', { class: 'cqa-panel' },
-      h('div', { class: 'cqa-panel__head cqa-trhead' }, h('h3', { class: 'cqa-h3' }, 'Транскрипт'),
+      h('div', { class: 'cqa-panel__head cqa-trhead' }, h('h3', { class: 'cqa-h3' }, 'Расшифровка'),
         h('span', { class: 'cqa-faint cqa-trhead__n' }, `${conv.messages.length} реплик`),
         isCall ? h('span', { class: 'cqa-faint cqa-trhead__hint' }, withAudio ? 'расшифровка устной речи · клик по реплике — слушать' : 'расшифровка устной речи') : null),
       trEl));
