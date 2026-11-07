@@ -340,7 +340,7 @@ export function mount(el, params = {}) {
       h('div', { class: 'cqa-pagehead__actions' },
         h('span', { class: `cqa-badge ${reviewer ? 'cqa-badge--accent' : 'cqa-badge--muted'}` }, reviewer ? 'Режим: проверяющий' : 'Режим: аналитик'))),
     reviewer ? null : h('div', { class: 'cqa-banner cqa-banner--info cqa-apr__modenote' }, h('span', { class: 'cqa-banner__icon' }, 'i'),
-      h('div', null, 'Вы в режиме аналитика: здесь видно, что с вашими апелляциями. Решения принимает проверяющий — переключатель режима в шапке.')),
+      h('div', null, 'Вы в режиме аналитика: здесь видно, что с вашими апелляциями. Решения принимает проверяющий — роль переключается внизу меню слева.')),
     h('div', { class: 'cqa-panel cqa-apr__panel' }, toolbarEl, h('div', { class: 'cqa-apr__cols' }, listEl, detailEl))].filter(Boolean));
   load();
 

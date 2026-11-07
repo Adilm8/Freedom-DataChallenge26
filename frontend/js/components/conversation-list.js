@@ -123,7 +123,7 @@ export function mount(el, params = {}) {
       h('thead', null, h('tr', null,
         h('th', { style: 'width:36px' }, h('input', { type: 'checkbox', class: 'cqa-check', checked: allOn, 'aria-label': 'Выбрать все',
           onchange: (e) => { list.forEach((r) => (e.target.checked ? st.selected.add(r.id) : st.selected.delete(r.id))); renderTable(); } })),
-        h('th', null, 'Диалог'), h('th', { class: 'cqa-num' }, sortBtn), h('th', { class: 'cqa-list__heat', title: 'Критерии 01–08 по финальной оценке' }, 'Критерии'), h('th', { class: 'cqa-list__narrow' }, 'Язык'), h('th', { class: 'cqa-list__narrow' }, 'Канал'),
+        h('th', null, 'Диалог'), h('th', { class: 'cqa-num' }, sortBtn), h('th', { class: 'cqa-list__heat', title: 'Критерии 01–08 по финальной оценке' }, 'Критерии'), h('th', { class: 'cqa-list__narrow' }, 'Язык, канал'),
         h('th', { class: 'cqa-list__topic' }, 'Тема'), h('th', { class: 'cqa-list__tags' }, 'Метки'), h('th', { class: 'cqa-num cqa-list__ap' }, 'Апелляции'))),
       h('tbody', null, list.map((r) => {
         const l = r.latest;
@@ -143,7 +143,7 @@ export function mount(el, params = {}) {
               l.ai_total !== l.final_total ? [h('span', { class: 'cqa-faint' }, '→'), score(l.final_total)] : null)
             : h('span', { class: 'cqa-badge cqa-badge--muted' }, 'Не оценён')),
           h('td', { class: 'cqa-list__heat' }, heat(l)),
-          h('td', { class: 'cqa-list__narrow' }, langChip(r.language)), h('td', { class: 'cqa-list__narrow' }, channelBadge(r.channel)),
+          h('td', { class: 'cqa-list__narrow' }, h('span', { class: 'cqa-list__lc' }, langChip(r.language), channelBadge(r.channel))),
           h('td', { class: 'cqa-list__topic' }, topics.get(r.id) ? h('span', { class: 'cqa-list__topictext', title: topics.get(r.id) }, topics.get(r.id)) : h('span', { class: 'cqa-faint' }, '—')),
           h('td', { class: 'cqa-list__tags' }, h('div', { class: 'cqa-tags' },
             l?.critical ? h('span', { class: 'cqa-badge cqa-badge--flag' }, 'Грубая ошибка') : null,
@@ -173,9 +173,9 @@ export function mount(el, params = {}) {
 
   function reviewWhy(id) {
     const w = why.get(id);
-    if (!w) return h('span', { class: 'cqa-list__why', title: 'Требует проверки' }, 'проверить');
+    if (!w) return h('span', { class: 'cqa-badge cqa-badge--warn', title: 'Требует проверки' }, 'Проверить');
     const parts = WHY_ORDER.filter((r) => w[r]).map((r) => `${WHY[r]}${w[r].length ? `: ${w[r].join(', ')}` : ''}`);
-    return h('span', { class: 'cqa-list__why', title: `Требует проверки — ${parts.join('; ')}` }, parts.join(' · '));
+    return h('span', { class: 'cqa-badge cqa-badge--warn', title: `Требует проверки — ${parts.join('; ')}` }, 'Проверить');
   }
 
   function appealCell(l) {
@@ -215,12 +215,14 @@ export function mount(el, params = {}) {
       const btn = h('button', { type: 'button', class: 'cqa-btn', id, title, onclick: () => exportFile(path, params, btn) }, text);
       return btn;
     };
-    return h('div', { class: 'cqa-export', role: 'group', 'aria-label': 'Экспорт результатов группы' },
-      h('span', { class: 'cqa-faint cqa-export__label' }, 'Экспорт'),
-      b('cqa-export-csv', '⇩ CSV', 'Таблица для Excel: финальные ответы и баллы, итог AI и финальный', '/export', { format: 'csv' }),
-      b('cqa-export-json', '⇩ JSON', 'Тот же набор с обоснованиями, доказательствами и апелляциями', '/export', { format: 'json' }),
-      b('cqa-export-results', '⇩ Файл сдачи', 'results.json в формате организаторов 1.0 с проверкой формата', '/export/results', {}),
-      exportNote);
+    // Один пункт «Экспорт» с выпадающим списком вместо трёх кнопок: шапка экрана не перегружена.
+    const menu = h('details', { class: 'cqa-menu' },
+      h('summary', { class: 'cqa-btn', title: 'Выгрузить результаты группы' }, 'Экспорт', h('span', { class: 'cqa-menu__caret', 'aria-hidden': 'true' }, '▾')),
+      h('div', { class: 'cqa-menu__list', role: 'menu', onclick: (e) => { if (e.target.closest('button')) e.currentTarget.parentElement.open = false; } },
+        b('cqa-export-csv', 'Таблица CSV (Excel)', 'Финальные ответы и баллы, итог AI и финальный', '/export', { format: 'csv' }),
+        b('cqa-export-json', 'Полный JSON', 'Тот же набор с обоснованиями, доказательствами и апелляциями', '/export', { format: 'json' }),
+        b('cqa-export-results', 'Файл сдачи (results.json)', 'Формат организаторов 1.0 с проверкой формата', '/export/results', {})));
+    return h('div', { class: 'cqa-export', role: 'group', 'aria-label': 'Экспорт результатов группы' }, exportNote, menu);
   }
 
   async function load({ quiet = false } = {}) {

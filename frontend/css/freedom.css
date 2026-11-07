@@ -134,3 +134,24 @@
 .cqa-root .cqa-kpi--hero .cqa-ringbox__val b { font-size: 24px; }
 .cqa-root .cqa-insight { border-left-width: 1px; }
 @media (max-width: 900px) { .cqa-shell { background: none; } }
+
+/* ---------- Выпадающее меню (экспорт) ---------- */
+.cqa-menu { position: relative; }
+.cqa-menu > summary { list-style: none; }
+.cqa-menu > summary::-webkit-details-marker { display: none; }
+.cqa-menu__caret { font-size: 11px; color: var(--cqa-faint); }
+.cqa-menu__list { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; min-width: 240px; display: grid; padding: 4px;
+  background: var(--cqa-surface); border: 1px solid var(--cqa-border); border-radius: 6px; box-shadow: var(--cqa-shadow-md); }
+.cqa-menu__list .cqa-btn { justify-content: flex-start; border: 0; background: none; font-weight: 500; padding: 8px 10px; }
+.cqa-menu__list .cqa-btn:hover:not(:disabled) { background: var(--cqa-surface-2); }
+.cqa-root .cqa-export { display: flex; align-items: center; gap: 8px; }
+
+/* Список: язык и канал в одной ячейке, тема ужимается раньше колонок справа. */
+.cqa-root .cqa-list__lc { display: inline-flex; gap: 6px; align-items: center; }
+.cqa-root .cqa-list__topictext { max-width: 220px; }
+@media (max-width: 1500px) {
+  .cqa-root .cqa-list__topictext { max-width: 150px; }
+}
+@media (max-width: 1280px) {
+  .cqa-root .cqa-list-table .cqa-list__topic { display: none; }
+}
