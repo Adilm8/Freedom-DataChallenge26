@@ -17,6 +17,12 @@ from ..models import ChecklistVersion, Conversation, CriterionResult, Evaluation
 
 SCHEMA_VERSION = "1.0"
 MODES = ("local", "external_api", "hybrid")
+# Коды и допустимые значения из приложения организаторов — фиксированы, от активного чек-листа не зависят.
+_B, _BN = {True, False}, {True, False, None}
+ORGANIZER_CRITERIA: dict[str, set] = {
+    "contact": _B, "discovery": _BN, "identification": _BN, "consultation": {0, 5, 10, 15, 20, None},
+    "empathy": _B, "dialogue": {0, 4, 7, 10}, "closure": _BN, "critical": _B,
+}
 _MSG_RE = re.compile(r"^m(\d+)$")
 RATIONALE_MAX = 600
 
@@ -33,6 +39,8 @@ def export_value(c: Criterion, answer):
 def turns(evidence: list[dict]) -> list[int]:
     out = set()
     for e in evidence or []:
+        if e.get("quote_ok") is False:  # цитату проверка не нашла — в сдачу не отдаём
+            continue
         m = _MSG_RE.match(str(e.get("msg_id", "")))
         if m:
             out.add(int(m.group(1)) + 1)
@@ -63,10 +71,14 @@ def _error_reason(session: Session, ev: Evaluation | None) -> str:
 
 
 def build(session: Session, group_id: str, *, team_name: str, mode: str = "external_api",
-          checklist_version_id: int | None = None) -> dict:
+          checklist_version_id: int | None = None, expected_ids: list[str] | None = None,
+          skipped: dict[str, str] | None = None) -> dict:
+    """`expected_ids` — ID набора из API: те, что не попали в БД, идут как error с причиной из `skipped`."""
+    from .checklists import get_active
+
     version_id = checklist_version_id
     if version_id is None:
-        active = session.exec(select(ChecklistVersion).where(ChecklistVersion.is_active == True)).first()  # noqa: E712
+        active = get_active(session)
         version_id = active.id if active else None
     convs = session.exec(select(Conversation).where(Conversation.group_id == group_id)
                          .order_by(Conversation.conversation_id)).all()
@@ -93,21 +105,25 @@ def build(session: Session, group_id: str, *, team_name: str, mode: str = "exter
                         "score": {"final_score": total, "critical_flag": flag}})
         if ev.model and ev.model not in models:
             models.append(ev.model)
+    have = {r["conversation_id"] for r in results}
+    for cid in expected_ids or []:
+        if cid not in have:
+            have.add(cid)
+            results.append({"conversation_id": cid, "status": "error", "criteria": [], "score": None,
+                            "error": (skipped or {}).get(cid) or "Запись набора не импортирована."})
     return {"schema_version": SCHEMA_VERSION, "team_name": team_name,
             "model": {"mode": mode, "name": ", ".join(models)}, "results": results}
 
 
-def _value_ok(c: Criterion, v) -> bool:
-    if v is None:
-        return c.na_allowed
-    if c.type == "scale":
-        return isinstance(v, int) and not isinstance(v, bool) and v in [s.value for s in c.scale or []]
-    return isinstance(v, bool)
+def _value_ok(code: str, v) -> bool:
+    """Сравнение по типу: 1 ≠ true и 0 ≠ false (в Python они равны)."""
+    return any(type(a) is type(v) and a == v for a in ORGANIZER_CRITERIA[code])
 
 
-def validate(doc: dict, checklist: Checklist, *, expected_ids: list[str] | None = None,
+def validate(doc: dict, checklist: Checklist | None = None, *, expected_ids: list[str] | None = None,
              expected_count: int | None = None) -> list[str]:
-    """Проверка перед push: структура, коды и типы значений, одна запись на диалог (правила организаторов)."""
+    """Проверка перед push по формату организаторов: структура, ровно их 8 кодов и типы значений,
+    одна запись на каждый диалог набора. `checklist` не используется: формат фиксирован."""
     errs: list[str] = []
     if doc.get("schema_version") != SCHEMA_VERSION:
         errs.append(f"schema_version должен быть «{SCHEMA_VERSION}»")
@@ -133,7 +149,6 @@ def validate(doc: dict, checklist: Checklist, *, expected_ids: list[str] | None 
             errs.append(f"лишние ID: {extra}")
     if expected_count is not None and len(res) != expected_count:
         errs.append(f"записей {len(res)}, нужно ровно {expected_count}")
-    by_id = {c.export_id or c.key: c for c in checklist.enabled_criteria()}
     for r in res:
         cid = r.get("conversation_id")
         if r.get("status") == "error":
@@ -144,21 +159,21 @@ def validate(doc: dict, checklist: Checklist, *, expected_ids: list[str] | None 
             errs.append(f"{cid}: status — ok или error")
             continue
         got = [c.get("criterion_id") for c in r.get("criteria") or []]
-        if sorted(got) != sorted(by_id):
-            errs.append(f"{cid}: нужны все критерии ровно по разу {sorted(by_id)}, есть {got}")
+        if sorted(got) != sorted(ORGANIZER_CRITERIA):
+            errs.append(f"{cid}: нужны все критерии ровно по разу {sorted(ORGANIZER_CRITERIA)}, есть {got}")
         flag_value = None
         for item in r.get("criteria") or []:
-            c = by_id.get(item.get("criterion_id"))
-            if c is None:
+            code = item.get("criterion_id")
+            if code not in ORGANIZER_CRITERIA:
                 continue
-            if not _value_ok(c, item.get("value")):
+            if not _value_ok(code, item.get("value")):
                 errs.append(f"{cid}: {item['criterion_id']} — недопустимое значение {item.get('value')!r}")
             if not isinstance(item.get("rationale"), str):
                 errs.append(f"{cid}: {item['criterion_id']} — rationale должен быть строкой")
             t = item.get("evidence_turns")
             if not isinstance(t, list) or any(not isinstance(x, int) or isinstance(x, bool) or x < 1 for x in t):
                 errs.append(f"{cid}: {item['criterion_id']} — evidence_turns: список номеров с 1")
-            if c.type == "flag":
+            if code == "critical":
                 flag_value = item.get("value")
         s = r.get("score") or {}
         fs = s.get("final_score")

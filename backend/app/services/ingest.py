@@ -48,9 +48,10 @@ def import_payload(session: Session, payload: Any, source: str = "upload", group
     data = payload.get("data", payload)
     if not isinstance(data, dict) or not isinstance(data.get("records"), list):
         raise IngestError("в данных нет списка records")
-    group = str(data.get("dataset_group_id") or group_id or settings.dataset_group_id)
+    group = str(group_id or data.get("dataset_group_id") or settings.dataset_group_id)  # явный group_id важнее
 
     warnings: list[str] = []
+    skipped: dict[str, str] = {}  # conversation_id → причина: в results.json такие идут как status=error
     imported = updated = 0
     imp = DatasetImport(group_id=group, source=source)
     session.add(imp)
@@ -63,8 +64,9 @@ def import_payload(session: Session, payload: Any, source: str = "upload", group
         cid = str(rec["conversation_id"]).strip()
         try:
             norm = normalize(rec)
-        except ValueError as e:
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
             warnings.append(f"{cid}: {e}; пропущена")
+            skipped[cid] = f"Запись набора не разобрана: {e}"
             continue
         warnings.extend(f"{cid}: {w}" for w in norm.warnings)
         row = session.exec(
@@ -92,4 +94,12 @@ def import_payload(session: Session, payload: Any, source: str = "upload", group
     imp.imported, imp.updated, imp.warnings = imported, updated, warnings
     session.add(imp)
     session.commit()
-    return {"group_id": group, "imported": imported, "updated": updated, "warnings": warnings}
+    return {"group_id": group, "imported": imported, "updated": updated, "warnings": warnings, "skipped": skipped}
+
+
+def payload_ids(payload: Any) -> list[str]:
+    """Все conversation_id набора как в API (для проверки файла сдачи: ни одна запись не должна пропасть)."""
+    data = payload.get("data", payload) if isinstance(payload, dict) else {}
+    recs = data.get("records") if isinstance(data, dict) else None
+    return [str(r["conversation_id"]).strip() for r in recs or []
+            if isinstance(r, dict) and str(r.get("conversation_id") or "").strip()]

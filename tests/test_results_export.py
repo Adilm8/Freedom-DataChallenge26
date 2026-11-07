@@ -82,3 +82,32 @@ def test_run_sync_then_export(env):
         doc = results_export.build(s, "T", team_name="Команда")
     assert c.get(f"/api/runs/{rid}").json()["status"] == "done"
     assert [r["status"] for r in doc["results"]] == ["ok", "ok"]
+
+
+def test_broken_record_stays_in_file_as_error(env):
+    from backend.app.services import ingest
+
+    bad = payload()
+    bad["data"]["records"].append({"conversation_id": "broken-1", "channel": "agent chat", "language": "RU",
+                                   "transcript": None})
+    with Session(db.engine) as s:
+        rep = ingest.import_payload(s, bad, "file", group_id="CTRL")
+        assert rep["group_id"] == "CTRL" and "broken-1" in rep["skipped"]      # явный group_id важнее файла
+        doc = results_export.build(s, "CTRL", team_name="t", expected_ids=ingest.payload_ids(bad),
+                                   skipped=rep["skipped"])
+    by = {r["conversation_id"]: r for r in doc["results"]}
+    assert by["broken-1"]["status"] == "error" and "не разобрана" in by["broken-1"]["error"]
+    errs = results_export.validate(doc, expected_ids=ingest.payload_ids(bad))
+    assert not any("нет записей" in e for e in errs)
+
+
+def test_validate_requires_organizer_codes():
+    doc = {"schema_version": "1.0", "team_name": "t", "model": {"mode": "external_api", "name": "m"},
+           "results": [{"conversation_id": "a", "status": "ok",
+                        "criteria": [{"criterion_id": k, "value": True, "rationale": "", "evidence_turns": []}
+                                     for k in ("contact", "discovery", "identification", "empathy", "closure",
+                                               "critical", "wait_warning")]
+                        + [{"criterion_id": "consultation", "value": 1, "rationale": "", "evidence_turns": []}],
+                        "score": {"final_score": 50.0, "critical_flag": True}}]}
+    errs = results_export.validate(doc)
+    assert any("ровно по разу" in e for e in errs) and any("consultation" in e for e in errs)

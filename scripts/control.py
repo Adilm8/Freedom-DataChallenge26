@@ -23,9 +23,9 @@ from sqlmodel import Session, select  # noqa: E402
 from backend.app import db  # noqa: E402
 from backend.app.config import settings  # noqa: E402
 from backend.app.domain import Checklist  # noqa: E402
-from backend.app.models import ChecklistVersion, Conversation, Evaluation, EvaluationRun  # noqa: E402
+from backend.app.models import Conversation, Evaluation, EvaluationRun  # noqa: E402
 from backend.app.providers import configured_models  # noqa: E402
-from backend.app.services import ingest, results_export, runs  # noqa: E402
+from backend.app.services import checklists, ingest, results_export, runs  # noqa: E402
 
 
 def latest_ok(session: Session, pks: list[int], version_id: int) -> set[int]:
@@ -59,18 +59,32 @@ def main() -> None:
         sys.exit(f"у провайдера {args.provider} не задана модель")
     t0 = time.monotonic()
 
+    db.init_db()
+    raw = ROOT / "data" / "raw" / f"{args.group}.json"
     with Session(db.engine) as s:
+        checklists.seed_default(s)
+        ver = checklists.get_active(s)
+        codes = sorted(c.export_id or c.key for c in Checklist.model_validate(ver.body).enabled_criteria())
+        if codes != sorted(results_export.ORGANIZER_CRITERIA):
+            sys.exit(f"у активного чек-листа (v{ver.id}) коды для сдачи {codes}, нужны {sorted(results_export.ORGANIZER_CRITERIA)}:"
+                     " задайте export_id заменённому критерию в редакторе чек-листа")
+        skipped: dict[str, str] = {}
         if not args.skip_import:
             payload = json.loads(args.file.read_text(encoding="utf-8")) if args.file else ingest.fetch_payload(args.group)
-            raw = ROOT / "data" / "raw" / f"{args.group}.json"
             raw.parent.mkdir(parents=True, exist_ok=True)
             raw.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
             rep = ingest.import_payload(s, payload, "file" if args.file else "api", group_id=args.group)
-            print(f"импорт: {rep}")
+            skipped = rep["skipped"]
+            print(f"импорт: {rep['imported']} новых, {rep['updated']} обновлено, пропущено {len(skipped)}, "
+                  f"предупреждений {len(rep['warnings'])}")
+            for w in rep["warnings"]:
+                print(f"  {w}")
+        else:
+            payload = json.loads(raw.read_text(encoding="utf-8")) if raw.exists() else None
+        expected = ingest.payload_ids(payload) if payload else None
         pks = list(s.exec(select(Conversation.id).where(Conversation.group_id == args.group)))
         if not pks:
             sys.exit("в группе нет диалогов")
-        ver = s.exec(select(ChecklistVersion).where(ChecklistVersion.is_active == True)).first()  # noqa: E712
         print(f"оценка: {len(pks)} диалогов · {args.provider} / {model} / {args.strategy} · чек-лист v{ver.id}")
         run_id = runs.run_sync(s, pks, group_id=args.group, checklist_version_id=ver.id, provider=args.provider,
                                model=model, strategy=args.strategy)
@@ -85,10 +99,10 @@ def main() -> None:
                                 model=model, strategy=args.strategy, reuse="auto")
             cost += s.get(EvaluationRun, rid).cost_usd
         s.expire_all()
-        doc = results_export.build(s, args.group, team_name=args.team, mode=args.mode, checklist_version_id=ver.id)
-        ids = list(s.exec(select(Conversation.conversation_id).where(Conversation.group_id == args.group)))
-        errs = results_export.validate(doc, Checklist.model_validate(ver.body), expected_ids=ids,
-                                       expected_count=args.expect_count)
+        doc = results_export.build(s, args.group, team_name=args.team, mode=args.mode, checklist_version_id=ver.id,
+                                   expected_ids=expected, skipped=skipped)
+        ids = expected or list(s.exec(select(Conversation.conversation_id).where(Conversation.group_id == args.group)))
+        errs = results_export.validate(doc, expected_ids=ids, expected_count=args.expect_count)
 
     out = ROOT / "results" / args.target / "results.json"
     out.parent.mkdir(parents=True, exist_ok=True)

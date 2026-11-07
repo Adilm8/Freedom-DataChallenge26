@@ -5,7 +5,8 @@
     python scripts/export_results.py --check results/prod/results.json --expect-count 10   # только проверка
 
 Берёт последнюю полную оценку каждого диалога группы по активной версии чек-листа (или --version).
-Диалог без оценки попадает со status=error. Выход с кодом 1, если проверка нашла ошибки.
+Диалог без оценки — status=error. Ожидаемые ID берутся из снапшота data/raw/<group>.json, если он есть:
+так запись, которая не импортировалась, тоже попадёт в файл как error, а не пропадёт. Выход с кодом 1, если проверка нашла ошибки.
 """
 import argparse
 import json
@@ -19,9 +20,8 @@ from sqlmodel import Session, select  # noqa: E402
 
 from backend.app import db  # noqa: E402
 from backend.app.config import settings  # noqa: E402
-from backend.app.domain import Checklist  # noqa: E402
 from backend.app.models import ChecklistVersion, Conversation  # noqa: E402
-from backend.app.services import results_export  # noqa: E402
+from backend.app.services import checklists, ingest, results_export  # noqa: E402
 
 
 def main() -> None:
@@ -35,13 +35,14 @@ def main() -> None:
     ap.add_argument("--expect-count", type=int)
     args = ap.parse_args()
 
+    db.init_db()
     with Session(db.engine) as s:
-        q = select(ChecklistVersion).where(ChecklistVersion.id == args.version) if args.version else \
-            select(ChecklistVersion).where(ChecklistVersion.is_active == True)  # noqa: E712
-        ver = s.exec(q).first()
+        checklists.seed_default(s)
+        ver = s.get(ChecklistVersion, args.version) if args.version else checklists.get_active(s)
         if not ver:
             sys.exit("нет версии чек-листа")
-        cl = Checklist.model_validate(ver.body)
+        snap = ROOT / "data" / "raw" / f"{args.group}.json" if args.group else None
+        payload_ids = ingest.payload_ids(json.loads(snap.read_text(encoding="utf-8"))) if snap and snap.exists() else None
         if args.check:
             doc = json.loads(args.check.read_text(encoding="utf-8"))
             group = args.group
@@ -50,11 +51,13 @@ def main() -> None:
                 sys.exit("нужны --group и --out (или --check)")
             if not args.team:
                 sys.exit("укажите --team или TEAM_NAME в .env")
-            doc = results_export.build(s, args.group, team_name=args.team, mode=args.mode, checklist_version_id=ver.id)
+            doc = results_export.build(s, args.group, team_name=args.team, mode=args.mode, checklist_version_id=ver.id,
+                                       expected_ids=payload_ids)
             group = args.group
-        expected = list(s.exec(select(Conversation.conversation_id).where(Conversation.group_id == group))) if group else None
+        expected = payload_ids or (list(s.exec(select(Conversation.conversation_id).where(Conversation.group_id == group)))
+                                   if group else None)
 
-    errs = results_export.validate(doc, cl, expected_ids=expected, expected_count=args.expect_count)
+    errs = results_export.validate(doc, expected_ids=expected, expected_count=args.expect_count)
     if not args.check:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
