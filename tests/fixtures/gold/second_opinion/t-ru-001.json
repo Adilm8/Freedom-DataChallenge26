@@ -1,0 +1,16 @@
+{
+  "criteria": {
+    "01": {
+      "answer": "no",
+      "reason": "иначе",
+      "evidence": [
+        "m2"
+      ]
+    },
+    "04": {
+      "answer": 15,
+      "reason": "так же",
+      "evidence": []
+    }
+  }
+}

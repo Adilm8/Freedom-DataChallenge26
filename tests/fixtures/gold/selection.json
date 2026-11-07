@@ -1,0 +1,20 @@
+[
+  {
+    "conversation_id": "t-ru-001",
+    "language": "RU",
+    "channel": "chat",
+    "why": "тест"
+  },
+  {
+    "conversation_id": "t-en-001",
+    "language": "EN",
+    "channel": "chat",
+    "why": "тест"
+  },
+  {
+    "conversation_id": "t-kz-009",
+    "language": "KZ",
+    "channel": "chat",
+    "why": "без черновика"
+  }
+]

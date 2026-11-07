@@ -63,3 +63,21 @@ export async function getChecklist(versionId) {
   if (isMock()) return fixture(`checklist-${versionId}`);
   return http(`/checklists/${encodeURIComponent(versionId)}`);
 }
+
+// ---------- Проверка gold (только DEV; без mock-режима: файлы разметки живут на бэкенде) ----------
+export async function listGold() { return http('/gold'); }
+export async function getGold(conversationId) { return http(`/gold/${encodeURIComponent(conversationId)}`); }
+export async function putGold(conversationId, body) {
+  let res;
+  try {
+    res = await fetch(new URL(apiBase() + `/gold/${encodeURIComponent(conversationId)}`, window.location.href), {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+  } catch { throw new ApiError('Нет связи с сервером: разметка не сохранена.', 0); }
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.json()).detail; } catch { /* тело не JSON */ }
+    throw new ApiError(`Не сохранено${detail ? ': ' + (typeof detail === 'string' ? detail : JSON.stringify(detail)) : ''} (${res.status})`, res.status);
+  }
+  return res.json();
+}

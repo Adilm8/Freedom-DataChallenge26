@@ -1,0 +1,74 @@
+{
+  "conversation_id": "t-en-001",
+  "drafted_by": "fixture",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "no",
+      "reasoning": "Выдуманное обоснование для теста.",
+      "evidence": [
+        "m2"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "yes",
+      "reasoning": "Выдуманное обоснование для теста.",
+      "evidence": [
+        "m2"
+      ],
+      "confidence": "high"
+    },
+    "03": {
+      "answer": "na",
+      "reasoning": "Выдуманное обоснование для теста.",
+      "evidence": [],
+      "confidence": "low"
+    },
+    "04": {
+      "answer": 20,
+      "reasoning": "Выдуманное обоснование для теста.",
+      "evidence": [
+        "m2"
+      ],
+      "confidence": "high"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Выдуманное обоснование для теста.",
+      "evidence": [
+        "m2"
+      ],
+      "confidence": "high"
+    },
+    "06": {
+      "answer": 10,
+      "reasoning": "Выдуманное обоснование для теста.",
+      "evidence": [
+        "m2"
+      ],
+      "confidence": "high"
+    },
+    "07": {
+      "answer": "yes",
+      "reasoning": "Выдуманное обоснование для теста.",
+      "evidence": [
+        "m2"
+      ],
+      "confidence": "high"
+    },
+    "08": {
+      "answer": "yes",
+      "reasoning": "Выдуманное обоснование для теста.",
+      "evidence": [
+        "m2"
+      ],
+      "confidence": "medium"
+    }
+  },
+  "total": null,
+  "critical": [
+    "08"
+  ],
+  "notes": ""
+}

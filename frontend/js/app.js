@@ -11,6 +11,7 @@ const NAV = [
 const ROUTES = {
   conversations: { nav: 'conversations', load: () => import('./components/conversation-list.js') },
   conversation: { nav: 'conversations', load: () => import('./components/conversation-card.js'), full: true },
+  gold: { nav: 'gold', load: () => import('./components/gold-review.js'), full: true },
 };
 const PLACEHOLDERS = {
   dashboard: ['Дашборд', 'Средний итог, распределение, выполнение по критериям и грубые ошибки. Экран появится на этапе аналитики.'],
@@ -18,7 +19,6 @@ const PLACEHOLDERS = {
   appeals: ['Апелляции', 'Очередь проверяющего: спорные оценки, фрагмент диалога и форма решения.'],
   checklist: ['Чек-лист', 'Версии, редактор критериев и применение к набору диалогов.'],
   quality: ['Качество', 'Согласие с эталоном и сравнение моделей и стратегий.'],
-  gold: ['Проверка gold', 'Экран разметки эталона.'],
   compare: ['Сравнение', 'Два результата одного диалога рядом.'],
 };
 
@@ -47,9 +47,9 @@ function parseHash() {
 
 function buildHeader() {
   const nav = h('nav', { class: 'cqa-nav', 'aria-label': 'Разделы' },
-    NAV.map(([id, label]) => h('a', { class: 'cqa-nav__link', href: `#/${id}`, dataset: { nav: id } }, label)));
+    [...NAV, ['gold', 'Проверка gold']].map(([id, label]) => h('a', { class: 'cqa-nav__link', href: `#/${id}`, dataset: { nav: id }, hidden: id === 'gold' && settings.group !== 'DEV' }, label)));
   const groupSel = h('select', { class: 'cqa-select', 'aria-label': 'Группа данных',
-    onchange: (e) => { settings.group = e.target.value; store.set('group', settings.group); route(); } },
+    onchange: (e) => { settings.group = e.target.value; store.set('group', settings.group); syncHeader(); route(); } },
     ['DEV', 'CONTROL'].map((g) => h('option', { value: g, selected: settings.group === g }, g)));
   const modeSeg = h('div', { class: 'cqa-seg', role: 'group', 'aria-label': 'Режим' },
     [['analyst', 'Аналитик'], ['reviewer', 'Проверяющий']].map(([id, label]) =>
@@ -65,6 +65,8 @@ function buildHeader() {
 
 function syncHeader() {
   appEl.classList.toggle('cqa-demo', settings.demo);
+  const goldLink = appEl.querySelector('.cqa-nav__link[data-nav="gold"]'); // gold размечаем только для DEV
+  if (goldLink) goldLink.hidden = settings.group !== 'DEV';
   appEl.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === settings.mode)));
 }
 function markNav(name) {
@@ -103,7 +105,7 @@ async function route() {
   }
   const mod = await def.load();
   if (my !== routeToken) return;
-  const params = name === 'conversation' ? { ...base, id: arg } : base;
+  const params = name === 'conversation' || name === 'gold' ? { ...base, id: arg } : base;
   current = { name, instance: mod.mount(host, params), el: host };
 }
 
