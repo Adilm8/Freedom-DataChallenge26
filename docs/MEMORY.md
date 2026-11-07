@@ -14,7 +14,7 @@
 - Локальная модель (Ollama) — опционально, позже.
 
 ## Среда
-- Облачные сессии — среда `Freedom-DataChallenge26` (открыты `openrouter.ai` и хост API организаторов). Default-среда эти хосты блокирует. Для Gemini нужно добавить `generativelanguage.googleapis.com`.
+- Облачные сессии — среда `Freedom-DataChallenge26`: открыты `openrouter.ai` и хост API организаторов; ключи OpenRouter и Gemini подставляет прокси (network secrets, Bearer), в коде ключ может быть пустым. `generativelanguage.googleapis.com` нет в Allowed domains — при блокировке добавить.
 - URL API организаторов содержит подпись `sig` = секрет. Он есть внутри PDF-гайда, поэтому гайд в git не класть.
 - Снапшот DEV: `data/raw/DEV.json`; читаемая версия — `data/raw/DEV_readable.md` (и копия в папке проекта `Freedom Datathon/research/`).
 - Ноутбук Лиды — Windows (имя устройства «macbook»). Команды для него — PowerShell. Локальная папка проекта — `Freedom Datathon\` (папка `Freedom-DataChallenge26\` там пока не git-клон).
