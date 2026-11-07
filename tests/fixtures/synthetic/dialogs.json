@@ -1,0 +1,1038 @@
+{
+  "isSuccess": true,
+  "error": "",
+  "data": {
+    "dataset_group_id": "SYNTH",
+    "total_records": 26,
+    "records": [
+      {
+        "conversation_id": "s-ru-001",
+        "channel": "agent chat",
+        "language": "RU",
+        "transcript": [
+          {
+            "timestamp": "00:05",
+            "speaker": "client",
+            "text": "Где скачать отчет брокера за прошлый год?"
+          },
+          {
+            "timestamp": "00:40",
+            "speaker": "operator",
+            "text": "В веб-кабинете перейдите в Меню → Отчеты и документы → Отчет брокера, укажите диапазон дат и нажмите скачать."
+          },
+          {
+            "timestamp": "01:10",
+            "speaker": "client",
+            "text": "Спасибо, нашел."
+          },
+          {
+            "timestamp": "01:25",
+            "speaker": "operator",
+            "text": "Пожалуйста. Рад был помочь. Хорошего дня!"
+          },
+          {
+            "timestamp": "01:30",
+            "speaker": "system",
+            "text": "Оператор закрыл чат."
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-ru-002",
+        "channel": "agent chat",
+        "language": "RU",
+        "transcript": [
+          {
+            "timestamp": "00:01",
+            "speaker": "bot",
+            "text": "Здравствуйте! Опишите ваш вопрос."
+          },
+          {
+            "timestamp": "00:15",
+            "speaker": "client",
+            "text": "Я вчера отправлял скан доп. соглашения на почту, почему вы до сих пор не применили тариф?"
+          },
+          {
+            "timestamp": "00:20",
+            "speaker": "system",
+            "text": "Эскалация на оператора."
+          },
+          {
+            "timestamp": "00:45",
+            "speaker": "operator",
+            "text": "Здравствуйте! Что за соглашение вы отправляли?"
+          },
+          {
+            "timestamp": "01:05",
+            "speaker": "operator",
+            "text": "Меня зовут Илья. Вложения из почты у меня в чате не отображаются."
+          },
+          {
+            "timestamp": "01:30",
+            "speaker": "client",
+            "text": "Понял, продублирую сюда."
+          },
+          {
+            "timestamp": "01:50",
+            "speaker": "operator",
+            "text": "Хорошо, ожидаю файл. Всего доброго!"
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-ru-003",
+        "channel": "agent chat",
+        "language": "RU",
+        "transcript": [
+          {
+            "timestamp": "00:02",
+            "speaker": "bot",
+            "text": "Добрый день! Чат-бот на связи."
+          },
+          {
+            "timestamp": "00:12",
+            "speaker": "client",
+            "text": "Оператор"
+          },
+          {
+            "timestamp": "00:15",
+            "speaker": "system",
+            "text": "Эскалация на оператора."
+          },
+          {
+            "timestamp": "00:30",
+            "speaker": "operator",
+            "text": "Здравствуйте! Меня зовут Ксения. Чем могу помочь?"
+          },
+          {
+            "timestamp": "00:45",
+            "speaker": "client",
+            "text": "Сколько у меня свободных долларов на счете?"
+          },
+          {
+            "timestamp": "01:10",
+            "speaker": "operator",
+            "text": "У вас на счете сейчас 4 520 долларов США, готовых к выводу."
+          },
+          {
+            "timestamp": "01:25",
+            "speaker": "client",
+            "text": "Спасибо!"
+          },
+          {
+            "timestamp": "01:35",
+            "speaker": "operator",
+            "text": "Всего доброго! До свидания!"
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-ru-004",
+        "channel": "agent chat",
+        "language": "RU",
+        "transcript": [
+          {
+            "timestamp": "00:03",
+            "speaker": "operator",
+            "text": "Здравствуйте! Меня зовут Дамир. Чем могу помочь?"
+          },
+          {
+            "timestamp": "00:20",
+            "speaker": "client",
+            "text": "Какая комиссия на тарифе Инвестор при покупке акций на KASE?"
+          },
+          {
+            "timestamp": "00:45",
+            "speaker": "operator",
+            "text": "На тарифе Инвестор комиссия за сделки на KASE составляет 0.085% от суммы сделки, абонентской платы нет."
+          },
+          {
+            "timestamp": "01:00",
+            "speaker": "client",
+            "text": "Все ясно, спасибо большое!"
+          },
+          {
+            "timestamp": "01:15",
+            "speaker": "operator",
+            "text": "Был рад проконсультировать! Хорошего вам дня и удачных инвестиций. До свидания!"
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-ru-005",
+        "channel": "agent chat",
+        "language": "RU",
+        "transcript": [
+          {
+            "timestamp": "00:01",
+            "speaker": "client",
+            "text": "Привет"
+          },
+          {
+            "timestamp": "00:02",
+            "speaker": "bot",
+            "text": "Здравствуйте! Опишите ваш вопрос, пожалуйста."
+          },
+          {
+            "timestamp": "00:25",
+            "speaker": "system",
+            "text": "Клиент покинул чат."
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-ru-006",
+        "channel": "agent chat",
+        "language": "RU",
+        "transcript": [
+          {
+            "timestamp": "00:02",
+            "speaker": "bot",
+            "text": "Здравствуйте! Перевожу на оператора."
+          },
+          {
+            "timestamp": "00:05",
+            "speaker": "system",
+            "text": "Эскалация на оператора."
+          },
+          {
+            "timestamp": "00:25",
+            "speaker": "operator",
+            "text": "Здравствуйте! Меня зовут Анна, слушаю вас."
+          },
+          {
+            "timestamp": "00:40",
+            "speaker": "system",
+            "text": "Соединение с клиентом прервано."
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-ru-007",
+        "channel": "agent chat",
+        "language": "RU",
+        "transcript": [
+          {
+            "timestamp": "00:02",
+            "speaker": "client",
+            "text": "Оператор сюда быстро!"
+          },
+          {
+            "timestamp": "00:05",
+            "speaker": "system",
+            "text": "Эскалация на оператора."
+          },
+          {
+            "timestamp": "00:20",
+            "speaker": "operator",
+            "text": "Здравствуйте! Меня зовут Максим. В чем вопрос?"
+          },
+          {
+            "timestamp": "00:40",
+            "speaker": "client",
+            "text": "Почему акция упала, верните деньги!"
+          },
+          {
+            "timestamp": "01:00",
+            "speaker": "operator",
+            "text": "Вы полный идиот, это биржа, никто вам ничего не вернет."
+          },
+          {
+            "timestamp": "01:05",
+            "speaker": "system",
+            "text": "Оператор закрыл чат."
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-ru-008",
+        "channel": "agent chat",
+        "language": "RU",
+        "transcript": [
+          {
+            "timestamp": "00:02",
+            "speaker": "system",
+            "text": "Диалог переведен на оператора."
+          },
+          {
+            "timestamp": "00:15",
+            "speaker": "operator",
+            "text": "Добрый день! Меня зовут Светлана. Чем могу помочь?"
+          },
+          {
+            "timestamp": "00:35",
+            "speaker": "client",
+            "text": "Подскажите, до скольки сегодня работает биржа AIX?"
+          },
+          {
+            "timestamp": "04:15",
+            "speaker": "operator",
+            "text": "Торговая сессия на бирже AIX длится до 17:00 по времени Астаны."
+          },
+          {
+            "timestamp": "04:40",
+            "speaker": "client",
+            "text": "Спасибо, успею выставить заявку."
+          },
+          {
+            "timestamp": "04:55",
+            "speaker": "operator",
+            "text": "Пожалуйста! Удачных торгов, всего доброго!"
+          },
+          {
+            "timestamp": "05:00",
+            "speaker": "system",
+            "text": "Сессия закрыта по таймауту активности."
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-ru-009",
+        "channel": "agent chat",
+        "language": "RU",
+        "transcript": [
+          {
+            "timestamp": "00:03",
+            "speaker": "system",
+            "text": "Эскалация на оператора."
+          },
+          {
+            "timestamp": "00:18",
+            "speaker": "operator",
+            "text": "Здравствуйте! Меня зовут Артур. Какой у вас вопрос?"
+          },
+          {
+            "timestamp": "00:45",
+            "speaker": "client",
+            "text": "Ужасный сервис! Мой вывод денег задерживается уже на 4 дня, я несу убытки и очень зол!"
+          },
+          {
+            "timestamp": "01:05",
+            "speaker": "operator",
+            "text": "Регламент вывода на сторонние банковские счета составляет до пяти рабочих дней."
+          },
+          {
+            "timestamp": "01:25",
+            "speaker": "client",
+            "text": "Могли бы хоть извиниться за неудобства."
+          },
+          {
+            "timestamp": "01:45",
+            "speaker": "operator",
+            "text": "Сроки прописаны в регламенте. До свидания."
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-ru-010",
+        "channel": "agent chat",
+        "language": "RU",
+        "transcript": [
+          {
+            "timestamp": "00:02",
+            "speaker": "system",
+            "text": "Эскалация на оператора."
+          },
+          {
+            "timestamp": "00:20",
+            "speaker": "operator",
+            "text": "Здравствуйте! Меня зовут Тимур. Чем помочь?"
+          },
+          {
+            "timestamp": "00:40",
+            "speaker": "client",
+            "text": "Не могу разобраться, как настроить стоп-лосс на американские акции."
+          },
+          {
+            "timestamp": "01:00",
+            "speaker": "operator",
+            "text": "Переведите мне на каспи 5000 тенге на мой личный номер, я вам лично в обход компании все настрою и научу торговать."
+          },
+          {
+            "timestamp": "01:20",
+            "speaker": "client",
+            "text": "Нет, я сообщу руководству."
+          },
+          {
+            "timestamp": "01:30",
+            "speaker": "operator",
+            "text": "Всего хорошего."
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-kz-001",
+        "channel": "agent chat",
+        "language": "KZ",
+        "transcript": [
+          {
+            "timestamp": "00:03",
+            "speaker": "client",
+            "text": "Сәлеметсіз бе! D-шоттан ақшаны қалай шығаруға болады?"
+          },
+          {
+            "timestamp": "00:10",
+            "speaker": "system",
+            "text": "Чат операторға жіберілді."
+          },
+          {
+            "timestamp": "00:35",
+            "speaker": "operator",
+            "text": "D-шоттан ақшаны алдымен негізгі сауда шотына аударыңыз, содан кейін картаңызға шығарыңыз."
+          },
+          {
+            "timestamp": "00:55",
+            "speaker": "client",
+            "text": "Түсінікті, рақмет!"
+          },
+          {
+            "timestamp": "01:10",
+            "speaker": "operator",
+            "text": "Оқасы жоқ. Сау болыңыз!"
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-kz-002",
+        "channel": "agent chat",
+        "language": "KZ",
+        "transcript": [
+          {
+            "timestamp": "00:02",
+            "speaker": "system",
+            "text": "Тұтынушы верификацияланды."
+          },
+          {
+            "timestamp": "00:15",
+            "speaker": "operator",
+            "text": "Сәлеметсіз бе! Сізге қалай көмектесе аламын?"
+          },
+          {
+            "timestamp": "00:35",
+            "speaker": "client",
+            "text": "Менің шотымда қанша акция бар екенін қарап бересіз бе?"
+          },
+          {
+            "timestamp": "00:50",
+            "speaker": "operator",
+            "text": "Менің атым Айгүл. Сіздің портфеліңізде 150 дана Қазатомөнеркәсіп акциясы бар."
+          },
+          {
+            "timestamp": "01:10",
+            "speaker": "client",
+            "text": "Үлкен рақмет!"
+          },
+          {
+            "timestamp": "01:25",
+            "speaker": "operator",
+            "text": "Күніңіз сәтті өтсін! Сау болыңыз!"
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-kz-003",
+        "channel": "agent chat",
+        "language": "KZ",
+        "transcript": [
+          {
+            "timestamp": "00:03",
+            "speaker": "client",
+            "text": "Сәлеметсіз бе! Шотты қалай толтыруға болады?"
+          },
+          {
+            "timestamp": "00:06",
+            "speaker": "system",
+            "text": "Чат операторға жіберілді."
+          },
+          {
+            "timestamp": "00:25",
+            "speaker": "operator",
+            "text": "Здравствуйте! Меня зовут Алия. Пополнить счет можно с карты Invest Card без комиссии."
+          },
+          {
+            "timestamp": "00:45",
+            "speaker": "client",
+            "text": "Жақсы, түсіндім."
+          },
+          {
+            "timestamp": "01:00",
+            "speaker": "operator",
+            "text": "Всего доброго! До свидания!"
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-kz-004",
+        "channel": "agent chat",
+        "language": "KZ",
+        "transcript": [
+          {
+            "timestamp": "00:03",
+            "speaker": "operator",
+            "text": "Қайырлы күн! Менің атым Бауыржан. Сізге қалай көмектесе аламын?"
+          },
+          {
+            "timestamp": "00:25",
+            "speaker": "client",
+            "text": "KASE биржасында сауда сағаттары қандай?"
+          },
+          {
+            "timestamp": "00:50",
+            "speaker": "operator",
+            "text": "KASE қор нарығындағы сауда-саттық сессиясы сағат 11:30-дан 17:30-ға дейін өтеді."
+          },
+          {
+            "timestamp": "01:10",
+            "speaker": "client",
+            "text": "Түсінікті, көмегіңізге рақмет!"
+          },
+          {
+            "timestamp": "01:25",
+            "speaker": "operator",
+            "text": "Оқасы жоқ! Сұрақтарыңыз болса әрқашан хабарласыңыз. Сау болыңыз!"
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-kz-005",
+        "channel": "agent chat",
+        "language": "KZ",
+        "transcript": [
+          {
+            "timestamp": "00:01",
+            "speaker": "client",
+            "text": "Сәлем"
+          },
+          {
+            "timestamp": "00:02",
+            "speaker": "bot",
+            "text": "Сәлеметсіз бе! Сұрағыңызды жазыңызшы."
+          },
+          {
+            "timestamp": "00:30",
+            "speaker": "system",
+            "text": "Клиент чаттан шықты."
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-kz-006",
+        "channel": "agent chat",
+        "language": "KZ",
+        "transcript": [
+          {
+            "timestamp": "00:03",
+            "speaker": "system",
+            "text": "Чат операторға жіберілді."
+          },
+          {
+            "timestamp": "00:20",
+            "speaker": "operator",
+            "text": "Сәлеметсіз бе! Мен Дәуренмін. Қандай көмек көрсете аламын?"
+          },
+          {
+            "timestamp": "00:40",
+            "speaker": "client",
+            "text": "Қай акцияны сатып алсам тиімді болады?"
+          },
+          {
+            "timestamp": "01:00",
+            "speaker": "operator",
+            "text": "Маған жеке төлеңіз, менің каспиме 10 мың теңге жіберсеңіз, құпия инсайд акцияларды айтамын."
+          },
+          {
+            "timestamp": "01:10",
+            "speaker": "client",
+            "text": "Бұл заңсыз ғой."
+          },
+          {
+            "timestamp": "01:15",
+            "speaker": "system",
+            "text": "Оператор чатты жапты."
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-kz-007",
+        "channel": "agent chat",
+        "language": "KZ",
+        "transcript": [
+          {
+            "timestamp": "00:02",
+            "speaker": "system",
+            "text": "Чат операторға жіберілді."
+          },
+          {
+            "timestamp": "00:20",
+            "speaker": "operator",
+            "text": "Сәлеметсіз бе! Менің атым Марат. Қандай сұрағыңыз бар?"
+          },
+          {
+            "timestamp": "00:35",
+            "speaker": "client",
+            "text": "W-8BEN формасы не үшін керек?"
+          },
+          {
+            "timestamp": "00:55",
+            "speaker": "operator",
+            "text": "Ол салық бойынша қағаз, Америка үшін сол жерден басып жібереді."
+          },
+          {
+            "timestamp": "01:15",
+            "speaker": "client",
+            "text": "Түсінбедім, қандай салық және нақты қай батырманы басу керек?"
+          },
+          {
+            "timestamp": "01:45",
+            "speaker": "operator",
+            "text": "АҚШ дивидендінің салығын 30-дан 10%-ға түсіреді. Кабинет → Персональные данные бөлімінде толтырыңыз."
+          },
+          {
+            "timestamp": "02:05",
+            "speaker": "client",
+            "text": "Енді түсінікті болды."
+          },
+          {
+            "timestamp": "02:20",
+            "speaker": "operator",
+            "text": "Сау болыңыз!"
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-en-001",
+        "channel": "agent chat",
+        "language": "EN",
+        "transcript": [
+          {
+            "timestamp": "00:03",
+            "speaker": "system",
+            "text": "Chat transferred to an agent."
+          },
+          {
+            "timestamp": "00:20",
+            "speaker": "operator",
+            "text": "Hello, I'm Kevin. How may I help?"
+          },
+          {
+            "timestamp": "00:40",
+            "speaker": "client",
+            "text": "Why was my market order rejected during after-hours?"
+          },
+          {
+            "timestamp": "01:00",
+            "speaker": "operator",
+            "text": "Shut up and read the trading hours, market orders are not supported after hours you dumb idiot."
+          },
+          {
+            "timestamp": "01:15",
+            "speaker": "client",
+            "text": "How dare you speak to a client like that!"
+          },
+          {
+            "timestamp": "01:20",
+            "speaker": "system",
+            "text": "Agent closed the chat."
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-en-002",
+        "channel": "agent chat",
+        "language": "EN",
+        "transcript": [
+          {
+            "timestamp": "00:05",
+            "speaker": "client",
+            "text": "Hello, how can I find my brokerage report?"
+          },
+          {
+            "timestamp": "00:08",
+            "speaker": "system",
+            "text": "Chat transferred to an agent."
+          },
+          {
+            "timestamp": "00:30",
+            "speaker": "operator",
+            "text": "Здравствуйте! Меня зовут Нурлан. Откройте Меню → Отчеты и документы."
+          },
+          {
+            "timestamp": "00:50",
+            "speaker": "client",
+            "text": "Could you please assist in English?"
+          },
+          {
+            "timestamp": "01:15",
+            "speaker": "operator",
+            "text": "Yes, of course. Open Menu -> Reports and documents -> Broker Report to download it."
+          },
+          {
+            "timestamp": "01:35",
+            "speaker": "client",
+            "text": "Got it, thank you very much."
+          },
+          {
+            "timestamp": "01:45",
+            "speaker": "operator",
+            "text": "You are welcome. Have a wonderful day, goodbye!"
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-en-003",
+        "channel": "agent chat",
+        "language": "EN",
+        "transcript": [
+          {
+            "timestamp": "00:02",
+            "speaker": "bot",
+            "text": "Hi! Connecting you to an agent."
+          },
+          {
+            "timestamp": "00:05",
+            "speaker": "system",
+            "text": "Chat transferred to an agent."
+          },
+          {
+            "timestamp": "00:25",
+            "speaker": "operator",
+            "text": "Hello! My name is Chloe. How can I assist you today?"
+          },
+          {
+            "timestamp": "00:45",
+            "speaker": "client",
+            "text": "Can you check how many shares of Apple I currently hold?"
+          },
+          {
+            "timestamp": "01:05",
+            "speaker": "operator",
+            "text": "Sure, I see that your portfolio has 25 shares of AAPL purchased at 180 USD."
+          },
+          {
+            "timestamp": "01:20",
+            "speaker": "client",
+            "text": "Thanks a lot, that is all I needed."
+          },
+          {
+            "timestamp": "01:30",
+            "speaker": "operator",
+            "text": "You are welcome! Have a great day, goodbye!"
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-en-004",
+        "channel": "agent chat",
+        "language": "EN",
+        "transcript": [
+          {
+            "timestamp": "00:03",
+            "speaker": "operator",
+            "text": "Hello! I am Oliver from customer support. How may I help you?"
+          },
+          {
+            "timestamp": "00:20",
+            "speaker": "system",
+            "text": "Connection to customer lost."
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-en-005",
+        "channel": "agent chat",
+        "language": "EN",
+        "transcript": [
+          {
+            "timestamp": "00:02",
+            "speaker": "system",
+            "text": "Chat transferred to an agent."
+          },
+          {
+            "timestamp": "00:20",
+            "speaker": "operator",
+            "text": "Hello! My name is Lucas. How can I help you today?"
+          },
+          {
+            "timestamp": "00:40",
+            "speaker": "client",
+            "text": "What is the overnight repo rate for D-accounts in USD?"
+          },
+          {
+            "timestamp": "04:10",
+            "speaker": "operator",
+            "text": "The USD D-account overnight rate is floating and tied directly to the SOFR benchmark published by the Federal Reserve."
+          },
+          {
+            "timestamp": "04:30",
+            "speaker": "client",
+            "text": "Thank you for the clarification."
+          },
+          {
+            "timestamp": "04:45",
+            "speaker": "operator",
+            "text": "Glad to assist. Take care and goodbye!"
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-en-006",
+        "channel": "agent chat",
+        "language": "EN",
+        "transcript": [
+          {
+            "timestamp": "00:03",
+            "speaker": "system",
+            "text": "Chat transferred to an agent."
+          },
+          {
+            "timestamp": "00:20",
+            "speaker": "operator",
+            "text": "Good day! I am Ethan. How can I assist you?"
+          },
+          {
+            "timestamp": "00:40",
+            "speaker": "client",
+            "text": "As stated in my support ticket #9812 yesterday, how do I stop margin lending on my account?"
+          },
+          {
+            "timestamp": "01:05",
+            "speaker": "operator",
+            "text": "You just don't trade on it and it won't borrow anything."
+          },
+          {
+            "timestamp": "01:25",
+            "speaker": "client",
+            "text": "That doesn't answer my question. Ticket #9812 is not resolved. Where is the setting in the order form?"
+          },
+          {
+            "timestamp": "01:55",
+            "speaker": "operator",
+            "text": "In the order ticket, open Order Settings and uncheck the 'Use margin' checkbox prior to placing the order."
+          },
+          {
+            "timestamp": "02:15",
+            "speaker": "client",
+            "text": "Finally, that is clear now."
+          },
+          {
+            "timestamp": "02:30",
+            "speaker": "operator",
+            "text": "Have a good day. Goodbye!"
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-en-007",
+        "channel": "agent chat",
+        "language": "EN",
+        "transcript": [
+          {
+            "timestamp": "00:03",
+            "speaker": "system",
+            "text": "Chat transferred to an agent."
+          },
+          {
+            "timestamp": "00:22",
+            "speaker": "operator",
+            "text": "Hello, my name is Daniel. How can I help?"
+          },
+          {
+            "timestamp": "00:45",
+            "speaker": "client",
+            "text": "I am furious! My withdrawal to a third-party card was rejected without any explanation!"
+          },
+          {
+            "timestamp": "01:05",
+            "speaker": "operator",
+            "text": "Withdrawals to third-party bank accounts or cards are strictly prohibited by AML regulations. You can only withdraw to your own verified account."
+          },
+          {
+            "timestamp": "01:25",
+            "speaker": "client",
+            "text": "You could at least sound polite instead of reading rigid policies."
+          },
+          {
+            "timestamp": "01:40",
+            "speaker": "operator",
+            "text": "Policy is policy. Goodbye."
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-call-001",
+        "channel": "voice call",
+        "language": "RU",
+        "transcript": [
+          {
+            "timestamp": "2026-11-07T14:00:00+05:00",
+            "speaker": "system",
+            "text": "Запись и транскрибирование запущены."
+          },
+          {
+            "timestamp": "2026-11-07T14:00:02+05:00",
+            "speaker": "operator",
+            "text": "Здравствуйте! Меня зовут Руслан, служба поддержки Freedom Broker. Слушаю вас!"
+          },
+          {
+            "timestamp": "2026-11-07T14:00:15+05:00",
+            "speaker": "client",
+            "text": "Алло, э-э, здравствуйте. Слушайте, у меня, ну... это, не получается найти, где форму В-8 заполнить. W-8BEN которая."
+          },
+          {
+            "timestamp": "2026-11-07T14:00:32+05:00",
+            "speaker": "operator",
+            "text": "Да, конечно, с удовольствием подскажу. Вы сейчас за компьютером в веб-версии или с мобильного телефона?"
+          },
+          {
+            "timestamp": "2026-11-07T14:00:45+05:00",
+            "speaker": "client",
+            "text": "Я, э-э, в компьютере, в браузере сижу."
+          },
+          {
+            "timestamp": "2026-11-07T14:01:00+05:00",
+            "speaker": "operator",
+            "text": "Отлично. Нажмите сверху вкладку «Кабинет», затем слева выберите раздел «Персональные данные», и там будет пункт «Форма W-8BEN»."
+          },
+          {
+            "timestamp": "2026-11-07T14:01:20+05:00",
+            "speaker": "client",
+            "text": "Ага, так, нажал... Да, открылось окно с моими данными. А смс-код нужен будет?"
+          },
+          {
+            "timestamp": "2026-11-07T14:01:35+05:00",
+            "speaker": "operator",
+            "text": "Да, после проверки правильности адреса и ИИН система попросит открыть сессию безопасности и ввести код из СМС для подписания."
+          },
+          {
+            "timestamp": "2026-11-07T14:01:52+05:00",
+            "speaker": "client",
+            "text": "Все понял, спасибо вам огромное, Руслан, все очень доходчиво!"
+          },
+          {
+            "timestamp": "2026-11-07T14:02:08+05:00",
+            "speaker": "operator",
+            "text": "Рад был помочь! Если появятся еще вопросы, обязательно звоните на 7555. Желаю вам прекрасного дня и удачных торгов! До свидания!"
+          },
+          {
+            "timestamp": "2026-11-07T14:02:15+05:00",
+            "speaker": "client",
+            "text": "До свидания!"
+          },
+          {
+            "timestamp": "2026-11-07T14:02:18+05:00",
+            "speaker": "system",
+            "text": "Клиент завершил разговор."
+          }
+        ],
+        "audio_url": null
+      },
+      {
+        "conversation_id": "s-call-002",
+        "channel": "voice call",
+        "language": "RU",
+        "transcript": [
+          {
+            "timestamp": "2026-11-07T14:10:00+05:00",
+            "speaker": "system",
+            "text": "Запись и транскрибирование запущены."
+          },
+          {
+            "timestamp": "2026-11-07T14:10:03+05:00",
+            "speaker": "operator",
+            "text": "Добрый день! Компания Freedom Broker, меня зовут Камилла. Чем могу помочь?"
+          },
+          {
+            "timestamp": "2026-11-07T14:10:18+05:00",
+            "speaker": "client",
+            "text": "Здравствуйте, Камилла. Я подавал заявку на вывод 100 000 тенге на карту Freedom Bank, проверьте статус, пожалуйста."
+          },
+          {
+            "timestamp": "2026-11-07T14:10:35+05:00",
+            "speaker": "operator",
+            "text": "С удовольствием помогу. Для доступа к информации по вашему счету назовите, пожалуйста, ваш ИИН и кодовое слово."
+          },
+          {
+            "timestamp": "2026-11-07T14:10:50+05:00",
+            "speaker": "client",
+            "text": "ИИН 920514300123, слово Астана."
+          },
+          {
+            "timestamp": "2026-11-07T14:11:00+05:00",
+            "speaker": "system",
+            "text": "Личность клиента подтверждена."
+          },
+          {
+            "timestamp": "2026-11-07T14:11:05+05:00",
+            "speaker": "operator",
+            "text": "Спасибо, данные совпали. Одну минуту, пожалуйста, оставайтесь на линии, я проверю статус транзакции в банковском шлюзе."
+          },
+          {
+            "timestamp": "2026-11-07T14:11:10+05:00",
+            "speaker": "system",
+            "text": "Клиент находится на удержании."
+          },
+          {
+            "timestamp": "2026-11-07T14:11:45+05:00",
+            "speaker": "system",
+            "text": "Клиент больше не находится на удержании."
+          },
+          {
+            "timestamp": "2026-11-07T14:11:50+05:00",
+            "speaker": "operator",
+            "text": "Благодарю за ожидание! Ваше поручение исполнено две минуты назад, средства уже зачислены на вашу карту Freedom Bank."
+          },
+          {
+            "timestamp": "2026-11-07T14:12:05+05:00",
+            "speaker": "client",
+            "text": "О, действительно, пришло уведомление! Спасибо за оперативность!"
+          },
+          {
+            "timestamp": "2026-11-07T14:12:15+05:00",
+            "speaker": "operator",
+            "text": "Всегда рады помочь! Остались ли у вас еще вопросы?"
+          },
+          {
+            "timestamp": "2026-11-07T14:12:20+05:00",
+            "speaker": "client",
+            "text": "Нет, все отлично, спасибо!"
+          },
+          {
+            "timestamp": "2026-11-07T14:12:25+05:00",
+            "speaker": "operator",
+            "text": "Хорошего вам дня и отличного настроения! До свидания!"
+          },
+          {
+            "timestamp": "2026-11-07T14:12:30+05:00",
+            "speaker": "system",
+            "text": "Клиент завершил разговор."
+          }
+        ],
+        "audio_url": null
+      }
+    ]
+  }
+}
