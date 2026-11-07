@@ -57,7 +57,8 @@ def test_list_and_detail(client):
     d = client.get(f"/api/conversations/{rows[0]['id']}").json()
     assert d["messages"][0]["msg_id"] == "m0"
     assert "audio_offset_sec" in d["messages"][0] and "internal" in d["messages"][0]
-    assert d["evaluations"] == [] and d["audio_url"] == "https://x.test/a.mp3"
+    assert d["evaluations"] == [] and d["has_audio"] is True
+    assert d["audio_url"] == f"/api/conversations/{d['id']}/audio"  # подписанная ссылка не уходит в браузер
 
 
 def test_detail_404(client):
