@@ -1,7 +1,9 @@
 // Карточка диалога: шапка, факты и транскрипт слева, результат справа. Связывает дочерние компоненты событиями DOM.
-// Параметры: id (суррогатный id диалога), eval (id оценки; без него — последняя), group, mode.
+// Параметры: id (суррогатный id диалога), eval (id оценки; без него — последняя), focus (код критерия: прокрутить к нему
+// и подсветить доказательства — переход из очереди «требует проверки» и апелляций), group, mode.
 // Наружу: cqa:navigate {to}, cqa:location {to} (сменить адрес без перехода), cqa:run-request {ids, label, channel, preset, ...}.
-// Внутрь: cqa:refresh на el — перечитать диалог и показать последнюю оценку (после прогона).
+// Внутрь: cqa:refresh на el — перечитать диалог и показать последнюю оценку (после прогона);
+// cqa:evaluation-updated {evaluation} от панели результата (апелляция подана) — обновить итог в шапке.
 // Звонок: плеер над транскриптом; клик по реплике или доказательству переводит запись на секунду реплики (с поправкой).
 import { h, clear, emit, channelBadge, langChip, score, fmtScore, fmtDate, skeletonRows, errorState } from '../ui.js';
 import { getConversation, getEvaluation, listConversations } from '../api.js';
@@ -17,7 +19,7 @@ export function mount(el, params = {}) {
   let kids = [];
   let token = 0;
   let trEl = null, resEl = null, playerEl = null;
-  let conv = null, ev = null;
+  let conv = null, ev = null, lastRows = [];
 
   function evidenceMap(e) {
     return (e?.criteria || [])
@@ -66,24 +68,40 @@ export function mount(el, params = {}) {
         `#${x.id} · ${x.model || '—'} · ${fmtDate(x.created_at)} · ${fmtScore(x.final_total)}${i === 0 ? ' · последняя' : ''}`))));
   }
 
+  // Итог в шапке: финальный; если решения по апелляциям его изменили — «AI → финальный» рядом.
+  function totalEl() {
+    if (!ev) return h('span', { class: 'cqa-badge cqa-badge--muted' }, 'Не оценён');
+    const ai = ev.ai_score?.total, fin = ev.final_score?.total;
+    if (ai == null || fin == null || ai === fin) return h('span', { class: 'cqa-card__total' }, h('span', { class: 'cqa-faint cqa-h3' }, 'Итог'), score(fin ?? ai, 'cqa-text-lg'));
+    return h('span', { class: 'cqa-card__total cqa-card__total--two', title: 'AI-оценка не меняется; финальный итог — с решениями по апелляциям' },
+      h('span', { class: 'cqa-faint cqa-h3' }, 'AI'), score(ai, 'cqa-faint'), h('span', { class: 'cqa-faint' }, '→'),
+      h('span', { class: 'cqa-faint cqa-h3' }, 'Финальный'), score(fin, 'cqa-text-lg'));
+  }
+
   function render(rows) {
     clear(root);
+    lastRows = rows;
+    root.append(head(rows));
+    const isCall = conv.channel === 'voice call';
+    const withAudio = isCall && (conv.has_audio ?? !!conv.audio_url) === true;
+    body(isCall, withAudio);
+  }
+
+  function head(rows) {
     const idx = rows.findIndex((r) => String(r.id) === String(conv.id));
     const prev = idx > 0 ? rows[idx - 1] : null;
     const next = idx >= 0 && idx < rows.length - 1 ? rows[idx + 1] : null;
     const go = (to) => emit(root, 'cqa:navigate', { to });
-    const isCall = conv.channel === 'voice call';
-    const withAudio = isCall && (conv.has_audio ?? !!conv.audio_url) === true;
     const newest = conv.evaluations?.[0]?.id;
     const old = ev && newest && ev.id !== newest;
 
-    root.append(h('div', { class: 'cqa-card__head' },
+    return h('div', { class: 'cqa-card__head' },
       h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', onclick: () => go('#/conversations') }, '← К списку'),
       h('span', { class: 'cqa-card__id' }, conv.conversation_id),
       channelBadge(conv.channel), langChip(conv.language),
-      ev ? h('span', { class: 'cqa-card__total' }, h('span', { class: 'cqa-faint cqa-h3' }, 'Итог'), score(ev.final_score?.total, 'cqa-text-lg'))
-        : h('span', { class: 'cqa-badge cqa-badge--muted' }, 'Не оценён'),
-      ev?.ai_score?.critical?.length ? h('span', { class: 'cqa-badge cqa-badge--flag' }, 'Грубая ошибка') : null,
+      totalEl(),
+      (ev?.final_score || ev?.ai_score)?.critical?.length ? h('span', { class: 'cqa-badge cqa-badge--flag' }, 'Грубая ошибка') : null,
+      ev?.open_appeals ? h('span', { class: 'cqa-badge cqa-badge--accent' }, `Апелляций открыто: ${ev.open_appeals}`) : null,
       ev?.needs_review ? h('span', { class: 'cqa-badge cqa-badge--warn' }, 'Требует проверки') : null,
       ev && ev.status !== 'done' ? h('span', { class: 'cqa-badge cqa-badge--no' }, ev.status === 'failed' ? 'Оценка не выполнена' : 'Оценка неполная') : null,
       old ? h('button', { type: 'button', class: 'cqa-badge cqa-badge--warn cqa-card__old', onclick: () => go(`#/conversation/${conv.id}`) }, 'не последняя оценка · к последней') : null,
@@ -92,8 +110,10 @@ export function mount(el, params = {}) {
       h('div', { class: 'cqa-card__nav' },
         idx >= 0 ? h('span', { class: 'cqa-faint', style: 'font-size:var(--cqa-text-xs)' }, `${idx + 1} из ${rows.length}`) : null,
         h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', disabled: !prev, onclick: () => prev && go(`#/conversation/${prev.id}`) }, '‹ Предыдущий'),
-        h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', disabled: !next, onclick: () => next && go(`#/conversation/${next.id}`) }, 'Следующий ›'))));
+        h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', disabled: !next, onclick: () => next && go(`#/conversation/${next.id}`) }, 'Следующий ›')));
+  }
 
+  function body(isCall, withAudio) {
     const left = h('div', { class: 'cqa-card__col', id: 'cqa-col-left' });
     const right = h('div', { class: 'cqa-card__col', id: 'cqa-col-right' });
     root.append(h('div', { class: 'cqa-card__cols' }, left, right));
@@ -123,6 +143,11 @@ export function mount(el, params = {}) {
     const rs = mountResult(resEl, { evaluation: ev, mode: p.mode, conversationId: conv.id });
     const pl = playerEl ? mountPlayer(playerEl, { conversation: conv, evidence: evidenceMap(ev) }) : null;
     kids = [tr, rs, fx, pl].filter(Boolean);
+    if (p.focus && ev) {
+      const key = p.focus;
+      p = { ...p, focus: undefined }; // один раз: после «Оценить повторно» карточка открывается сверху
+      requestAnimationFrame(() => resEl?.dispatchEvent(new CustomEvent('cqa:focus-criterion', { detail: { key, show: true } })));
+    }
   }
 
   // Результат и факты -> транскрипт, транскрипт -> результат. Слушатели вешаются один раз.
@@ -153,6 +178,11 @@ export function mount(el, params = {}) {
     if (!conv || e.detail?.lockScope) return;
     Object.assign(e.detail, { ids: [conv.id], group: conv.group_id, label: conv.conversation_id, channel: conv.channel, lockScope: true,
       preset: e.detail.preset || preset(), title: ev ? `Оценить повторно ${conv.conversation_id}` : `Оценить ${conv.conversation_id}` });
+  });
+  root.addEventListener('cqa:evaluation-updated', (e) => {
+    if (!conv || !e.detail?.evaluation) return;
+    ev = e.detail.evaluation;
+    root.querySelector('.cqa-card__head')?.replaceWith(head(lastRows));
   });
   const onRefresh = () => {
     if (p.eval) { p = { ...p, eval: undefined }; emit(root, 'cqa:location', { to: `#/conversation/${p.id}` }); }

@@ -65,12 +65,12 @@ export async function getHealth() {
 }
 
 export async function listConversations(params = {}) {
-  if (isMock()) return fixture('conversations');
+  if (isMock()) return (await mockStore()).conversations(params);
   return http('/conversations', params);
 }
 
 export async function getConversation(id) {
-  if (isMock()) return fixture(`conversation-${id}`);
+  if (isMock()) return (await mockStore()).conversation(id);
   return http(`/conversations/${encodeURIComponent(id)}`);
 }
 
@@ -103,7 +103,7 @@ export async function probeAudio(url) {
 }
 
 export async function getEvaluation(id) {
-  if (isMock()) return fixture(`evaluation-${id}`);
+  if (isMock()) return (await mockStore()).evaluation(id);
   return http(`/evaluations/${encodeURIComponent(id)}`);
 }
 
@@ -235,4 +235,60 @@ export async function listGold() { return http('/gold'); }
 export async function getGold(conversationId) { return http(`/gold/${encodeURIComponent(conversationId)}`); }
 export async function putGold(conversationId, body) {
   return request('PUT', `/gold/${encodeURIComponent(conversationId)}`, { body, failText: 'Не сохранено', netText: 'Нет связи с сервером: разметка не сохранена.' });
+}
+
+// ---------- Апелляции, «требует проверки», новый диалог, экспорт, группы (этап 4) ----------
+// В mock-режиме состояние живёт в памяти вкладки: js/mock-store.js поверх фикстур appeals.json, review-queue.json.
+const mockStore = () => import('./mock-store.js');
+
+/** GET /appeals → [AppealRow] (новые сверху). params: {status: open|confirmed|changed|closed, group_id, evaluation_id, conversation_id}. */
+export async function listAppeals(params = {}) {
+  if (isMock()) return (await mockStore()).listAppeals(params);
+  return http('/appeals', params);
+}
+/** POST /appeals {evaluation_id, criterion_key, comment} → Appeal (201); 409 — открытая уже есть; 422 с errors. */
+export async function createAppeal(body) {
+  if (isMock()) return (await mockStore()).createAppeal(body);
+  return request('POST', '/appeals', { body, failText: 'Апелляция не сохранена', netText: 'Нет связи с сервером: апелляция не сохранена.' });
+}
+/** POST /appeals/{id}/decision {action: confirm|change, answer?, reason} → {appeal, evaluation}. */
+export async function decideAppeal(id, body) {
+  if (isMock()) return (await mockStore()).decideAppeal(id, body);
+  return request('POST', `/appeals/${encodeURIComponent(id)}/decision`, { body, failText: 'Решение не сохранено', netText: 'Нет связи с сервером: решение не сохранено.' });
+}
+/** GET /review-queue → [ReviewItem], важные сверху. */
+export async function getReviewQueue(params = {}) {
+  if (isMock()) return (await mockStore()).reviewQueue(params);
+  return http('/review-queue', params);
+}
+/** POST /conversations {group_id?, conversation_id?, channel?, language?, transcript: [] | text} → ConversationDetail (201); 409; 422 с errors. */
+export async function createConversation(body) {
+  if (isMock()) return (await mockStore()).createConversation(body);
+  return request('POST', '/conversations', { body, failText: 'Диалог не сохранён', netText: 'Нет связи с сервером: диалог не сохранён.' });
+}
+/** Группы с диалогами [{group_id, count, default}]: по списку диалогов + группа по умолчанию из /health (даже пустая). */
+export async function listGroups() {
+  if (isMock()) return (await mockStore()).groups();
+  const [rows, hl] = await Promise.all([http('/conversations'), getHealth().catch(() => null)]);
+  const counts = new Map(hl?.group_id ? [[hl.group_id, 0]] : []);
+  for (const r of rows) counts.set(r.group_id, (counts.get(r.group_id) || 0) + 1);
+  return [...counts].map(([group_id, count]) => ({ group_id, count, default: group_id === hl?.group_id }));
+}
+/** Файл выгрузки: path '/export' ({group_id, format: csv|json}) или '/export/results' ({group_id}).
+ *  → {blob, filename, validationErrors} (число ошибок проверки формата из X-Validation-Errors или null). */
+export async function downloadExport(path, params = {}) {
+  if (isMock()) return (await mockStore()).exportFile(path, params);
+  const url = new URL(apiBase() + path, window.location.href);
+  for (const [k, v] of Object.entries(params)) if (v !== '' && v != null) url.searchParams.set(k, v);
+  let res;
+  try { res = await fetch(url); } catch { throw new ApiError('Нет связи с сервером: файл не скачан.', 0); }
+  if (!res.ok) {
+    let parsed = { detail: null, errors: [] };
+    try { parsed = parseErrorBody(await res.json()); } catch { /* тело не JSON */ }
+    throw new ApiError(`Файл не выгружен${parsed.detail ? ': ' + parsed.detail : ''} (${res.status})`, res.status, parsed);
+  }
+  const name = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(res.headers.get('Content-Disposition') || '')?.[1];
+  const v = res.headers.get('X-Validation-Errors');
+  return { blob: await res.blob(), filename: name ? decodeURIComponent(name) : path.endsWith('results') ? 'results.json' : `export.${params.format || 'csv'}`,
+    validationErrors: v == null || v === '' ? null : Number(v) };
 }

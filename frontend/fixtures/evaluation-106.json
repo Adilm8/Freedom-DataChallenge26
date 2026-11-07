@@ -369,7 +369,12 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": 105,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no"
+   ],
+   "appeal_history": []
   },
   {
    "key": "02",
@@ -397,7 +402,13 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": 105,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no",
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "03",
@@ -430,7 +441,13 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": 105,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no",
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "04",
@@ -465,7 +482,16 @@
     "низкая уверенность модели"
    ],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    20,
+    15,
+    10,
+    5,
+    0,
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "05",
@@ -493,7 +519,12 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": 105,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no"
+   ],
+   "appeal_history": []
   },
   {
    "key": "06",
@@ -529,7 +560,14 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    10,
+    7,
+    4,
+    0
+   ],
+   "appeal_history": []
   },
   {
    "key": "07",
@@ -557,7 +595,13 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": 105,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no",
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "08",
@@ -582,7 +626,12 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": 105,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no"
+   ],
+   "appeal_history": []
   }
  ],
  "tokens_in": 5560,
@@ -590,5 +639,6 @@
  "cost_usd": 0.02151,
  "latency_ms": 2150,
  "created_at": "2026-11-07T16:05:00Z",
- "needs_review": true
+ "needs_review": true,
+ "open_appeals": 0
 }

@@ -408,7 +408,12 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no"
+   ],
+   "appeal_history": []
   },
   {
    "key": "02",
@@ -433,7 +438,13 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no",
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "03",
@@ -458,7 +469,13 @@
    "na_reason": "Запрос не требовал идентификации.",
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no",
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "04",
@@ -486,7 +503,16 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    20,
+    15,
+    10,
+    5,
+    0,
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "05",
@@ -514,7 +540,36 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": {
+    "id": 3,
+    "evaluation_id": 103,
+    "criterion_key": "05",
+    "comment": "Оператор поздоровался вежливо и без грубости — эмпатия есть.",
+    "status": "confirmed",
+    "ai_answer_snapshot": "no",
+    "decision_answer": "no",
+    "decision_reason": "Вежливое приветствие не отменяет давления на клиента и просьбы перевести деньги лично: ответ AI верный.",
+    "created_at": "2026-11-07T15:40:00Z",
+    "decided_at": "2026-11-07T15:52:00Z"
+   },
+   "allowed_answers": [
+    "yes",
+    "no"
+   ],
+   "appeal_history": [
+    {
+     "id": 3,
+     "evaluation_id": 103,
+     "criterion_key": "05",
+     "comment": "Оператор поздоровался вежливо и без грубости — эмпатия есть.",
+     "status": "confirmed",
+     "ai_answer_snapshot": "no",
+     "decision_answer": "no",
+     "decision_reason": "Вежливое приветствие не отменяет давления на клиента и просьбы перевести деньги лично: ответ AI верный.",
+     "created_at": "2026-11-07T15:40:00Z",
+     "decided_at": "2026-11-07T15:52:00Z"
+    }
+   ]
   },
   {
    "key": "06",
@@ -542,7 +597,14 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    10,
+    7,
+    4,
+    0
+   ],
+   "appeal_history": []
   },
   {
    "key": "07",
@@ -567,7 +629,13 @@
    "na_reason": "Чат оборвался до возможности его завершить.",
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no",
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "08",
@@ -600,7 +668,12 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no"
+   ],
+   "appeal_history": []
   }
  ],
  "tokens_in": 12640,
@@ -608,5 +681,6 @@
  "cost_usd": 0.051855,
  "latency_ms": 3550,
  "created_at": "2026-11-07T14:20:00Z",
- "needs_review": false
+ "needs_review": false,
+ "open_appeals": 0
 }

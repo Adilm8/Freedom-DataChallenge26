@@ -4,6 +4,7 @@
 import { h, clear, emit, answerBadge, score, fmtScore, fmtMoney, fmtDate, skeletonRows, errorState, emptyState } from '../ui.js';
 import { getEvaluation, getEvaluationCalls } from '../api.js';
 import { mount as mountCalls } from './llm-calls.js';
+import { openAppealForm } from './appeal-form.js';
 
 const RESOLVED = { yes: ['Вопрос решён', 'yes'], no: ['Вопрос не решён', 'no'], unclear: ['Решён ли вопрос — неясно', 'na'] };
 const CONF = {
@@ -12,6 +13,7 @@ const CONF = {
   low: ['Низкая уверенность', 'Данных для вывода мало: ответ стоит проверить вручную'],
 };
 export const STRATEGY_LABEL = { grouped: 'по группам', single: 'один вызов', per_criterion: 'по критерию' };
+const AP_STATUS = { open: ['Апелляция открыта', 'warn'], confirmed: ['Оценка подтверждена', 'yes'], changed: ['Ответ изменён', 'accent'] };
 const SECTION_TITLES = { start: 'Начало и понимание запроса', safety: 'Безопасность и решение', dialog: 'Ведение и завершение диалога', critical: 'Грубые нарушения' };
 
 function confidence(level) {
@@ -42,10 +44,10 @@ export function mount(el, params = {}) {
   let token = 0;
 
   const preset = () => ({ provider: ev.provider, model: ev.model, strategy: ev.strategy, reuse: 'none' });
-  const showInTranscript = (c) => {
+  const showInTranscript = (c, extra = {}) => {
     const evs = c.evidence || [];
     emit(root, 'cqa:evidence-click', { key: c.key, msg_ids: evs.map((e) => e.msg_id), quotes: evs.map((e) => e.quote),
-      from: c.checked_range?.from, to: c.checked_range?.to });
+      from: c.checked_range?.from, to: c.checked_range?.to, ...extra });
   };
 
   function section(sec, list) {
@@ -96,14 +98,6 @@ export function mount(el, params = {}) {
     }
     if (c.advice) body.push(h('div', { class: 'cqa-advice' }, h('b', null, 'Что можно было сделать иначе'), c.advice));
 
-    const appealLine = [];
-    if (c.overridden) {
-      appealLine.push(h('span', { class: 'cqa-appeal__text' },
-        h('b', null, 'Пересмотр: '), 'AI ', answerBadge(c, c.ai_answer), ' → проверяющий ', answerBadge(c, c.final_answer),
-        c.appeal?.decision_reason ? ` · ${c.appeal.decision_reason}` : ''));
-    } else if (c.appeal?.status === 'open') {
-      appealLine.push(h('span', { class: 'cqa-appeal__text' }, h('span', { class: 'cqa-badge cqa-badge--warn' }, 'Апелляция открыта'), ` ${c.appeal.comment}`));
-    }
 
     const foot = [confidence(c.confidence)];
     if (c.reused_from_evaluation_id) {
@@ -115,7 +109,10 @@ export function mount(el, params = {}) {
       foot.push(h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-btn--ghost', onclick: () => showInTranscript(c) }, 'Показать в транскрипте'));
     }
     if (p.mode !== 'reviewer') {
-      foot.push(h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-tip cqa-crit__appeal', disabled: true, 'data-tip': 'Подача апелляции появится на следующем шаге' }, 'Оспорить'));
+      const open = c.appeal?.status === 'open';
+      const why = open ? `Апелляция №${c.appeal.id} уже ждёт решения проверяющего` : c.final_answer == null ? 'Ответа нет — оспаривать нечего' : '';
+      foot.push(h('button', { type: 'button', class: `cqa-btn cqa-btn--sm cqa-crit__appeal ${why ? 'cqa-tip' : ''}`, disabled: !!why, 'data-tip': why || null,
+        dataset: { appeal: c.key }, onclick: () => appeal(c) }, c.appeal ? 'Оспорить снова' : 'Оспорить'));
     }
 
     return h('article', { class: `cqa-panel cqa-crit ${flagged ? 'cqa-crit--flag' : review ? 'cqa-crit--review' : ''}`, id: `crit-${c.key}`, dataset: { key: c.key }, tabindex: -1 },
@@ -125,8 +122,56 @@ export function mount(el, params = {}) {
         c.final_answer == null ? h('span', { class: 'cqa-badge cqa-badge--muted' }, 'нет ответа') : answerBadge(c),
         c.overridden ? h('span', { class: 'cqa-badge cqa-badge--accent' }, 'изменено') : null,
         pointsText(c)),
-      h('div', { class: 'cqa-crit__body' }, body, appealLine.length ? h('div', { class: 'cqa-appeal' }, appealLine) : null),
+      h('div', { class: 'cqa-crit__body' }, body, appealBlock(c)),
       h('div', { class: 'cqa-crit__foot' }, foot));
+  }
+
+  // Три слоя оспоренного критерия: ответ AI (не меняется) → решение проверяющего → финальный ответ (FR-APL-04, 05).
+  function appealBlock(c) {
+    const a = c.appeal;
+    if (!a) return null;
+    const hist = c.appeal_history?.length ? c.appeal_history : [a];
+    const [stText, tone] = AP_STATUS[a.status] || [a.status, 'muted'];
+    const pts = (v) => (c.type === 'flag' || v == null ? null : h('small', { class: 'cqa-apl__pts' }, `${+Number(v).toFixed(2)} / ${c.weight}`));
+    const layer = (label, ...kids) => h('div', { class: 'cqa-apl__layer' }, h('span', { class: 'cqa-apl__label' }, label), h('span', { class: 'cqa-apl__val' }, kids));
+    const decision = a.status === 'open' ? h('span', { class: 'cqa-badge cqa-badge--warn' }, 'ждёт проверяющего')
+      : a.status === 'changed' ? [h('span', { class: 'cqa-faint' }, 'изменить на'), answerBadge(c, a.decision_answer)]
+        : h('span', { class: 'cqa-badge cqa-badge--yes' }, 'подтвердить AI');
+    const older = hist.slice(0, -1).reverse();
+    return h('div', { class: `cqa-apl cqa-apl--${a.status}`, id: `appeal-${c.key}` },
+      h('div', { class: 'cqa-apl__head' },
+        h('b', null, `Апелляция №${a.id}`), h('span', { class: `cqa-badge cqa-badge--${tone}` }, stText),
+        h('span', { class: 'cqa-faint' }, fmtDate(a.decided_at || a.created_at)),
+        a.status === 'open' && p.mode === 'reviewer'
+          ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-btn--primary cqa-apl__go', onclick: () => emit(root, 'cqa:navigate', { to: `#/appeals?id=${a.id}` }) }, 'Рассмотреть')
+          : null),
+      h('div', { class: 'cqa-apl__layers' },
+        layer('AI', answerBadge(c, c.ai_answer), pts(c.ai_points)),
+        h('span', { class: 'cqa-apl__arrow', 'aria-hidden': 'true' }, '→'),
+        layer('Решение', decision),
+        h('span', { class: 'cqa-apl__arrow', 'aria-hidden': 'true' }, '→'),
+        layer('Финал', answerBadge(c, c.final_answer), pts(c.final_points))),
+      h('div', { class: 'cqa-apl__text' }, h('b', null, 'Комментарий: '), a.comment),
+      a.decision_reason ? h('div', { class: 'cqa-apl__text' }, h('b', null, 'Причина решения: '), a.decision_reason) : null,
+      older.length ? h('details', { class: 'cqa-apl__hist' }, h('summary', null, `Прошлые апелляции: ${older.length}`),
+        h('ul', null, older.map((x) => h('li', null, h('b', null, `№${x.id}`), ` · ${(AP_STATUS[x.status] || [x.status])[0].toLowerCase()} · ${fmtDate(x.decided_at || x.created_at)} — ${x.comment}`,
+          x.decision_reason ? h('span', { class: 'cqa-faint' }, ` → ${x.decision_reason}`) : null)))) : null);
+  }
+
+  function appeal(c) {
+    const host = root.closest('.cqa-root') || document.body;
+    openAppealForm(host, { evaluation: ev, criterion: c, onSaved: async () => {
+      emit(root, 'cqa:counts-changed', {});
+      const my = ++token;
+      try {
+        const fresh = await getEvaluation(ev.id);
+        if (my !== token) return;
+        ev = fresh;
+        render();
+        emit(root, 'cqa:evaluation-updated', { evaluation: ev });
+        focusCriterion(c.key, false);
+      } catch { /* карточка обновится при следующем открытии */ }
+    } });
   }
 
   function overview() {
@@ -143,13 +188,16 @@ export function mount(el, params = {}) {
   function summary() {
     const ai = ev.ai_score, fin = ev.final_score;
     const changed = fin.total !== ai.total && fin.total != null && ai.total != null;
+    // После решений по апелляциям итог AI и финальный стоят рядом, даже если ответ подтверждён.
+    const both = changed || ev.criteria.some((c) => (c.appeal_history || []).some((a) => a.status !== 'open'));
     const parts = [];
     parts.push(h('div', { class: 'cqa-sum__top' },
-      h('div', null, h('div', { class: 'cqa-sum__label' }, 'Итог AI'),
+      h('div', { id: 'cqa-sum-ai' }, h('div', { class: 'cqa-sum__label' }, both ? 'Итог AI · не меняется' : 'Итог AI'),
         h('div', { class: `cqa-sum__big ${changed ? 'cqa-muted' : ''}` }, changed ? h('span', { style: 'font-size:.6em' }, fmtScore(ai.total)) : score(ai.total), ' ', h('span', { class: 'cqa-sum__of' }, '/ 100'))),
-      changed ? h('div', { class: 'cqa-sum__arrow' }, '→') : null,
-      changed ? h('div', null, h('div', { class: 'cqa-sum__label' }, 'Финальный итог'),
-        h('div', { class: 'cqa-sum__big' }, score(fin.total), ' ', h('span', { class: 'cqa-delta' }, `${fin.total - ai.total > 0 ? '+' : ''}${(fin.total - ai.total).toFixed(2)}`))) : null,
+      both ? h('div', { class: 'cqa-sum__arrow' }, '→') : null,
+      both ? h('div', { id: 'cqa-sum-final' }, h('div', { class: 'cqa-sum__label' }, 'Финальный итог'),
+        h('div', { class: 'cqa-sum__big' }, score(fin.total), ' ', changed ? h('span', { class: 'cqa-delta' }, `${fin.total - ai.total > 0 ? '+' : ''}${(fin.total - ai.total).toFixed(2)}`)
+          : h('span', { class: 'cqa-sum__of' }, 'как у AI'))) : null,
       h('div', { class: 'cqa-sum__aw' },
         h('div', { class: 'cqa-sum__label' }, 'Применимый вес'),
         h('b', null, `${fin.applicable_weight ?? 0} из 100`))));
@@ -278,7 +326,17 @@ export function mount(el, params = {}) {
     }
   }
 
-  const onFocus = (e) => focusCriterion(e.detail?.key, false);
+  // {key, show}: show — ещё и подсветить доказательства в транскрипте (переход из очереди и апелляций).
+  // Две плавные прокрутки сразу браузер не доводит: транскрипт прокручиваем после колонки результата,
+  // а в одну колонку (телефон) подсвечиваем без прокрутки — страница остаётся на критерии.
+  const onFocus = (e) => {
+    const d = e.detail || {};
+    focusCriterion(d.key, false);
+    const c = d.show && ev?.criteria.find((x) => x.key === d.key);
+    if (!c || !(c.evidence?.length || c.checked_range)) return;
+    const narrow = window.matchMedia('(max-width: 900px)').matches;
+    setTimeout(() => { if (root.isConnected) showInTranscript(c, narrow ? { scroll: false } : {}); }, narrow ? 0 : 500);
+  };
   el.addEventListener('cqa:focus-criterion', onFocus);
   load();
 

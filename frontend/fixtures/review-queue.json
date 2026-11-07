@@ -1,0 +1,113 @@
+[
+ {
+  "evaluation_id": 104,
+  "conversation_id": 4,
+  "conversation_code": "p1-ru-021",
+  "group_id": "DEV",
+  "channel": "agent chat",
+  "language": "RU",
+  "criterion_key": "07",
+  "criterion_title": "Завершение",
+  "reason": "appeal",
+  "reasons": [
+   "appeal",
+   "validator"
+  ],
+  "severity": 80,
+  "message": "Апелляция №2: Фраза «Пожалуйста, обращайтесь» — предложение дальнейшей помощи.",
+  "messages": [
+   "Апелляция №2: Фраза «Пожалуйста, обращайтесь» — предложение дальнейшей помощи.",
+   "Проверка ответа: цитата к m10 не найдена в тексте"
+  ],
+  "issues": [
+   "цитата к m10 не найдена в тексте"
+  ],
+  "confidence": "medium",
+  "ai_answer": "no",
+  "final_answer": "no",
+  "appeal_id": 2
+ },
+ {
+  "evaluation_id": 104,
+  "conversation_id": 4,
+  "conversation_code": "p1-ru-021",
+  "group_id": "DEV",
+  "channel": "agent chat",
+  "language": "RU",
+  "criterion_key": "03",
+  "criterion_title": "Идентификация",
+  "reason": "validator",
+  "reasons": [
+   "validator",
+   "low_confidence"
+  ],
+  "severity": 60,
+  "message": "Проверка ответа: Низкая уверенность: в чате нет системного сообщения «Личность клиента подтверждена».; Остаток по счёту назван сразу после кодового слова без проверки ФИО.",
+  "messages": [
+   "Проверка ответа: Низкая уверенность: в чате нет системного сообщения «Личность клиента подтверждена».; Остаток по счёту назван сразу после кодового слова без проверки ФИО.",
+   "Модель не уверена: данных для вывода мало"
+  ],
+  "issues": [
+   "Низкая уверенность: в чате нет системного сообщения «Личность клиента подтверждена».",
+   "Остаток по счёту назван сразу после кодового слова без проверки ФИО."
+  ],
+  "confidence": "low",
+  "ai_answer": "yes",
+  "final_answer": "yes",
+  "appeal_id": null
+ },
+ {
+  "evaluation_id": 104,
+  "conversation_id": 4,
+  "conversation_code": "p1-ru-021",
+  "group_id": "DEV",
+  "channel": "agent chat",
+  "language": "RU",
+  "criterion_key": "04",
+  "criterion_title": "Корректная и полная консультация",
+  "reason": "validator",
+  "reasons": [
+   "validator",
+   "low_confidence"
+  ],
+  "severity": 60,
+  "message": "Проверка ответа: Низкая уверенность: фактическая ставка налога не подтверждена базой знаний.",
+  "messages": [
+   "Проверка ответа: Низкая уверенность: фактическая ставка налога не подтверждена базой знаний.",
+   "Модель не уверена: данных для вывода мало"
+  ],
+  "issues": [
+   "Низкая уверенность: фактическая ставка налога не подтверждена базой знаний."
+  ],
+  "confidence": "low",
+  "ai_answer": 15,
+  "final_answer": 15,
+  "appeal_id": null
+ },
+ {
+  "evaluation_id": 106,
+  "conversation_id": 5,
+  "conversation_code": "p4-ru-002",
+  "group_id": "DEV",
+  "channel": "voice call",
+  "language": "RU",
+  "criterion_key": "04",
+  "criterion_title": "Корректная и полная консультация",
+  "reason": "low_confidence",
+  "reasons": [
+   "low_confidence"
+  ],
+  "severity": 50,
+  "message": "Модель не уверена: данных для вывода мало",
+  "messages": [
+   "Модель не уверена: данных для вывода мало"
+  ],
+  "issues": [
+   "низкая уверенность модели"
+  ],
+  "confidence": "low",
+  "ai_answer": 10,
+  "final_answer": 10,
+  "appeal_id": null
+ }
+]

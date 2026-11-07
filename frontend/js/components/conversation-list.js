@@ -1,11 +1,14 @@
-// Таблица диалогов: фильтры, сортировка по итогу, выбор строк и запуск оценки.
-import { h, clear, emit, channelBadge, langChip, score, skeletonRows, errorState, emptyState } from '../ui.js';
-import { listConversations } from '../api.js';
+// Таблица диалогов: фильтры, сортировка по итогу, выбор строк и запуск оценки, экспорт (FR-EXP-01), новый диалог.
+// Параметры: group, appeal ('open' | 'any' | 'none' — фильтр апелляций по последней оценке).
+import { h, clear, emit, channelBadge, langChip, score, skeletonRows, errorState, emptyState, toast } from '../ui.js';
+import { listConversations, downloadExport } from '../api.js';
+
+const APPEAL_FILTER = [['', 'Апелляции: все'], ['open', 'Есть открытые'], ['any', 'Были апелляции'], ['none', 'Без апелляций']];
 
 export function mount(el, params = {}) {
   let p = { ...params };
   let rows = [];
-  const st = { q: '', lang: '', channel: '', flag: false, review: false, appeals: false, sort: null, selected: new Set() };
+  const st = { q: '', lang: '', channel: '', flag: false, review: false, appeal: APPEAL_FILTER.some(([v]) => v && v === p.appeal) ? p.appeal : '', sort: null, selected: new Set() };
   const root = h('div', { class: 'cqa-page' });
   el.append(root);
   const body = h('div');
@@ -18,7 +21,9 @@ export function mount(el, params = {}) {
       if (st.channel && (x.channel === 'voice call' ? 'voice call' : 'chat') !== st.channel) return false;
       if (st.flag && !l?.critical) return false;
       if (st.review && !l?.needs_review) return false;
-      if (st.appeals && !(l?.open_appeals > 0)) return false;
+      if (st.appeal === 'open' && !(l?.open_appeals > 0)) return false;
+      if (st.appeal === 'any' && !(l?.appeals > 0)) return false;
+      if (st.appeal === 'none' && l?.appeals > 0) return false;
       return true;
     });
     if (st.sort) {
@@ -48,9 +53,10 @@ export function mount(el, params = {}) {
         oninput: (e) => { st.q = e.target.value; refreshTable(); } }),
       select('Язык', 'lang', [['', 'Все языки'], ['ru', 'RU'], ['kz', 'KZ'], ['en', 'EN']]),
       select('Канал', 'channel', [['', 'Все каналы'], ['chat', 'Чат'], ['voice call', 'Звонок']]),
-      toggle('Грубая ошибка', 'flag'), toggle('Требует проверки', 'review'), toggle('Есть апелляции', 'appeals'),
+      toggle('Грубая ошибка', 'flag'), toggle('Требует проверки', 'review'),
+      select('Апелляции', 'appeal', APPEAL_FILTER),
       h('span', { class: 'cqa-toolbar__spacer' }),
-      (st.q || st.lang || st.channel || st.flag || st.review || st.appeals)
+      (st.q || st.lang || st.channel || st.flag || st.review || st.appeal)
         ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--ghost cqa-btn--sm', onclick: reset }, 'Сбросить фильтры') : null,
       h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-list-run', onclick: runRequest,
         title: st.selected.size ? 'Оценить выбранные диалоги' : 'Ничего не выбрано: оценить всю группу' },
@@ -78,7 +84,7 @@ export function mount(el, params = {}) {
   function toggle(label, key) {
     return h('label', { class: 'cqa-toggle' }, h('input', { type: 'checkbox', checked: st[key], onchange: (e) => { st[key] = e.target.checked; renderTable(); } }), label);
   }
-  function reset() { Object.assign(st, { q: '', lang: '', channel: '', flag: false, review: false, appeals: false }); renderTable(); }
+  function reset() { Object.assign(st, { q: '', lang: '', channel: '', flag: false, review: false, appeal: '' }); renderTable(); }
   function runRequest() { emit(root, 'cqa:run-request', { ids: [...st.selected], group: p.group || 'DEV', rows }); }
 
   function table(list) {
@@ -109,9 +115,51 @@ export function mount(el, params = {}) {
           h('td', null, h('div', { class: 'cqa-tags' },
             l?.critical ? h('span', { class: 'cqa-badge cqa-badge--flag' }, 'Грубая ошибка') : null,
             l?.needs_review ? h('span', { class: 'cqa-badge cqa-badge--warn' }, 'Требует проверки') : null)),
-          h('td', { class: 'cqa-num' }, l?.open_appeals ? h('span', { class: 'cqa-badge cqa-badge--accent' }, `${l.open_appeals} откр.`) : h('span', { class: 'cqa-faint' }, '—')));
+          h('td', { class: 'cqa-num' }, appealCell(l)));
         return tr;
       })));
+  }
+
+  function appealCell(l) {
+    const open = l?.open_appeals || 0, done = Math.max(0, (l?.appeals || 0) - open);
+    if (!open && !done) return h('span', { class: 'cqa-faint' }, '—');
+    return h('span', { class: 'cqa-tags cqa-list__appeals' },
+      open ? h('span', { class: 'cqa-badge cqa-badge--accent', title: 'Открытые апелляции ждут проверяющего' }, `${open} откр.`) : null,
+      done ? h('span', { class: 'cqa-badge cqa-badge--muted', title: 'Рассмотренные апелляции' }, `${done} рассм.`) : null);
+  }
+
+  // Экспорт: файл скачивается через api.js, у файла сдачи показываем итог проверки формата (X-Validation-Errors).
+  const exportNote = h('span', { class: 'cqa-export__note', id: 'cqa-export-note', 'aria-live': 'polite' });
+  async function exportFile(path, params, btn) {
+    const label = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Готовим…';
+    try {
+      const { blob, filename, validationErrors } = await downloadExport(path, { group_id: p.group || 'DEV', ...params });
+      const url = URL.createObjectURL(blob);
+      const a = h('a', { href: url, download: filename, hidden: true });
+      root.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      if (validationErrors != null) {
+        exportNote.className = `cqa-export__note cqa-badge ${validationErrors ? 'cqa-badge--no' : 'cqa-badge--yes'}`;
+        exportNote.textContent = validationErrors ? `${filename}: ошибок проверки формата — ${validationErrors}` : `${filename}: формат проверен, ошибок нет`;
+        exportNote.title = validationErrors ? 'Подробности: python scripts/export_results.py --check <файл>' : '';
+      }
+      toast(root, `Файл ${filename} скачан.`);
+    } catch (e) {
+      toast(root, e.message || String(e));
+    } finally { btn.disabled = false; btn.textContent = label; }
+  }
+  function exportBar() {
+    const b = (id, text, title, path, params) => {
+      const btn = h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', id, title, onclick: () => exportFile(path, params, btn) }, text);
+      return btn;
+    };
+    return h('div', { class: 'cqa-export', role: 'group', 'aria-label': 'Экспорт результатов группы' },
+      h('span', { class: 'cqa-faint cqa-export__label' }, 'Экспорт'),
+      b('cqa-export-csv', '⇩ CSV', 'Таблица для Excel: финальные ответы и баллы, итог AI и финальный', '/export', { format: 'csv' }),
+      b('cqa-export-json', '⇩ JSON', 'Тот же набор с обоснованиями, доказательствами и апелляциями', '/export', { format: 'json' }),
+      b('cqa-export-results', '⇩ Файл сдачи', 'results.json в формате организаторов 1.0 с проверкой формата', '/export/results', {}),
+      exportNote);
   }
 
   async function load({ quiet = false } = {}) {
@@ -131,7 +179,9 @@ export function mount(el, params = {}) {
 
   root.append(
     h('div', { class: 'cqa-pagehead' },
-      h('div', null, h('h1', { class: 'cqa-h1' }, 'Диалоги'), h('div', { class: 'cqa-pagehead__sub' }, `Группа ${p.group || 'DEV'}: оценки AI, финальные итоги и метки для проверки`))),
+      h('div', null, h('h1', { class: 'cqa-h1' }, 'Диалоги'), h('div', { class: 'cqa-pagehead__sub' }, `Группа ${p.group || 'DEV'}: оценки AI, финальные итоги и метки для проверки`)),
+      h('div', { class: 'cqa-pagehead__actions cqa-list__actions' }, exportBar(),
+        h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-list-new', title: 'Вставить переписку и оценить её сразу', onclick: () => emit(root, 'cqa:navigate', { to: '#/new' }) }, '+ Новый диалог'))),
     h('div', { class: 'cqa-panel' }, body));
   load();
 

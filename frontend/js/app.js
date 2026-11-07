@@ -1,6 +1,6 @@
 // Оболочка: шапка, переключатели, hash-роутинг. Экраны монтируются как самостоятельные компоненты.
 import { h, clear, emptyState, toast } from './ui.js';
-import { getHealth, isMock } from './api.js';
+import { getHealth, isMock, listGroups, listAppeals, getReviewQueue } from './api.js';
 import { openRunDialog } from './components/run-dialog.js';
 
 const appEl = document.getElementById('app');
@@ -14,11 +14,12 @@ const ROUTES = {
   conversation: { nav: 'conversations', load: () => import('./components/conversation-card.js'), full: true },
   gold: { nav: 'gold', load: () => import('./components/gold-review.js'), full: true },
   checklist: { nav: 'checklist', load: () => import('./components/checklist-editor.js') },
+  appeals: { nav: 'appeals', load: () => import('./components/appeal-review.js') },
+  review: { nav: 'review', load: () => import('./components/review-queue.js') },
+  new: { nav: 'conversations', load: () => import('./components/new-dialog.js') },
 };
 const PLACEHOLDERS = {
   dashboard: ['Дашборд', 'Средний итог, распределение, выполнение по критериям и грубые ошибки. Экран появится на этапе аналитики.'],
-  review: ['Требует проверки', 'Очередь критериев с низкой уверенностью и предупреждениями валидатора.'],
-  appeals: ['Апелляции', 'Очередь проверяющего: спорные оценки, фрагмент диалога и форма решения.'],
   quality: ['Качество', 'Согласие с эталоном и сравнение моделей и стратегий.'],
   compare: ['Сравнение', 'Два результата одного диалога рядом.'],
 };
@@ -36,7 +37,7 @@ const settings = {
 };
 
 let current = null; // { name, instance, el }
-let healthEl;
+let healthEl, groupSel;
 
 function parseHash() {
   const raw = location.hash.replace(/^#\/?/, '');
@@ -48,10 +49,12 @@ function parseHash() {
 
 function buildHeader() {
   const nav = h('nav', { class: 'cqa-nav', 'aria-label': 'Разделы' },
-    [...NAV, ['gold', 'Проверка gold']].map(([id, label]) => h('a', { class: 'cqa-nav__link', href: `#/${id}`, dataset: { nav: id }, hidden: id === 'gold' && settings.group !== 'DEV' }, label)));
-  const groupSel = h('select', { class: 'cqa-select', 'aria-label': 'Группа данных',
-    onchange: (e) => { settings.group = e.target.value; store.set('group', settings.group); syncHeader(); route(); } },
-    ['DEV', 'CONTROL'].map((g) => h('option', { value: g, selected: settings.group === g }, g)));
+    [...NAV, ['gold', 'Проверка gold']].map(([id, label]) => h('a', { class: 'cqa-nav__link', href: `#/${id}`, dataset: { nav: id }, hidden: id === 'gold' && settings.group !== 'DEV' }, label,
+      COUNTED[id] ? h('span', { class: 'cqa-nav__count', hidden: true, title: COUNTED[id] }) : null)));
+  // Группы — из реальных данных (loadGroups); до ответа сервера — только текущая.
+  groupSel = h('select', { class: 'cqa-select', 'aria-label': 'Группа данных',
+    onchange: (e) => { settings.group = e.target.value; store.set('group', settings.group); syncHeader(); route(); refreshCounts(); } },
+    h('option', { value: settings.group, selected: true }, settings.group));
   const modeSeg = h('div', { class: 'cqa-seg', role: 'group', 'aria-label': 'Режим' },
     [['analyst', 'Аналитик'], ['reviewer', 'Проверяющий']].map(([id, label]) =>
       h('button', { type: 'button', class: 'cqa-seg__btn', dataset: { mode: id }, 'aria-pressed': String(settings.mode === id),
@@ -82,6 +85,33 @@ async function checkHealth() {
     if (isMock()) set('mock', 'демо-данные');
     else set('ok', `бэкенд: ${hl.provider || 'ok'}`);
   } catch { set('bad', 'бэкенд недоступен'); }
+}
+
+// ---------- Группы и счётчики в меню ----------
+const COUNTED = { review: 'Критериев, которые стоит проверить', appeals: 'Открытых апелляций' };
+/** Список групп из данных; select — сделать группу текущей (после нового диалога). true — текущая группа сменилась. */
+async function loadGroups(select) {
+  let groups;
+  try { groups = await listGroups(); } catch { return false; }
+  const before = settings.group;
+  if (select) settings.group = select;
+  else if (groups.length && !groups.some((g) => g.group_id === settings.group)) settings.group = (groups.find((g) => g.default) || groups[0]).group_id;
+  if (!groups.some((g) => g.group_id === settings.group)) groups.push({ group_id: settings.group, count: 0 });
+  store.set('group', settings.group);
+  groupSel.replaceChildren(...groups.map((g) => h('option', { value: g.group_id, selected: g.group_id === settings.group, title: `диалогов: ${g.count}` }, g.group_id)));
+  groupSel.title = groups.map((g) => `${g.group_id}: ${g.count}`).join(' · ');
+  syncHeader();
+  return settings.group !== before;
+}
+let countSeq = 0;
+async function refreshCounts() {
+  const my = ++countSeq;
+  const [ap, rq] = await Promise.all([listAppeals({ status: 'open', group_id: settings.group }).catch(() => null), getReviewQueue({ group_id: settings.group }).catch(() => null)]);
+  if (my !== countSeq) return;
+  for (const [id, list] of [['appeals', ap], ['review', rq]]) {
+    const el = appEl.querySelector(`.cqa-nav__link[data-nav="${id}"] .cqa-nav__count`);
+    if (el) { el.hidden = !list?.length; el.textContent = list?.length > 99 ? '99+' : String(list?.length || ''); }
+  }
 }
 
 // ---------- Роутер ----------
@@ -116,8 +146,11 @@ function onAppEvent(e) {
   else if (e.type === 'cqa:run-request') {
     // По завершении прогона обновляем тот экран, который открыт в этот момент (карточка или список).
     openRunDialog(appEl, { group: settings.group, ...e.detail,
-      onFinished: () => current?.el?.dispatchEvent(new CustomEvent('cqa:refresh')) });
+      onFinished: () => { current?.el?.dispatchEvent(new CustomEvent('cqa:refresh')); refreshCounts(); } });
   } else if (e.type === 'cqa:import-request') toast(appEl, 'Импорт набора появится вместе с бэкендом.');
+  else if (e.type === 'cqa:counts-changed') refreshCounts();
+  else if (e.type === 'cqa:groups-changed') loadGroups(e.detail?.select).then(refreshCounts); // без перехода: экран остаётся
+  else if (e.type === 'cqa:mode' && e.detail?.mode) { settings.mode = e.detail.mode; store.set('mode', settings.mode); syncHeader(); route(); }
 }
 
 function init() {
@@ -128,11 +161,12 @@ function init() {
   shell.append(header, mainEl);
   appEl.append(shell);
   appEl.style.setProperty('--cqa-header-h', '60px');
-  for (const t of ['cqa:navigate', 'cqa:location', 'cqa:run-request', 'cqa:import-request']) appEl.addEventListener(t, onAppEvent);
+  for (const t of ['cqa:navigate', 'cqa:location', 'cqa:run-request', 'cqa:import-request', 'cqa:counts-changed', 'cqa:groups-changed', 'cqa:mode']) appEl.addEventListener(t, onAppEvent);
   syncHeader();
-  window.addEventListener('hashchange', route);
+  window.addEventListener('hashchange', () => { route(); refreshCounts(); });
   if (!location.hash) location.replace('#/conversations' + (query.has('group') ? `?group=${query.get('group')}` : ''));
-  route();
+  // Сохранённой группы может не быть в данных (другая БД, демо-режим): сначала сверяем список групп.
+  loadGroups().finally(() => { route(); refreshCounts(); });
   checkHealth();
 }
 init();

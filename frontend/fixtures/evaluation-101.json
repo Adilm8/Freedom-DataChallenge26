@@ -393,7 +393,12 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no"
+   ],
+   "appeal_history": []
   },
   {
    "key": "02",
@@ -421,7 +426,13 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no",
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "03",
@@ -454,7 +465,13 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no",
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "04",
@@ -492,13 +509,35 @@
     "evaluation_id": 101,
     "criterion_key": "04",
     "comment": "Лимиты на вывод не входят в вопрос клиента, ответ полный.",
-    "status": "decided",
+    "status": "changed",
     "ai_answer_snapshot": 15,
     "decision_answer": 20,
     "decision_reason": "Клиент не спрашивал о лимитах, основной вопрос закрыт полностью.",
     "created_at": "2026-11-07T15:02:00Z",
     "decided_at": "2026-11-07T15:20:00Z"
-   }
+   },
+   "allowed_answers": [
+    20,
+    15,
+    10,
+    5,
+    0,
+    "na"
+   ],
+   "appeal_history": [
+    {
+     "id": 1,
+     "evaluation_id": 101,
+     "criterion_key": "04",
+     "comment": "Лимиты на вывод не входят в вопрос клиента, ответ полный.",
+     "status": "changed",
+     "ai_answer_snapshot": 15,
+     "decision_answer": 20,
+     "decision_reason": "Клиент не спрашивал о лимитах, основной вопрос закрыт полностью.",
+     "created_at": "2026-11-07T15:02:00Z",
+     "decided_at": "2026-11-07T15:20:00Z"
+    }
+   ]
   },
   {
    "key": "05",
@@ -526,7 +565,12 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no"
+   ],
+   "appeal_history": []
   },
   {
    "key": "06",
@@ -554,7 +598,14 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    10,
+    7,
+    4,
+    0
+   ],
+   "appeal_history": []
   },
   {
    "key": "07",
@@ -582,7 +633,13 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no",
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "08",
@@ -607,7 +664,12 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no"
+   ],
+   "appeal_history": []
   }
  ],
  "tokens_in": 12640,
@@ -615,5 +677,6 @@
  "cost_usd": 0.051675,
  "latency_ms": 3550,
  "created_at": "2026-11-07T14:20:00Z",
- "needs_review": false
+ "needs_review": false,
+ "open_appeals": 0
 }

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CQA · Апелляция</title>
+  <link rel="stylesheet" href="../css/cqa.css">
+  <style>html, body { margin: 0; background: #f4f5f9; } #cqa-host { padding: 16px; }</style>
+</head>
+<body>
+  <!-- Форма апелляции аналитика: ?evaluationId=<id оценки>&criterionKey=05 -->
+  <div id="cqa-host" class="cqa-root"></div>
+  <script type="module">
+    import { mount } from '../js/components/appeal-form.js';
+    import { paramsFromQuery } from '../js/ui.js';
+    const q = paramsFromQuery();
+    const el = document.getElementById('cqa-host');
+    if (q.demo === '1') el.classList.add('cqa-demo');
+    mount(el, { evaluationId: q.evaluationId, criterionKey: q.criterionKey });
+  </script>
+</body>
+</html>
