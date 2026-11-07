@@ -39,6 +39,7 @@
 .cqa-root .cqa-nav__link[data-nav="review"] .cqa-nav__count { background: #f1c560; color: #2a1d00; }
 .cqa-side__foot { margin-top: auto; display: grid; gap: 12px; padding: 14px 8px 2px; border-top: 1px solid rgba(255, 255, 255, .14); }
 .cqa-side__field { display: grid; gap: 6px; }
+.cqa-side__hint { font-size: 12px; line-height: 1.35; color: rgba(255, 255, 255, .62); }
 .cqa-side__label { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: rgba(255, 255, 255, .62); }
 .cqa-root .cqa-side__select { width: 100%; background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .22); color: #fff; }
 .cqa-root .cqa-side__select option { color: #18201b; background: #fff; }
@@ -80,7 +81,7 @@
   .cqa-root .cqa-nav { order: 3; width: 100%; display: flex; overflow-x: auto; scrollbar-width: none; margin: 0; }
   .cqa-root .cqa-nav__link { padding: 8px 10px; white-space: nowrap; }
   .cqa-side__foot { margin: 0 0 0 auto; border: 0; padding: 0; display: flex; gap: 8px; align-items: center; }
-  .cqa-side__label { display: none; }
+  .cqa-side__label, .cqa-side__hint { display: none; }
   .cqa-root .cqa-side__select { width: auto; }
   .cqa-root .cqa-header { position: static; height: auto; padding: 8px 12px; flex-wrap: nowrap; }
 }
