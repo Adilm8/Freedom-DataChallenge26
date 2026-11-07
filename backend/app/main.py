@@ -14,6 +14,7 @@ from .api import conversations as conversations_api
 from .api import datasets as datasets_api
 from .api import evaluations as evaluations_api
 from .api import gold as gold_api
+from .api import quality as quality_api
 from .api import export as export_api
 from .api import runs as runs_api
 from .config import settings
@@ -43,6 +44,7 @@ app.include_router(gold_api.router, prefix="/api")
 app.include_router(export_api.router, prefix="/api")
 app.include_router(appeals_api.router, prefix="/api")
 app.include_router(analytics_api.router, prefix="/api")
+app.include_router(quality_api.router, prefix="/api")
 
 
 def _model_name() -> str:
