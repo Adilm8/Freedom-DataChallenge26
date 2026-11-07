@@ -14,12 +14,13 @@
 | [ADR-004](decisions/ADR-004-storage-sqlite-json.md) | SQLite + SQLModel, JSON-колонки, без миграций | Принято | Claude |
 | [ADR-005](decisions/ADR-005-frontend-no-build.md) | Фронт без сборки, компоненты `mount(el, params)` | Принято | требования |
 | [ADR-006](decisions/ADR-006-scoring-rules.md) | Правила расчёта: половина вверх, флаг без обнуления, секции | Принято | Claude |
-| [ADR-007](decisions/ADR-007-output-language.md) | Обоснования на русском для всех языков | Предложено (Q-05) | ждёт Лиду |
+| [ADR-007](decisions/ADR-007-output-language.md) | Обоснования на русском для всех языков; мультиязычность — на будущее | Принято | Лида |
 | [ADR-008](decisions/ADR-008-background-runs.md) | Прогоны — фоновые задачи в процессе | Принято | Claude |
 | [ADR-009](decisions/ADR-009-appeals-override.md) | Апелляция — надстройка `final_*`, AI-оценка неизменна | Принято | требования |
 | [ADR-010](decisions/ADR-010-calls-full-support.md) | Звонки полноценно: плеер, переход по времени, сегменты | Принято | Лида |
 | [ADR-011](decisions/ADR-011-product-knowledge.md) | Справка о продуктах для 04 как подсказка | Принято, сверяем на eval | Лида + Claude |
 | [ADR-012](decisions/ADR-012-local-model-deferred.md) | Локальная модель — если останется время | Отложено | Лида |
+| [ADR-013](decisions/ADR-013-deploy.md) | Демо локально; публичный деплой с демо-режимом — опция | Принято / деплой отложен | Лида |
 
 ## Журнал
 
