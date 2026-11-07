@@ -7,10 +7,10 @@
 | ID | Задача | Когда | Ветка | Проверяет |
 |---|---|---|---|---|
 | [AG-01](AG-01-lexicons.md) | Словари фраз RU / KZ / EN для фактов | сейчас | `feat/data-lexicons` | Claude: тесты фактов |
-| [AG-02](AG-02-gold-second-opinion.md) | Независимая вторая разметка gold (только чаты) | после черновика Claude (~12:30 UTC) | `eval/gold-second-opinion` | Claude сравнивает, Лида смотрит только расхождения |
+| [AG-02](AG-02-gold-second-opinion.md) | Независимая вторая разметка gold (только чаты) | после черновика gold от Claude (шаг 4 плана) | `eval/gold-second-opinion` | Claude сравнивает, Лида смотрит только расхождения |
 | [AG-03](AG-03-synthetic-dialogs.md) | Синтетические диалоги для тестов краевых случаев | сейчас | `test/synthetic-dialogs` | Claude: тесты и eval |
 | [AG-04](AG-04-kb-research.md) | Дополнить справку о продуктах для критерия 04 | сейчас | `docs/kb-04` | Claude + Лида |
-| [AG-05](AG-05-windows-run.md) | Проверить запуск на Windows и дописать README | после вехи M3 (~20:00 UTC) | `docs/readme-windows` | Лида |
+| [AG-05](AG-05-windows-run.md) | Проверить запуск на Windows и дописать README | после M3, когда есть рабочий UI | `docs/readme-windows` | Лида |
 
 Что **не** отдаём наружу: промпты и оценщик, `scoring.py`, контракты и архитектуру, модель данных. Там цена ошибки высокая и нужен контекст всего проекта.
 
