@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CQA · Запись звонка</title>
+  <link rel="stylesheet" href="../css/cqa.css">
+  <style>html, body { margin: 0; background: #f4f5f9; } #cqa-host { padding: 16px; }</style>
+</head>
+<body>
+  <!-- Встроенный плеер записи звонка: ?id=<id диалога>[&mock=1]. Переход к секунде — событие cqa:seek на #cqa-host. -->
+  <div id="cqa-host" class="cqa-root"></div>
+  <script type="module">
+    import { mount } from '../js/components/audio-player.js';
+    import { paramsFromQuery } from '../js/ui.js';
+    const q = paramsFromQuery();
+    const el = document.getElementById('cqa-host');
+    if (q.demo === '1') el.classList.add('cqa-demo');
+    mount(el, { id: q.id });
+  </script>
+</body>
+</html>

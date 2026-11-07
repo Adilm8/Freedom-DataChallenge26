@@ -2,10 +2,36 @@
 // Подсветка (событие cqa:highlight или cqa:evidence-click на el): {msg_ids, quote, from, to, scroll}.
 // msg_ids — реплики-доказательства (жёлтая подсветка, цитата выделяется в тексте); from/to — проверенный
 // диапазон (полоса слева и мягкий фон). Подсветка держится до следующего клика.
+// Звонок (параметр audio: 'seek' | 'times', segments): у реплики — секунда записи «▶ 0:40» (с поправкой из cqa:audio-fix {fix});
+// при 'seek' клик по реплике отправляет наружу cqa:msg-click {msg_id}. Звучащая реплика — событие cqa:playing {msg_id, scroll}.
+// Реплики внутри паузы записи помечены «вне записи», внутри удержания и консультации — «внутренний разговор».
 import { h, clear, emit, ROLE, EVENT_LABEL, skeletonRows, errorState, emptyState } from '../ui.js';
 import { getConversation } from '../api.js';
 
 const norm = (s) => String(s || '').toLowerCase().replace(/ё/g, 'е');
+const clock = (sec) => {
+  const s = Math.max(0, Math.floor(sec + 1e-6)), hh = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60);
+  return `${hh ? `${hh}:${String(mm).padStart(2, '0')}` : mm}:${String(s % 60).padStart(2, '0')}`;
+};
+
+/** Реплики внутри паузы записи: их нет в файле записи. */
+function offRecord(messages, segments) {
+  const out = new Set();
+  for (const s of segments || []) {
+    if (s.type !== 'recording_paused') continue;
+    const end = s.end_idx ?? Infinity;
+    for (const m of messages) if ((m.idx ?? 0) > s.start_idx && (m.idx ?? 0) < end && m.speaker !== 'system') out.add(m.msg_id);
+  }
+  return out;
+}
+
+function scrollParent(node) {
+  for (let n = node.parentElement; n; n = n.parentElement) {
+    const oy = getComputedStyle(n).overflowY;
+    if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight) return n;
+  }
+  return null;
+}
 
 /** Ищет цитату в тексте без учёта регистра и лишних пробелов. Возвращает [start, end) в исходном тексте или null. */
 export function findQuote(text, quote) {
@@ -25,6 +51,9 @@ export function mount(el, params = {}) {
   let msgText = new Map();
   let order = [];
   let pulseTimer = null;
+  let recEls = new Map();
+  let fix = 0;
+  let playingId = null;
   const root = h('div', { class: 'cqa-tr-root' });
   el.append(root);
 
@@ -45,18 +74,23 @@ export function mount(el, params = {}) {
     clear(root);
     msgEls = new Map();
     msgText = new Map();
+    recEls = new Map();
+    playingId = null;
     order = transcript.map((m) => m.msg_id);
     if (!transcript.length) { root.append(emptyState({ title: 'Транскрипт пуст', text: 'В этом диалоге нет реплик.' })); return; }
     const tags = tagsByMsg();
-    const list = h('div', { class: 'cqa-tr', role: 'log' });
+    const seek = p.audio === 'seek';
+    const off = p.audio ? offRecord(transcript, p.segments) : new Set();
+    const list = h('div', { class: `cqa-tr ${seek ? 'cqa-tr--seek' : ''}`, role: 'log' });
     for (const m of transcript) {
-      const cls = ['cqa-msg', `cqa-msg--${m.speaker}`, m.internal ? 'cqa-msg--internal' : ''].join(' ');
+      const cls = ['cqa-msg', `cqa-msg--${m.speaker}`, m.internal ? 'cqa-msg--internal' : '', off.has(m.msg_id) ? 'cqa-msg--offrec' : ''].join(' ');
       const time = String(m.timestamp || '').includes('T') ? m.timestamp.slice(11, 19) : m.timestamp;
       const textEl = h('div', { class: 'cqa-msg__text' }, m.text);
       const node = h('div', { class: cls, id: `msg-${m.msg_id}`, dataset: { msgId: m.msg_id } },
         h('div', { class: 'cqa-msg__meta' },
           h('span', { class: 'cqa-msg__role' }, ROLE[m.speaker] || m.speaker),
-          m.internal ? h('span', { class: 'cqa-badge cqa-badge--warn' }, 'внутренний разговор') : null,
+          p.audio ? recChip(m, off.has(m.msg_id), seek) : null,
+          m.internal ? h('span', { class: 'cqa-badge cqa-badge--warn cqa-tip', 'data-tip': 'Во время удержания или консультации с коллегой: клиент этого не слышит' }, 'внутренний разговор') : null,
           m.event ? h('span', { class: 'cqa-badge cqa-badge--muted' }, EVENT_LABEL[m.event] || m.event) : null,
           h('span', { class: 'cqa-msg__time' }, time),
           h('span', { class: 'cqa-msg__id' }, m.msg_id),
@@ -71,7 +105,54 @@ export function mount(el, params = {}) {
       msgText.set(m.msg_id, { el: textEl, text: m.text });
       list.append(node);
     }
+    if (seek) list.addEventListener('click', onListClick);
     root.append(list);
+  }
+
+  function recChip(m, offRec, seek) {
+    if (m.audio_offset_sec == null) return h('span', { class: 'cqa-msg__rec cqa-msg__rec--none', title: 'Реплика прозвучала до начала записи' }, 'до записи');
+    if (offRec) return h('span', { class: 'cqa-msg__rec cqa-msg__rec--none', title: 'Запись была приостановлена: этой реплики в файле нет' }, 'вне записи');
+    const label = clock(m.audio_offset_sec + fix);
+    const chip = seek
+      ? h('button', { type: 'button', class: 'cqa-msg__rec', title: 'Слушать с этого места', 'aria-label': `Слушать запись с ${label}` }, `▶ ${label}`)
+      : h('span', { class: 'cqa-msg__rec cqa-msg__rec--static', title: 'Секунда этой реплики в записи' }, label);
+    recEls.set(m.msg_id, { el: chip, off: m.audio_offset_sec, seek });
+    return chip;
+  }
+
+  function relabel() {
+    for (const { el: c, off, seek } of recEls.values()) {
+      const label = clock(off + fix);
+      c.textContent = seek ? `▶ ${label}` : label;
+      if (seek) c.setAttribute('aria-label', `Слушать запись с ${label}`);
+    }
+  }
+
+  // Клик по реплике звонка (кроме кнопок-меток и выделения текста) — перейти к ней в записи.
+  function onListClick(e) {
+    const node = e.target.closest('.cqa-msg');
+    if (!node || !root.contains(node)) return;
+    const btn = e.target.closest('button, a');
+    if (btn && !btn.classList.contains('cqa-msg__rec')) return;
+    const sel = window.getSelection?.();
+    if (!btn && sel && !sel.isCollapsed && node.contains(sel.anchorNode)) return;
+    emit(root, 'cqa:msg-click', { msg_id: node.dataset.msgId }); // реплика до начала записи — плеер сам скажет об этом
+  }
+
+  function setPlaying({ msg_id = null, scroll = false } = {}) {
+    if (playingId !== msg_id) {
+      msgEls.get(playingId)?.classList.remove('cqa-msg--playing');
+      playingId = msg_id;
+    }
+    const node = msgEls.get(msg_id);
+    if (!node) return;
+    node.classList.add('cqa-msg--playing');
+    if (!scroll) return;
+    const box = scrollParent(node);
+    const r = node.getBoundingClientRect();
+    const top = box ? box.getBoundingClientRect().top : 0;
+    const bottom = box ? box.getBoundingClientRect().bottom : window.innerHeight;
+    if (r.top < top + 8 || r.bottom > bottom - 8) node.scrollIntoView({ behavior: 'smooth', block: r.height > bottom - top ? 'start' : 'center' });
   }
 
   async function load() {
@@ -129,8 +210,12 @@ export function mount(el, params = {}) {
     const d = e.detail || {};
     if (d.msg_id || d.msg_ids || d.from) highlight({ ...d, msg_ids: d.msg_ids || (d.msg_id ? [d.msg_id] : []) });
   };
+  const onPlaying = (e) => setPlaying(e.detail || {});
+  const onFix = (e) => { fix = Number(e.detail?.fix) || 0; relabel(); };
   el.addEventListener('cqa:highlight', onHl);
   el.addEventListener('cqa:evidence-click', onEv);
+  el.addEventListener('cqa:playing', onPlaying);
+  el.addEventListener('cqa:audio-fix', onFix);
 
   if (p.messages || p.conversation != null) load();
   else root.append(emptyState({ title: 'Нет диалога', text: 'Укажите параметр conversation.' }));
@@ -146,6 +231,8 @@ export function mount(el, params = {}) {
     unmount() {
       el.removeEventListener('cqa:highlight', onHl);
       el.removeEventListener('cqa:evidence-click', onEv);
+      el.removeEventListener('cqa:playing', onPlaying);
+      el.removeEventListener('cqa:audio-fix', onFix);
       clearTimeout(pulseTimer);
       root.remove();
     },
