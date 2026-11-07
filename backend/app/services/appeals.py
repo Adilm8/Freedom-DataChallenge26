@@ -5,8 +5,13 @@
   `final_total`, `critical` оценки через `scoring.compute` по финальным ответам.
 - «confirm» закрывает апелляцию без изменений. Причина решения обязательна.
 - По критерию оценки — не больше одной открытой апелляции; после решения можно подать новую (FR-APL-07).
+- Подача и решение идут под общей блокировкой: два одновременных запроса не создадут двух открытых
+  апелляций и не решат одну дважды (второй получит 409). Приложение работает одним процессом.
 """
 from __future__ import annotations
+
+import functools
+import threading
 
 from sqlmodel import Session, select
 
@@ -21,6 +26,7 @@ CONTEXT = 2          # реплик до и после доказательст�
 RANGE_MAX = 10       # участок без доказательств короче этого — целиком, длиннее — начало и конец
 RANGE_EDGE = 4
 COMMENT_MAX = 4000
+_LOCK = threading.Lock()
 _FRAG_KEYS = ("msg_id", "idx", "speaker", "text", "timestamp", "t_sec", "audio_offset_sec", "internal", "event")
 
 
@@ -68,6 +74,16 @@ def open_appeal(session: Session, evaluation_id: int, key: str) -> Appeal | None
         Appeal.evaluation_id == evaluation_id, Appeal.criterion_key == key, Appeal.status == "open")).first()
 
 
+def _serialized(fn):
+    @functools.wraps(fn)
+    def wrapper(session: Session, *args, **kwargs):
+        with _LOCK:
+            session.expire_all()  # читаем состояние после чужого коммита, а не из кэша сессии
+            return fn(session, *args, **kwargs)
+    return wrapper
+
+
+@_serialized
 def create(session: Session, evaluation_id: int, criterion_key: str, comment: str) -> Appeal:
     ev = session.get(Evaluation, evaluation_id)
     if not ev:
@@ -108,6 +124,7 @@ def recompute_final(session: Session, ev: Evaluation, checklist: Checklist) -> N
     session.add(ev)
 
 
+@_serialized
 def decide(session: Session, appeal_id: int, action: str, answer, reason: str) -> tuple[Appeal, Evaluation]:
     a = session.get(Appeal, appeal_id)
     if not a:

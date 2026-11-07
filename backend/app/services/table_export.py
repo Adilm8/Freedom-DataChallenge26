@@ -76,6 +76,9 @@ def build(session: Session, group_id: str | None, checklist_version_id: int | No
     return ver, cols, out
 
 
+_FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
+
+
 def _cell(v) -> str:
     if v is None:
         return ""
@@ -83,7 +86,10 @@ def _cell(v) -> str:
         return "yes" if v else "no"
     if isinstance(v, float):
         return (f"{v:.6f}".rstrip("0").rstrip(".") if v else "0").replace(".", ",")
-    return str(v)
+    s = str(v)
+    if isinstance(v, str) and s[:1] in _FORMULA_START:  # защита от формул при открытии в Excel
+        return "'" + s
+    return s
 
 
 def to_csv(cols: list[str], rows: list[dict]) -> bytes:

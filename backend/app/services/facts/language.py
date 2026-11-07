@@ -28,7 +28,7 @@ LANG_FROM_LOCALE = {"kk": "kz", "kz": "kz", "ru": "ru", "en": "en"}
 MIN_LETTERS = 4
 
 _QUOTED = re.compile(r"«[^»]*»|“[^”]*”|„[^“”]*[“”]|\"[^\"]*\"")
-_NOISE = re.compile(r"\[[^\]]*\]|https?://\S+|\S+@\S+|\b[\w.-]+\.(?:com|kz|ru|global|net|org)\b", re.IGNORECASE)
+_NOISE = re.compile(r"\[[^\]]*\]|https?://\S+|[^\s@]{1,64}@[^\s@]{1,255}|\b[\w.-]{1,253}\.(?:com|kz|ru|global|net|org)\b", re.IGNORECASE)
 _WORD = re.compile(r"[^\W\d_]+")
 _LATIN_NAME = re.compile(r"\b[A-Z][A-Za-z]*\b|\b[A-Z]{2,}\b")
 _LOCALE_TO = re.compile(r"\bto\s+([a-z]{2})-[a-z]{2}\b", re.IGNORECASE)

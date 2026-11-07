@@ -1,7 +1,8 @@
 """Последняя оценка каждого диалога и связанные строки: общая выборка для списка, аналитики, экспорта и очереди.
 
 Правило одно на всё приложение: «последняя» = оценка с наибольшим `id` для диалога (и версии чек-листа,
-если она задана). Апелляции и очередь проверки считаются по этой оценке.
+если она задана) среди успешных (`done`/`partial`); упавшая берётся, только если успешных нет — неудачный
+повтор не прячет готовый результат. Апелляции и очередь проверки считаются по этой оценке.
 """
 from __future__ import annotations
 
@@ -26,7 +27,12 @@ def latest_map(session: Session, conv_pks: Iterable[int] | None = None,
         q = q.where(Evaluation.checklist_version_id == version_id)
     if conv_pks is not None:
         q = q.where(Evaluation.conversation_pk.in_(list(conv_pks)))
-    return {e.conversation_pk: e for e in session.exec(q)}  # поздние перекрывают ранние
+    out: dict[int, Evaluation] = {}
+    for e in session.exec(q):  # поздние перекрывают ранние, но упавшая не перекрывает успешную
+        prev = out.get(e.conversation_pk)
+        if prev is None or e.status != "failed" or prev.status == "failed":
+            out[e.conversation_pk] = e
+    return out
 
 
 def group_latest(session: Session, group_id: str | None,

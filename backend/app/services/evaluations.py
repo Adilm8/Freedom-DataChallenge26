@@ -43,8 +43,11 @@ def persist(
     run_id: int | None = None,
     reuse: str = "none",
     reused_from: dict[str, int] | None = None,
+    carried_final: dict[str, tuple[str, int]] | None = None,
 ) -> int:
+    """`carried_final` — финальные ответы по решениям апелляций из оценки, откуда взят ответ (см. reuse)."""
     reused_from = reused_from or {}
+    carried_final = {k: v for k, v in (carried_final or {}).items() if k in outcome.results}
     actual = next((c.result.model for c in outcome.calls if c.result and c.result.model), None)
     tin, tout = outcome.tokens
     score = outcome.score.model_dump()
@@ -76,13 +79,24 @@ def persist(
     for key, r in outcome.results.items():
         cs = outcome.score.criteria.get(key)
         pts = cs.points if cs else None
+        issues = list(r.issues)
+        final = _ans_str(r.answer)
+        if key in carried_final:
+            final, src = carried_final[key]
+            issues.append(f"{reuse_mod.CARRIED_PREFIX} из оценки №{src}: финальный ответ {final}")
         session.add(CriterionResult(
             evaluation_id=ev.id, criterion_key=key, ai_answer=_ans_str(r.answer), ai_points=pts,
             reasoning=r.reasoning, na_reason=r.na_reason, evidence=list(r.evidence), checked_range=r.checked_range,
-            issues=list(r.issues), confidence=r.confidence, advice=r.advice,
+            issues=issues, confidence=r.confidence, advice=r.advice,
             criterion_hash=outcome.hashes.get(key, ""), reused_from_evaluation_id=reused_from.get(key),
-            final_answer=_ans_str(r.answer), final_points=pts,
+            final_answer=final, final_points=pts,
         ))
+    if carried_final:
+        from . import appeals as appeals_mod  # appeals импортирует этот модуль
+
+        session.flush()
+        ver = session.get(ChecklistVersion, checklist_version_id)
+        appeals_mod.recompute_final(session, ev, Checklist.model_validate(ver.body))
     for c in outcome.calls:
         res = c.result
         session.add(LLMCall(
@@ -151,7 +165,8 @@ def evaluate_one(
         outcome = _failed_outcome(checklist, str(e))
         plan = reuse_mod.ReusePlan()
     return persist(session, conversation_pk, checklist_version_id, outcome, provider_name=provider_name,
-                   model=model, strategy=strategy, run_id=run_id, reuse=reuse, reused_from=plan.source)
+                   model=model, strategy=strategy, run_id=run_id, reuse=reuse, reused_from=plan.source,
+                   carried_final=plan.final)
 
 
 def to_api(session: Session, ev: Evaluation) -> dict:

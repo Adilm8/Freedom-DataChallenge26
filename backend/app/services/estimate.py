@@ -3,6 +3,8 @@
 Входные токены считаются по реальным промптам (≈ 3 символа на токен для смеси кириллицы и латиницы),
 выходные — по числу критериев. Если у модели уже есть вызовы в БД, цена и задержка берутся из их
 средних (так точнее и работает без сети); иначе — из прайса OpenRouter, если он доступен.
+История ищется по запрошенной модели прогона (OpenRouter может вернуть в ответе другое имя версии).
+Звонки, которые провайдер не принимает (бесплатный Gemini), в оценку не входят: `skipped_voice`.
 """
 
 from __future__ import annotations
@@ -10,10 +12,10 @@ from __future__ import annotations
 import json
 import math
 
-from sqlmodel import Session, select
+from sqlmodel import Session, or_, select
 
 from ..domain import Checklist, NormalizedConversation
-from ..models import ChecklistVersion, Conversation, LLMCall
+from ..models import ChecklistVersion, Conversation, Evaluation, EvaluationRun, LLMCall
 from ..providers import ProviderError, get_provider
 from . import evaluator, prompt_builder
 from . import reuse as reuse_mod
@@ -28,8 +30,11 @@ HISTORY = 200
 
 def _history(session: Session, model: str) -> tuple[float | None, float | None, float | None]:
     """(цена за 1k входных + выходных токенов по факту, средняя задержка вызова, доля повторов)."""
-    rows = session.exec(select(LLMCall).where(LLMCall.model == model, LLMCall.error == None)  # noqa: E711
-                        .order_by(LLMCall.id.desc()).limit(HISTORY)).all()
+    q = (select(LLMCall).join(Evaluation, Evaluation.id == LLMCall.evaluation_id)
+         .join(EvaluationRun, EvaluationRun.id == Evaluation.run_id, isouter=True)
+         .where(or_(LLMCall.model == model, EvaluationRun.model == model), LLMCall.error == None)  # noqa: E711
+         .order_by(LLMCall.id.desc()).limit(HISTORY))
+    rows = session.exec(q).all()
     if len(rows) < 5:
         return None, None, None
     toks = sum(r.tokens_in + r.tokens_out for r in rows)
@@ -44,9 +49,16 @@ def estimate(session: Session, conv_pks: list[int], version_id: int, *, provider
              strategy: str, reuse: str = "none") -> dict:
     cl = Checklist.model_validate(session.get(ChecklistVersion, version_id).body)
     sections = {s.id: s.title for s in cl.sections}
-    calls = tin = tout = dialogs_with_calls = 0
+    calls = tin = tout = dialogs_with_calls = skipped_voice = 0
+    try:
+        prov = get_provider(provider_name)
+    except ProviderError:
+        prov = None
     for pk in conv_pks:
         conv = NormalizedConversation.model_validate(session.get(Conversation, pk).normalized)
+        if prov is not None and conv.is_voice and not prov.allow_voice:
+            skipped_voice += 1
+            continue
         facts, context = evaluator.prepare(conv, cl)
         crit = cl.enabled_criteria()
         overview_needed = True
@@ -71,7 +83,6 @@ def estimate(session: Session, conv_pks: list[int], version_id: int, *, provider
     else:
         source = "pricing"
         try:
-            prov = get_provider(provider_name)
             cost = 0.0 if getattr(prov, "free", False) else prov.pricing.estimate(model, tin, tout)
         except (ProviderError, AttributeError):
             cost = None
@@ -82,4 +93,4 @@ def estimate(session: Session, conv_pks: list[int], version_id: int, *, provider
     return {"dialogs": len(conv_pks), "dialogs_with_calls": dialogs_with_calls, "calls": calls,
             "tokens_in": tin, "tokens_out": tout,
             "cost_usd": round(cost, 4) if cost is not None else None, "seconds": round(seconds),
-            "cost_source": source}
+            "cost_source": source, "skipped_voice": skipped_voice}

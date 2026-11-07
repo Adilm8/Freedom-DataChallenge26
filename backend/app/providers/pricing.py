@@ -11,6 +11,7 @@ import time
 from typing import Any
 
 CACHE_TTL_S = 3600
+RETRY_AFTER_FAIL_S = 120  # без сети не ходим за таблицей на каждый запрос
 
 
 class Pricing:
@@ -19,18 +20,24 @@ class Pricing:
         self._lock = threading.Lock()
         self._models: dict[str, dict] = {}
         self._loaded_at = 0.0
+        self._failed_at: float | None = None
 
     def _load(self) -> None:
         if self._client is None:
             return
         with self._lock:
-            if self._models and time.monotonic() - self._loaded_at < CACHE_TTL_S:
+            now = time.monotonic()
+            if self._models and now - self._loaded_at < CACHE_TTL_S:
+                return
+            if self._failed_at is not None and now - self._failed_at < RETRY_AFTER_FAIL_S:
                 return
             try:
                 data = self._client.models.list()
                 items = [m.model_dump() for m in data.data]
             except Exception:  # сеть или прокси недоступны: работаем без таблицы
+                self._failed_at = now
                 return
+            self._failed_at = None
             self._models = {m["id"]: m for m in items if m.get("id")}
             self._loaded_at = time.monotonic()
 

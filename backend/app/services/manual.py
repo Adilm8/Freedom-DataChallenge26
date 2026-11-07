@@ -3,6 +3,10 @@
 Текст: одна реплика — строка `роль: текст`, в начале можно указать время `[MM:SS]` или `MM:SS`.
 Роли: client / operator / bot / system, по-русски клиент / оператор / бот / система, коротко К / О.
 Строка без роли продолжает предыдущую реплику. Дальше запись идёт через тот же `normalize`, что и импорт.
+
+Ссылку на запись (`audio_url`) вручную задать нельзя: прокси записи ходит только по ссылкам из набора
+организаторов, иначе через него можно было бы обращаться к произвольным адресам. Ручной диалог не попадает
+в группу, где уже есть импортированные диалоги, чтобы не испортить файл сдачи.
 """
 from __future__ import annotations
 
@@ -17,7 +21,8 @@ from .normalize import normalize
 
 DEFAULT_GROUP = "MANUAL"
 MAX_MESSAGES = 1000
-MAX_CHARS = 300_000
+MAX_CHARS = 300_000           # весь ввод (текст или сумма реплик)
+MAX_MESSAGE_CHARS = 20_000    # одна реплика
 
 ROLE_ALIASES = {
     "client": "client", "клиент": "client", "customer": "client", "user": "client", "пользователь": "client",
@@ -68,10 +73,16 @@ def parse_text(text: str) -> tuple[list[dict], list[dict], list[str]]:
                 warnings.append(f"строка {n}: пустая реплика пропущена")
                 continue
             msgs.append({"timestamp": m.group("ts") or "", "speaker": role, "text": body})
+            if len(body) > MAX_MESSAGE_CHARS:
+                errors.append({"path": "transcript", "message": f"строка {n}: реплика длиннее {MAX_MESSAGE_CHARS} символов"})
         elif msgs:
             if m and not m.group("ts") and len(m.group("role")) <= 12:
                 warnings.append(f"строка {n}: «{m.group('role')}» — не роль, строка добавлена к предыдущей реплике")
             msgs[-1]["text"] += "\n" + line.strip()
+            if len(msgs[-1]["text"]) > MAX_MESSAGE_CHARS and not any(
+                    e["message"].startswith(f"реплика {len(msgs)}:") for e in errors):
+                errors.append({"path": "transcript",
+                               "message": f"реплика {len(msgs)}: длиннее {MAX_MESSAGE_CHARS} символов"})
         else:
             errors.append({"path": "transcript", "message": (
                 f"строка {n}: не указана роль — нужно «роль: текст», роли client, operator, bot, system "
@@ -84,6 +95,11 @@ def parse_text(text: str) -> tuple[list[dict], list[dict], list[str]]:
 def parse_array(items: list) -> tuple[list[dict], list[dict]]:
     msgs: list[dict] = []
     errors: list[dict] = []
+    if len(items) > MAX_MESSAGES:
+        return [], [{"path": "transcript", "message": f"больше {MAX_MESSAGES} реплик"}]
+    total = sum(len(m.get("text")) for m in items if isinstance(m, dict) and isinstance(m.get("text"), str))
+    if total > MAX_CHARS:
+        return [], [{"path": "transcript", "message": f"текст реплик длиннее {MAX_CHARS} символов"}]
     for i, m in enumerate(items):
         if not isinstance(m, dict):
             errors.append({"path": f"transcript.{i}", "message": "реплика — объект {timestamp, speaker, text}"})
@@ -95,6 +111,8 @@ def parse_array(items: list) -> tuple[list[dict], list[dict]]:
         text = m.get("text")
         if not isinstance(text, str) or not text.strip():
             errors.append({"path": f"transcript.{i}.text", "message": "пустой текст реплики"})
+        elif len(text) > MAX_MESSAGE_CHARS:
+            errors.append({"path": f"transcript.{i}.text", "message": f"реплика длиннее {MAX_MESSAGE_CHARS} символов"})
         ts = m.get("timestamp")
         if role and isinstance(text, str) and text.strip():
             msgs.append({"timestamp": "" if ts is None else str(ts), "speaker": role, "text": text})
@@ -118,7 +136,7 @@ def _unwrap(transcript: Any, body: dict) -> tuple[Any, dict]:
                                       f"в наборе {len(recs)} записей: вставьте одну или загрузите файл набора"}])
             data = recs[0]
         if isinstance(data, dict) and "transcript" in data:
-            meta = {k: data.get(k) for k in ("conversation_id", "channel", "language", "audio_url") if data.get(k)}
+            meta = {k: data.get(k) for k in ("conversation_id", "channel", "language") if data.get(k)}
             return data["transcript"], {**meta, **{k: v for k, v in body.items() if v not in (None, "")}}
     return data, body
 
@@ -150,12 +168,16 @@ def _next_id(session: Session, group: str) -> str:
 
 
 def create(session: Session, body: dict) -> Conversation:
-    """`body`: {group_id?, conversation_id?, channel?, language?, audio_url?, transcript: [] | str}."""
-    transcript, body = _unwrap(body.get("transcript"), body)
+    """`body`: {group_id?, conversation_id?, channel?, language?, transcript: [] | str}. `audio_url` не принимается."""
+    raw = body.get("transcript")
+    if isinstance(raw, str) and len(raw) > MAX_CHARS:  # до разбора JSON и регулярных выражений
+        raise ManualInvalid([{"path": "transcript", "message": f"текст длиннее {MAX_CHARS} символов"}])
+    if body.get("audio_url"):
+        raise ManualInvalid([{"path": "audio_url", "message": (
+            "ссылку на запись вручную задать нельзя: записи звонков приходят только из набора организаторов")}])
+    transcript, body = _unwrap(raw, body)
     warnings: list[str] = []
     if isinstance(transcript, str):
-        if len(transcript) > MAX_CHARS:
-            raise ManualInvalid([{"path": "transcript", "message": f"текст длиннее {MAX_CHARS} символов"}])
         msgs, errors, warnings = parse_text(transcript)
     elif isinstance(transcript, list):
         msgs, errors = parse_array(transcript)
@@ -171,6 +193,10 @@ def create(session: Session, body: dict) -> Conversation:
         warnings.append("нет ни одной реплики оператора: оценивать будет нечего")
 
     group = str(body.get("group_id") or "").strip() or DEFAULT_GROUP
+    if session.exec(select(Conversation.id).where(
+            Conversation.group_id == group, Conversation.source != "manual")).first():
+        raise ManualConflict(f"группа {group} — набор организаторов: ручные диалоги добавляйте в другую группу "
+                             f"(например, {DEFAULT_GROUP})")
     cid = str(body.get("conversation_id") or "").strip()
     if cid and session.exec(select(Conversation.id).where(
             Conversation.group_id == group, Conversation.conversation_id == cid)).first():
@@ -180,11 +206,11 @@ def create(session: Session, body: dict) -> Conversation:
     if lang_note:
         warnings.append(lang_note)
     record = {"conversation_id": cid, "channel": _channel(body.get("channel")), "language": language,
-              "audio_url": body.get("audio_url") or None, "transcript": msgs}
+              "audio_url": None, "transcript": msgs}
     norm = normalize(record)
     norm.warnings.extend(warnings)
     row = Conversation(group_id=group, conversation_id=cid, channel=norm.channel, language=norm.language,
-                       audio_url=record["audio_url"], source="manual", transcript=msgs,
+                       audio_url=None, source="manual", transcript=msgs,
                        normalized=norm.model_dump(), imported_at=utcnow())
     session.add(row)
     session.commit()

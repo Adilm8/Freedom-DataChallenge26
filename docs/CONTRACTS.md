@@ -152,7 +152,7 @@
 | `POST /datasets/import` | `{group_id}` | `{group_id, imported, updated, warnings[]}` |
 | `POST /datasets/upload` | файл JSON (формат API организаторов) | то же |
 | `GET /conversations` | `?group_id&language&channel&critical&appeal=open\|any\|none&checklist_version_id` | `[ConversationRow]`; `appeal` — по последней оценке |
-| `POST /conversations` | `{group_id?: "MANUAL", conversation_id?, channel?, language?, audio_url?, transcript: [] \| text}` | `ConversationDetail` (201, FR-DATA-07); 409 — такой `conversation_id` в группе уже есть; 422 с `errors` |
+| `POST /conversations` | `{group_id?: "MANUAL", conversation_id?, channel?, language?, transcript: [] \| text}` | `ConversationDetail` (201, FR-DATA-07); 409 — такой `conversation_id` в группе уже есть или группа — набор организаторов; 422 с `errors` (в т. ч. `audio_url` вручную не принимается; текст ≤ 300 000 символов, реплика ≤ 20 000) |
 | `GET /conversations/{id}` | — | `ConversationDetail` (транскрипт с `msg_id`, `t_sec`, `audio_offset_sec`; список оценок) |
 | `PATCH /conversations/{id}` | `{audio_offset_fix_sec}` (секунды, от −3600 до 3600) | `ConversationDetail`; `messages[].audio_offset_sec` не меняется, плеер прибавляет поправку сам |
 | `GET /conversations/{id}/audio` | заголовок `Range` (необязательно) | поток записи через бэкенд: 200 или 206 с `Content-Range`, `Accept-Ranges: bytes`, тип по сигнатуре файла; источник без `Range` — файл кэшируется в памяти и режется на бэкенде; 404 — записи нет; 502 — источник недоступен (без адреса источника в ответе и логах) |

@@ -54,7 +54,8 @@ def main() -> None:
             doc = results_export.build(s, args.group, team_name=args.team, mode=args.mode, checklist_version_id=ver.id,
                                        expected_ids=payload_ids)
             group = args.group
-        expected = payload_ids or (list(s.exec(select(Conversation.conversation_id).where(Conversation.group_id == group)))
+        expected = payload_ids or (list(s.exec(select(Conversation.conversation_id).where(
+            Conversation.group_id == group, Conversation.source != "manual")))
                                    if group else None)
 
     errs = results_export.validate(doc, expected_ids=expected, expected_count=args.expect_count)

@@ -8,6 +8,9 @@
 - на запрос без `Range` или с `bytes=0-` отдаёт поток сразу и попутно кладёт файл в память;
 - на запрос с другого места скачивает файл целиком и отдаёт нужный кусок (206).
 Кэш в памяти небольшой (LRU), на диск записи не пишутся.
+
+Отдаём только `audio/*` и `video/*` (иначе `application/octet-stream`) с `nosniff` и `sandbox`: ответ источника
+не может стать страницей в нашем origin. Ссылки берутся только из набора организаторов (ручной ввод их не задаёт).
 """
 from __future__ import annotations
 
@@ -36,7 +39,7 @@ _RANGE_RE = re.compile(r"^\s*bytes\s*=\s*(\d*)\s*-\s*(\d*)\s*(?:,.*)?$", re.I)
 
 def make_client() -> httpx.AsyncClient:
     """Клиент к источнику записи. Тесты подменяют эту функцию (httpx.MockTransport)."""
-    return httpx.AsyncClient(timeout=httpx.Timeout(60.0, connect=10.0), follow_redirects=True)
+    return httpx.AsyncClient(timeout=httpx.Timeout(60.0, connect=10.0), follow_redirects=True, max_redirects=5)
 
 
 class _Cache:
@@ -92,7 +95,7 @@ def _media_type(upstream: str | None, head: bytes, pk: int) -> str:
     up = (upstream or "").split(";")[0].strip().lower()
     if up.startswith(("audio/", "video/")):
         return up
-    return _types.get(pk) or up or "application/octet-stream"
+    return _types.get(pk) or "application/octet-stream"  # text/html и прочее источника не пропускаем
 
 
 def parse_range(header: str | None, size: int | None) -> tuple[int, int | None] | None:
@@ -114,8 +117,11 @@ def parse_range(header: str | None, size: int | None) -> tuple[int, int | None] 
     return start, end
 
 
+_SAFE_HEADERS = {"X-Content-Type-Options": "nosniff", "Content-Security-Policy": "default-src 'none'; sandbox"}
+
+
 def _base_headers(ctype: str) -> dict[str, str]:
-    return {"Accept-Ranges": "bytes", "Cache-Control": CACHE_CONTROL, "Content-Type": ctype}
+    return {"Accept-Ranges": "bytes", "Cache-Control": CACHE_CONTROL, "Content-Type": ctype, **_SAFE_HEADERS}
 
 
 def _from_bytes(data: bytes, ctype: str, range_header: str | None) -> Response:
@@ -159,7 +165,7 @@ async def conversation_audio(pk: int, request: Request, session: Session = Depen
     client = make_client()
     try:
         up = await client.send(client.build_request("GET", src, headers={"Range": range_header} if range_header else {}), stream=True)
-    except httpx.HTTPError as e:
+    except (httpx.HTTPError, httpx.InvalidURL, ValueError) as e:  # InvalidURL — не HTTPError
         await client.aclose()
         log.warning("запись диалога %s: источник недоступен (%s)", pk, type(e).__name__)
         raise HTTPException(502, "Источник записи недоступен: не удалось получить файл. Попробуйте позже") from None
@@ -186,9 +192,18 @@ async def conversation_audio(pk: int, request: Request, session: Session = Depen
         rng = parse_range(range_header, length) if range_header else None
 
         if status == 200 and rng is not None and not (rng[0] == 0 and (rng[1] is None or (length is not None and rng[1] >= length - 1))):
-            # Источник не умеет Range, а нужен кусок с середины: качаем целиком и режем.
-            data = await up.aread()
+            # Источник не умеет Range, а нужен кусок с середины: качаем целиком (с пределом) и режем.
+            if length is not None and length > MAX_CACHE_ITEM:
+                await close()
+                raise HTTPException(502, "Запись слишком большая для перемотки: источник не поддерживает Range")
+            buf = bytearray()
+            async for chunk in up.aiter_bytes():
+                buf.extend(chunk)
+                if len(buf) > MAX_CACHE_ITEM:
+                    await close()
+                    raise HTTPException(502, "Запись слишком большая для перемотки: источник не поддерживает Range")
             await close()
+            data = bytes(buf)
             ctype = _media_type(up.headers.get("content-type"), data[:16], pk)
             cache.put(key, data, ctype)
             return _from_bytes(data, ctype, range_header)
@@ -213,7 +228,7 @@ async def conversation_audio(pk: int, request: Request, session: Session = Depen
         else:
             if length is not None:
                 headers["Content-Length"] = str(length)
-                if rng is not None:  # bytes=0- при источнике без Range: тот же поток, но как 206
+                if rng is not None and length > 0:  # bytes=0- при источнике без Range: тот же поток, но как 206
                     out_status = 206
                     headers["Content-Range"] = f"bytes 0-{length - 1}/{length}"
         tee = status == 200  # полный файл: попутно кладём в кэш, чтобы следующая перемотка шла из памяти

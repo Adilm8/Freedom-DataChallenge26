@@ -17,7 +17,8 @@ def export_results(group_id: str = Query(default=None), team: str | None = None,
     group = group_id or settings.dataset_group_id
     doc = results_export.build(session, group, team_name=team or settings.team_name or "—",
                                mode=mode if mode in results_export.MODES else settings.model_mode)
-    ids = list(session.exec(select(Conversation.conversation_id).where(Conversation.group_id == group)))
+    ids = list(session.exec(select(Conversation.conversation_id).where(
+        Conversation.group_id == group, Conversation.source != "manual")))
     errs = results_export.validate(doc, expected_ids=ids)
     return JSONResponse(doc, headers={"Content-Disposition": f'attachment; filename="results-{group}.json"',
                                       "X-Validation-Errors": str(len(errs))})
