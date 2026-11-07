@@ -2,7 +2,7 @@
 name: test-runner
 description: Запускает pytest, eval/run_eval.py, линтеры и smoke-проверки API, возвращает короткий отчёт о падениях. Используй после каждой фичи и перед коммитом. Код не исправляет.
 tools: Read, Bash, Glob, Grep
-model: sonnet
+model: haiku
 effort: low
 ---
 

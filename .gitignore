@@ -224,3 +224,4 @@ data/raw/
 data/*.db
 data/eval_runs/
 .claude/settings.local.json
+eval/runs/
