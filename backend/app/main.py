@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -20,9 +21,12 @@ from .api import runs as runs_api
 from .config import settings
 from .models import Conversation
 from .services import checklists as checklists_svc
+from .services import results_import
 from .services import runs as runs_svc
 
-FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
+log = logging.getLogger("cqa")
+ROOT = Path(__file__).resolve().parents[2]
+FRONTEND_DIR = ROOT / "frontend"
 
 
 @asynccontextmanager
@@ -31,6 +35,14 @@ async def lifespan(app: FastAPI):
     with Session(db.engine) as s:
         checklists_svc.seed_default(s)
         runs_svc.close_interrupted(s)  # фоновые потоки не пережили перезапуск
+        if settings.autoload_results:  # оценки прогона DEV из файла сдачи, если в этой БД их нет
+            try:
+                for r in results_import.autoload(s, ROOT):
+                    if r["imported"]:
+                        log.info("results.json → БД: %s, загружено оценок %s", r["group_id"], r["imported"])
+            except Exception as e:  # битый файл не должен ронять сервер
+                s.rollback()
+                log.warning("не удалось загрузить results.json: %s", e)
     yield
 
 

@@ -35,6 +35,8 @@ class Settings(BaseSettings):
 
     # Маскирование персональных данных перед отправкой в модель (services/pii.py)
     pii_masking: bool = True
+    # При старте загрузить results/dev/results.json в БД, если у DEV нет оценок (без вызовов модели)
+    autoload_results: bool = True
 
     # Сдача результатов (docs/task/results-format.md)
     # Локальные записи звонков (не в git): <audio_dir>/<conversation_id>.mp3 и т. п. Прокси записи кладёт сюда скачанное.
