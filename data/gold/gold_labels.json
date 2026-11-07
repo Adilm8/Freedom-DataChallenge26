@@ -741,7 +741,7 @@
           "answer": "yes"
         },
         "04": {
-          "answer": 20
+          "answer": 15
         },
         "05": {
           "answer": "yes"
@@ -756,7 +756,7 @@
           "answer": "no"
         }
       },
-      "total": 100.0,
+      "total": 95.0,
       "notes": "",
       "uncertain": [],
       "changed": [],
@@ -829,6 +829,212 @@
       "uncertain": [],
       "changed": [],
       "reviewed_at": "2026-11-07T17:00:21+00:00"
+    },
+    "p1-ru-015": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 92.31,
+      "notes": "",
+      "uncertain": [],
+      "changed": [
+        "07"
+      ],
+      "reviewed_at": null
+    },
+    "p4-ru-003": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "yes"
+        },
+        "03": {
+          "answer": "yes"
+        },
+        "04": {
+          "answer": 15
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "na"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 90.0,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T22:53:55+00:00"
+    },
+    "p4-ru-004": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "yes"
+        },
+        "03": {
+          "answer": "yes"
+        },
+        "04": {
+          "answer": 15
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 4
+        },
+        "07": {
+          "answer": "na"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 85.26,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T22:55:37+00:00"
+    },
+    "p4-ru-005": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "yes"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 94.38,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T22:56:21+00:00"
+    },
+    "p1-ru-026": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "no"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 0
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 4
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 20.0,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T22:58:19+00:00"
+    },
+    "p1-ru-014": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "no"
+        },
+        "02": {
+          "answer": "no"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 56.88,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T22:59:45+00:00"
     }
   }
 }
