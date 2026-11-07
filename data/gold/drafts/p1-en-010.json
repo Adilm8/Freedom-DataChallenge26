@@ -1,0 +1,81 @@
+{
+  "conversation_id": "p1-en-010",
+  "drafted_by": "claude-session",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "yes",
+      "reasoning": "«Hi, I'm Nina» — приветствие и имя.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "na",
+      "reasoning": "Вопрос ясен с начала (можно ли покупать бумаги с D-счёта); уточнять было нечего.",
+      "evidence": [
+        "m0",
+        "m4",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "03": {
+      "answer": "na",
+      "reasoning": "Общее правило о D-счёте; балансы и данные счёта не раскрывались.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "04": {
+      "answer": 20,
+      "reasoning": "Верно: с D-счёта покупать бумаги напрямую нельзя, для приказа — торговый счёт; клиент «Understood».",
+      "evidence": [
+        "m9",
+        "m10"
+      ],
+      "confidence": "medium"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Вежливо; недовольства не было.",
+      "evidence": [
+        "m9",
+        "m11"
+      ],
+      "confidence": "high"
+    },
+    "06": {
+      "answer": 10,
+      "reasoning": "Ответ ясный; первый ответ через 1 мин 16 с.",
+      "evidence": [
+        "m8",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "07": {
+      "answer": "no",
+      "reasoning": "«You're welcome. Bye!» — прощание без итога и предложения помощи → «Нет».",
+      "evidence": [
+        "m10",
+        "m11"
+      ],
+      "confidence": "high"
+    },
+    "08": {
+      "answer": "no",
+      "reasoning": "Нарушений нет.",
+      "evidence": [
+        "m9",
+        "m11"
+      ],
+      "confidence": "high"
+    }
+  },
+  "total": 92.31,
+  "critical": false,
+  "notes": "Как p1-kz-011 / p1-ru-024: 04 20 или 15 (не сказано, как перевести деньги на торговый счёт; клиент не спрашивал)."
+}
