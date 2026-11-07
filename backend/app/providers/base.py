@@ -30,7 +30,7 @@ class LLMResult:
     cached_tokens: int = 0
     cost_usd: float | None = None
     latency_ms: int = 0
-    request: dict = field(default_factory=dict)   # фактические параметры запроса (без сообщений)
+    request: dict = field(default_factory=dict)   # фактические параметры запроса и сообщения (`messages`)
     raw: dict = field(default_factory=dict)
     attempts: int = 1
 

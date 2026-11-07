@@ -1,7 +1,7 @@
 // Панель результата: обзор, итог и секции, параметры оценки с сырыми вызовами LLM, критерии с доказательствами.
 // События наружу: cqa:evidence-click {msg_id|msg_ids, quote(s), from, to, key}, cqa:run-request {ids, preset},
 // cqa:navigate {to}. Внутрь: cqa:focus-criterion {key} на el.
-import { h, clear, emit, answerBadge, score, fmtScore, fmtMoney, fmtDate, skeletonRows, errorState, emptyState } from '../ui.js';
+import { h, clear, emit, answerBadge, answerState, score, fmtScore, fmtMoney, fmtDate, skeletonRows, errorState, emptyState } from '../ui.js';
 import { getEvaluation, getEvaluationCalls } from '../api.js';
 import { mount as mountCalls } from './llm-calls.js';
 import { openAppealForm } from './appeal-form.js';
@@ -17,7 +17,8 @@ const AP_STATUS = { open: ['Апелляция открыта', 'warn'], confirm
 const SECTION_TITLES = { start: 'Начало и понимание запроса', safety: 'Безопасность и решение', dialog: 'Ведение и завершение диалога', critical: 'Грубые нарушения' };
 
 function confidence(level) {
-  if (!level) return null;
+  // Высокая уверенность — норма, её не подписываем: шум на каждом критерии. Видны только средняя и низкая.
+  if (!level || level === 'high') return null;
   const [text, tip] = CONF[level] || [level, ''];
   if (level === 'low') {
     return h('span', { class: 'cqa-badge cqa-badge--warn cqa-conf-low cqa-tip', 'data-tip': tip }, h('span', { class: 'cqa-conf-low__mark', 'aria-hidden': 'true' }, '!'), text);
@@ -55,7 +56,7 @@ export function mount(el, params = {}) {
     return h('section', { class: 'cqa-ressec' },
       h('div', { class: 'cqa-sechead' },
         h('h3', { class: 'cqa-h3' }, sec.title),
-        sf?.applicable_weight ? h('span', { class: 'cqa-sechead__pts' }, `${sf.points} из ${sf.applicable_weight} · ${fmtScore(sf.pct)}%`) : null),
+        sf?.applicable_weight ? h('span', { class: 'cqa-sechead__pts', title: `${fmtScore(sf.pct)}% от применимого веса секции` }, `${+Number(sf.points).toFixed(2)} из ${+Number(sf.applicable_weight).toFixed(2)}`) : null),
       list.map(criterion));
   }
 
@@ -75,6 +76,7 @@ export function mount(el, params = {}) {
   function criterion(c) {
     const flagged = c.type === 'flag' && c.final_answer === 'yes';
     const review = c.confidence === 'low' || (c.issues || []).length;
+    const state = flagged ? 'flag' : answerState(c); // полоса слева: грубая ошибка > не выполнен > частично
     const body = [];
     if (c.reasoning) body.push(h('div', { class: 'cqa-crit__why' }, c.reasoning));
     if (c.final_answer === 'na' || c.ai_answer === 'na') {
@@ -96,10 +98,12 @@ export function mount(el, params = {}) {
       body.push(h('div', { class: 'cqa-warnbox' }, h('b', null, 'Предупреждения проверки'),
         h('ul', null, c.issues.map((i) => h('li', null, i)))));
     }
-    if (c.advice) body.push(h('div', { class: 'cqa-advice' }, h('b', null, 'Что можно было сделать иначе'), c.advice));
+    if (c.advice) body.push(h('div', { class: 'cqa-advice' }, h('b', null, 'Рекомендация оператору'), c.advice));
 
 
     const foot = [confidence(c.confidence)];
+    // «Требует проверки» — чипом в подвале (полоса слева занята результатом); низкая уверенность уже видна своим чипом.
+    if ((c.issues || []).length && c.confidence !== 'low') foot.push(h('span', { class: 'cqa-badge cqa-badge--warn cqa-tip', 'data-tip': 'Есть предупреждения проверки ответа — сверьте вручную' }, 'Требует проверки'));
     if (c.reused_from_evaluation_id) {
       foot.push(h('button', { type: 'button', class: 'cqa-chip cqa-chip--reused cqa-tip', 'data-tip': 'Критерий не менялся: ответ взят из прошлой оценки без нового вызова. Открыть ту оценку',
         onclick: () => emit(root, 'cqa:navigate', { to: `#/conversation/${ev.conversation_id}?eval=${c.reused_from_evaluation_id}` }) },
@@ -115,11 +119,11 @@ export function mount(el, params = {}) {
         dataset: { appeal: c.key }, onclick: () => appeal(c) }, c.appeal ? 'Оспорить снова' : 'Оспорить'));
     }
 
-    return h('article', { class: `cqa-panel cqa-crit ${flagged ? 'cqa-crit--flag' : review ? 'cqa-crit--review' : ''}`, id: `crit-${c.key}`, dataset: { key: c.key }, tabindex: -1 },
+    return h('article', { class: `cqa-panel cqa-crit ${state ? `cqa-crit--${state}` : ''} ${review ? 'cqa-crit--review' : ''}`, id: `crit-${c.key}`, dataset: { key: c.key, state: state || 'ok' }, tabindex: -1 },
       h('div', { class: 'cqa-crit__head' },
-        h('span', { class: `cqa-code ${flagged ? 'cqa-code--flag' : ''}` }, c.key),
+        h('span', { class: `cqa-code ${flagged ? 'cqa-code--flag' : state ? `cqa-code--${state}` : ''}` }, c.key),
         h('span', { class: 'cqa-crit__title' }, c.title),
-        c.final_answer == null ? h('span', { class: 'cqa-badge cqa-badge--muted' }, 'нет ответа') : answerBadge(c),
+        c.final_answer == null ? h('span', { class: 'cqa-badge cqa-badge--muted' }, 'нет ответа') : answerBadge(c, undefined, { words: true }),
         c.overridden ? h('span', { class: 'cqa-badge cqa-badge--accent' }, 'изменено') : null,
         pointsText(c)),
       h('div', { class: 'cqa-crit__body' }, body, appealBlock(c)),
@@ -174,15 +178,20 @@ export function mount(el, params = {}) {
     } });
   }
 
-  function overview() {
+  // Обзор — строкой внутри панели итога (тема, решён ли вопрос, резюме в две строки; клик — полностью).
+  // Отдельной панелью — только когда итога нет (оценка не выполнена).
+  function overview(inline) {
     const o = ev.overview;
     if (!o) return null;
     const [rt, rc] = RESOLVED[o.resolved] || RESOLVED.unclear;
+    const text = o.summary ? h('div', { class: 'cqa-ov__text cqa-sum__ovtext', title: inline ? 'Показать полностью' : null, tabindex: inline ? 0 : null,
+      onclick: inline ? (e) => e.currentTarget.classList.toggle('cqa-sum__ovtext--open') : null,
+      onkeydown: inline ? (e) => { if (e.key === 'Enter') e.currentTarget.classList.toggle('cqa-sum__ovtext--open'); } : null }, o.summary)
+      : h('div', { class: 'cqa-ov__text cqa-faint' }, 'Резюме не сформировано.');
+    const badges = [o.topic ? h('span', { class: 'cqa-badge cqa-badge--accent cqa-sum__topic' }, o.topic) : null, h('span', { class: `cqa-badge cqa-badge--${rc}` }, rt)];
+    if (inline) return h('div', { class: 'cqa-sum__ov', 'aria-label': 'Обзор диалога' }, h('div', { class: 'cqa-sum__ovhead' }, badges), text);
     return h('div', { class: 'cqa-panel cqa-ovpanel' },
-      h('div', { class: 'cqa-ovpanel__head' }, h('h3', { class: 'cqa-h3' }, 'Обзор'),
-        o.topic ? h('span', { class: 'cqa-badge cqa-badge--accent' }, o.topic) : null,
-        h('span', { class: `cqa-badge cqa-badge--${rc}` }, rt)),
-      h('div', { class: 'cqa-ov__text' }, o.summary || h('span', { class: 'cqa-faint' }, 'Резюме не сформировано.')));
+      h('div', { class: 'cqa-ovpanel__head' }, h('h3', { class: 'cqa-h3' }, 'Обзор'), badges), text);
   }
 
   function summary() {
@@ -201,6 +210,8 @@ export function mount(el, params = {}) {
       h('div', { class: 'cqa-sum__aw' },
         h('div', { class: 'cqa-sum__label' }, 'Применимый вес'),
         h('b', null, `${fin.applicable_weight ?? 0} из 100`))));
+    const ov = overview(true);
+    if (ov) parts.push(ov);
 
     const secs = (fin.sections || []).filter((s) => s.applicable_weight);
     if (secs.length) {
@@ -282,7 +293,9 @@ export function mount(el, params = {}) {
     token++;
     calls?.unmount(); calls = null;
     clear(root);
-    const out = [...banners(), overview(), ev.status === 'failed' && ev.ai_score?.total == null ? null : summary()];
+    // Итог — первым в колонке (обзор внутри него), предупреждения — под ним.
+    const noTotal = ev.status === 'failed' && ev.ai_score?.total == null;
+    const out = noTotal ? [...banners(), overview(false)] : [summary(), ...banners()];
     const defs = new Map();
     for (const c of ev.criteria) { if (!defs.has(c.section)) defs.set(c.section, []); defs.get(c.section).push(c); }
     for (const [id, list] of defs) {

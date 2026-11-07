@@ -95,6 +95,7 @@ class OpenAICompatProvider:
         request_meta = {k: v for k, v in kwargs.items() if k != "messages"}
         if "response_format" in request_meta:
             request_meta["response_format"] = {"type": request_meta["response_format"]["type"]}
+        request_meta["messages"] = [dict(m) for m in messages]  # фактический промпт (с подсказкой схемы, если она добавлялась)
 
         raw = resp.model_dump()
         choice = resp.choices[0] if resp.choices else None

@@ -203,8 +203,8 @@ export function mount(el, params = {}) {
   root.append(
     h('div', { class: 'cqa-pagehead' },
       h('div', null, h('h1', { class: 'cqa-h1' }, 'Новый диалог'),
-        h('div', { class: 'cqa-pagehead__sub' }, 'Вставьте переписку — система сохранит её в группе MANUAL и сразу оценит тем же конвейером, что и наборы организаторов.')),
-      h('div', { class: 'cqa-pagehead__actions' }, h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', onclick: () => emit(root, 'cqa:navigate', { to: '#/conversations' }) }, '← К списку'))),
+        h('div', { class: 'cqa-pagehead__sub' }, 'Вставьте переписку — система сохранит её отдельно от наборов организаторов и сразу оценит тем же конвейером.')),
+      h('div', { class: 'cqa-pagehead__actions' }, h('button', { type: 'button', class: 'cqa-btn', onclick: () => emit(root, 'cqa:navigate', { to: '#/conversations' }) }, '← К списку'))),
     h('div', { class: 'cqa-nd__cols' },
       h('form', { class: 'cqa-panel cqa-nd__form', novalidate: true, onsubmit: (e) => { e.preventDefault(); save(true); } },
         h('div', { class: 'cqa-nd__row' },

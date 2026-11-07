@@ -2,7 +2,7 @@
 // Параметры: group (группа данных), version (id версии чек-листа; по умолчанию — активная).
 // Данные — GET /analytics и GET /conversations той же версии (итоги по диалогам для корзин гистограммы).
 // Клик по цифре или полосе → cqa:navigate в список диалогов с фильтром (#/conversations?lang=…, ?ids=…&label=…).
-// Наружу: cqa:navigate {to}, cqa:run-request {ids: [], group, rows}. Внутрь: cqa:refresh на el — перечитать.
+// Наружу: cqa:navigate {to}, cqa:run-request {ids: [], group, rows}, cqa:import-request {group} (пустая группа). Внутрь: cqa:refresh на el — перечитать.
 import { h, clear, emit, errorState, emptyState, fmtScore, scoreClass, LANG, channelLabel } from '../ui.js';
 import { getAnalytics, listConversations } from '../api.js';
 import { createTip, fmtPct, fmtPct100, fmtUsd, plural, tableToggle, vpanel, legend, clamp01 } from './viz.js';
@@ -11,6 +11,9 @@ const C1 = 'var(--cqa-viz-1)', C2 = 'var(--cqa-viz-2)';
 const RESOLVED = [['yes', 'решён', 'var(--cqa-viz-good)'], ['unclear', 'неясно', 'var(--cqa-viz-neutral)'], ['no', 'не решён', 'var(--cqa-viz-bad)']];
 
 const langName = (l) => LANG[String(l).toLowerCase()] || String(l).toUpperCase();
+const nDialogs = (n) => `${n} ${plural(n, 'диалог', 'диалога', 'диалогов')}`;
+/** Заливка полосы критерия по порогу: слабые видны сразу. */
+const fillColor = (v) => (v == null ? C1 : v < 60 ? 'var(--cqa-no)' : v < 80 ? 'var(--cqa-warn-line)' : C1);
 
 export function mount(el, params = {}) {
   let p = { ...params };
@@ -32,12 +35,12 @@ export function mount(el, params = {}) {
       h('div', null,
         h('h1', { class: 'cqa-h1' }, 'Дашборд'),
         h('div', { class: 'cqa-pagehead__sub' },
-          `Группа ${group()}`, ver ? ` · чек-лист v${ver.version} ${ver.name || ver.key}` : '',
-          ' · по последней оценке каждого диалога; финальные цифры — с решениями по апелляциям')),
+          `Группа ${group()}`, ver ? ` · «${ver.name || ver.key}» v${ver.version}` : '',
+          ' · последние оценки с учётом апелляций')),
       h('div', { class: 'cqa-pagehead__actions' },
-        h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', onclick: () => load({ quiet: true }) }, '↻ Обновить'),
-        h('a', { class: 'cqa-btn cqa-btn--sm', href: listUrl() }, 'Все диалоги'),
-        a?.not_evaluated ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-btn--primary', onclick: runRequest },
+        h('button', { type: 'button', class: 'cqa-btn', onclick: () => load({ quiet: true }) }, '↻ Обновить'),
+        h('a', { class: 'cqa-btn', href: listUrl() }, 'Все диалоги'),
+        a?.not_evaluated ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', onclick: runRequest },
           `Оценить группу (${a.conversations})`) : null));
   }
 
@@ -69,16 +72,47 @@ export function mount(el, params = {}) {
       tile({ label: 'Грубые ошибки', value: String(a.critical_count), cls: a.critical_count ? 'cqa-kpi--flag' : '',
         sub: a.count ? `${fmtPct(a.critical_count / a.count)} диалогов${a.ai_critical_count !== a.critical_count ? ` · AI: ${a.ai_critical_count}` : ''}` : null,
         onClick: a.critical_count ? () => go(listUrl({ flag: '1' })) : null, aria: `Грубые ошибки: ${a.critical_count}. Открыть список` }),
-      tile({ label: 'Требует проверки', value: String(a.needs_review_count), cls: a.needs_review_count ? 'cqa-kpi--warn' : '',
-        sub: `в очереди проверки ${a.review_queue_count ?? '—'}`,
+      tile({ label: 'Требует проверки', value: [String(a.needs_review_count), h('small', null, ` ${plural(a.needs_review_count, 'диалог', 'диалога', 'диалогов')}`)],
+        cls: a.needs_review_count ? 'cqa-kpi--warn' : '',
+        sub: a.review_queue_count != null ? `${a.review_queue_count} ${plural(a.review_queue_count, 'пункт', 'пункта', 'пунктов')} в очереди проверки` : null,
         onClick: a.needs_review_count ? () => go(listUrl({ review: '1' })) : null, aria: `Требует проверки: ${a.needs_review_count}. Открыть список` }),
       tile({ label: 'Открытые апелляции', value: String(a.appeals?.open ?? 0),
         sub: `решено: без изменений ${a.appeals?.confirmed ?? 0}, изменено ${a.appeals?.changed ?? 0}`,
         onClick: a.appeals?.open ? () => go(listUrl({ appeal: 'open' })) : null, aria: `Открытые апелляции: ${a.appeals?.open ?? 0}. Открыть список` }),
       tile({ label: 'Стоимость оценок', value: fmtUsd(cost.latest_usd),
         sub: [`≈ ${fmtUsd(cost.avg_per_dialog_usd)} на диалог`,
-          cost.evaluations_total > a.count ? ` · всего ${fmtUsd(cost.total_usd)} за ${cost.evaluations_total} ${plural(cost.evaluations_total, 'оценку', 'оценки', 'оценок')}` : '',
+          cost.evaluations_total > a.count ? ` · всего с повторами ${fmtUsd(cost.total_usd)}` : '',
           (cost.models || []).length ? h('span', { class: 'cqa-kpi__models' }, cost.models.map((m) => `${m.model} × ${m.count}`).join(', ')) : null] }));
+  }
+
+  // ---------- Главное: вывод из цифр за 10 секунд ----------
+  function insights(a) {
+    const crit = (a.by_criterion || []).filter((c) => c.type !== 'flag' && c.avg_pct != null);
+    const weak = crit.reduce((m, c) => (!m || c.avg_pct < m.avg_pct ? c : m), null);
+    const item = ({ tone, title, sub, onClick, aria }) => h(onClick ? 'button' : 'div', {
+      type: onClick ? 'button' : null, class: `cqa-insight cqa-insight--${tone} ${onClick ? 'cqa-insight--link' : ''}`, onclick: onClick || null, 'aria-label': aria || null },
+    h('span', { class: 'cqa-insight__text' }, h('b', null, title), sub ? h('small', null, sub) : null),
+    onClick ? h('span', { class: 'cqa-insight__go', 'aria-hidden': 'true' }, '→') : null);
+    const items = [];
+    if (weak) {
+      const fails = weak.not_passed_ids || [];
+      items.push(weak.avg_pct < 85
+        ? item({ tone: weak.avg_pct < 60 ? 'bad' : 'warn', title: `${weak.key} ${weak.title} — ${fmtPct100(weak.avg_pct)}`,
+          sub: `слабее всего${fails.length ? ` · не выполнен в ${fails.length} ${plural(fails.length, 'диалоге', 'диалогах', 'диалогах')}` : ''}`,
+          onClick: fails.length ? () => goIds(fails, `${weak.key}: не выполнен`) : null, aria: `Слабее всего ${weak.key} ${weak.title}: открыть диалоги, где он не выполнен` })
+        : item({ tone: 'ok', title: 'Все критерии выполняются на 85% и выше', sub: `самый слабый — ${weak.key} ${weak.title}, ${fmtPct100(weak.avg_pct)}` }));
+    }
+    items.push(a.critical_count
+      ? item({ tone: 'bad', title: `Грубые ошибки: ${nDialogs(a.critical_count)}`, sub: 'флаг 08, открыть список', onClick: () => go(listUrl({ flag: '1' })) })
+      : item({ tone: 'ok', title: 'Грубых ошибок нет', sub: `оценено ${nDialogs(a.count)}` }));
+    if (a.needs_review_count) {
+      items.push(item({ tone: 'warn', title: `На проверку: ${nDialogs(a.needs_review_count)}`, sub: 'низкая уверенность, противоречия', onClick: () => go('#/review'),
+        aria: `Требует проверки: ${nDialogs(a.needs_review_count)}. Открыть очередь` }));
+    }
+    if (a.appeals?.open) {
+      items.push(item({ tone: 'accent', title: `Открытых апелляций: ${a.appeals.open}`, sub: 'ждут решения', onClick: () => go('#/appeals') }));
+    }
+    return h('section', { class: 'cqa-insights', 'aria-label': 'Главное' }, h('div', { class: 'cqa-insights__label' }, 'Главное'), items);
   }
 
   // ---------- Распределение итогов ----------
@@ -90,10 +124,17 @@ export function mount(el, params = {}) {
   }
 
   function histogram(a) {
-    const bins = a.histogram || [];
-    const twin = bins.some((b) => b.ai_count !== b.count);
+    const all = a.histogram || [];
+    const twin = all.some((b) => b.ai_count !== b.count);
+    // Пустые корзины слева не рисуем: шкала начинается за одну корзину до первой непустой (финальной или AI),
+    // иначе столбцы прижаты к правому краю, а 70% панели пустые. Таблица под графиком — по всем корзинам.
+    const first = all.findIndex((b) => b.count || (twin && b.ai_count));
+    const bins = first > 0 ? all.slice(first - 1) : all;
+    const lo = bins[0]?.from ?? 0, hi = bins[bins.length - 1]?.to ?? 100;
     const max = Math.max(1, ...bins.map((b) => Math.max(b.count, twin ? b.ai_count : 0)));
-    const plot = h('div', { class: `cqa-hist ${twin ? 'cqa-hist--twin' : ''}`, role: 'group', 'aria-label': 'Распределение финальных итогов по корзинам 10 баллов' });
+    const plot = h('div', { class: `cqa-hist ${twin ? 'cqa-hist--twin' : ''} ${bins.length > 6 ? 'cqa-hist--dense' : ''}`, role: 'group',
+      style: `grid-template-columns:repeat(${Math.max(1, bins.length)}, minmax(0, 1fr))`,
+      'aria-label': `Распределение финальных итогов по корзинам 10 баллов, от ${lo} до ${hi}` });
     for (const b of bins) {
       const ids = bucketIds(b);
       const label = `Итог ${b.from}–${b.to}`;
@@ -111,12 +152,12 @@ export function mount(el, params = {}) {
     }
     const avg = a.avg_final_total;
     // Среднее — тонкая линия без подписи на графике (подпись не наезжает на столбцы), значение — в легенде.
-    if (avg != null) plot.append(h('span', { class: 'cqa-hist__mean', style: `left:${avg}%`, 'aria-hidden': 'true' }));
-    plot.append(h('span', { class: 'cqa-hist__xend', 'aria-hidden': 'true' }, '100'));
+    if (avg != null && hi > lo) plot.append(h('span', { class: 'cqa-hist__mean', style: `left:${clamp01((avg - lo) / (hi - lo)) * 100}%`, 'aria-hidden': 'true' }));
+    plot.append(h('span', { class: 'cqa-hist__xend', 'aria-hidden': 'true' }, String(hi)));
     const table = h('table', { class: 'cqa-table cqa-vtable' },
       h('thead', null, h('tr', null, h('th', null, 'Итог'), h('th', { class: 'cqa-num' }, 'Финальный'), h('th', { class: 'cqa-num' }, 'AI'))),
-      h('tbody', null, bins.map((b) => h('tr', null, h('td', null, `${b.from}–${b.to}`), h('td', { class: 'cqa-num' }, b.count), h('td', { class: 'cqa-num' }, b.ai_count)))));
-    return vpanel({ title: 'Распределение итогов', sub: 'Сколько диалогов в каждой корзине по 10 баллов. Клик по столбцу — эти диалоги.',
+      h('tbody', null, all.map((b) => h('tr', null, h('td', null, `${b.from}–${b.to}`), h('td', { class: 'cqa-num' }, b.count), h('td', { class: 'cqa-num' }, b.ai_count)))));
+    return vpanel({ title: 'Распределение итогов', sub: `Сколько диалогов в каждой корзине по 10 баллов${lo > 0 ? ` (ниже ${lo} — ни одного)` : ''}. Клик по столбцу — эти диалоги.`,
       actions: tableToggle(table) },
     legend([...(twin ? [{ label: 'Финальный (с апелляциями)', key: C1 }, { label: 'AI', key: C2 }] : []),
       ...(avg != null ? [{ label: `среднее ${fmtScore(avg)}`, key: 'var(--cqa-text)', shape: 'tick' }] : [])]),
@@ -130,16 +171,17 @@ export function mount(el, params = {}) {
     const flags = (a.by_criterion || []).filter((c) => c.type === 'flag');
     const twin = list.some((c) => c.ai_avg_pct != null && c.avg_pct != null && Math.abs(c.ai_avg_pct - c.avg_pct) > 0.001);
     const body = h('div', { class: 'cqa-crow-list', role: 'list' });
+    const worst = list.reduce((m, c) => (c.avg_pct != null && c.avg_pct < 85 && (!m || c.avg_pct < m.avg_pct) ? c : m), null);
     for (const c of list) {
       const v = c.avg_pct;
       const fails = c.not_passed_ids || [];
       const titleText = `${c.key} ${c.title}`;
       const bar = h('div', { class: 'cqa-crow__track' },
-        v != null ? h('span', { class: 'cqa-crow__fill', style: `width:${clamp01(v / 100) * 100}%;background:${C1}` }) : null,
+        v != null ? h('span', { class: 'cqa-crow__fill', style: `width:${clamp01(v / 100) * 100}%;background:${fillColor(v)}` }) : null,
         twin && c.ai_avg_pct != null ? h('span', { class: 'cqa-crow__tick', style: `left:${clamp01(c.ai_avg_pct / 100) * 100}%;background:${C2}` }) : null);
-      const row = h('div', { class: 'cqa-crow', role: 'listitem', tabindex: 0,
+      const row = h('div', { class: `cqa-crow ${c === worst ? 'cqa-crow--worst' : ''}`, role: 'listitem', tabindex: 0,
         'aria-label': `${titleText}: ${c.type === 'scale' ? 'средняя доля балла' : 'выполнено'} ${fmtPct100(v)}${c.na_rate ? `, N/A ${fmtPct(c.na_rate)}` : ''}, не выполнено в ${fails.length}` },
-      h('span', { class: 'cqa-code' }, c.key),
+      h('span', { class: `cqa-code ${v != null && v < 60 ? 'cqa-code--no' : v != null && v < 80 ? 'cqa-code--part' : ''}` }, c.key),
       h('div', { class: 'cqa-crow__main' },
         h('div', { class: 'cqa-crow__title' }, h('span', { class: 'cqa-crow__name' }, c.title),
           h('span', { class: 'cqa-crow__w' }, `вес ${c.weight}`),
@@ -149,7 +191,8 @@ export function mount(el, params = {}) {
       h('span', { class: `cqa-crow__na ${c.na_rate ? '' : 'cqa-faint'}` }, `N/A ${fmtPct(c.na_rate)}`),
       fails.length
         ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-crow__fails', onclick: (e) => { e.stopPropagation(); goIds(fails, `${c.key}: не выполнен`); },
-          'aria-label': `Открыть ${fails.length} ${plural(fails.length, 'диалог', 'диалога', 'диалогов')}, где ${c.key} не выполнен` }, `${fails.length} ✕`)
+          'aria-label': `Открыть ${fails.length} ${plural(fails.length, 'диалог', 'диалога', 'диалогов')}, где ${c.key} не выполнен`,
+          title: `Диалоги, где ${c.key} не выполнен` }, `${fails.length} не вып.`)
         : h('span', { class: 'cqa-crow__fails cqa-faint' }, '—'));
       row.addEventListener('keydown', (e) => { if (e.key === 'Enter' && fails.length) goIds(fails, `${c.key}: не выполнен`); });
       tip.bind(row, () => ({ title: titleText, rows: [
@@ -171,7 +214,7 @@ export function mount(el, params = {}) {
       h('b', null, n ? `${n} ${plural(n, 'диалог', 'диалога', 'диалогов')}` : 'нарушений нет'),
       c.count ? h('span', { class: 'cqa-faint' }, fmtPct(n / c.count)) : null);
     });
-    return vpanel({ title: 'Выполнение по критериям', sub: 'Бинарный критерий — доля «Да» среди применимых, шкала — средняя доля балла. N/A не входит в долю. «✕» — диалоги, где критерий не выполнен.' },
+    return vpanel({ title: 'Выполнение по критериям', sub: 'Бинарный критерий — доля «Да» среди применимых, шкала — средняя доля балла. N/A не входит в долю. «не вып.» — открыть диалоги, где критерий не выполнен.' },
       twin ? legend([{ label: 'Финальный (с апелляциями)', key: C1 }, { label: 'AI', key: C2, shape: 'tick' }]) : null,
       body, flagRows.length ? h('div', { class: 'cqa-cflags' }, flagRows) : null);
   }
@@ -252,7 +295,8 @@ export function mount(el, params = {}) {
     root.append(header(a));
     if (!a.conversations) {
       root.append(h('div', { class: 'cqa-panel' }, emptyState({ title: `В группе ${group()} пока нет диалогов`, icon: '⇩',
-        text: 'Импортируйте набор диалогов организаторов в списке диалогов, затем запустите оценку.', actionLabel: 'К списку диалогов', onAction: () => go(listUrl()) })));
+        text: 'Импортируйте набор диалогов организаторов — по group_id из API или из JSON-файла, затем запустите оценку.', actionLabel: 'Импорт набора',
+        onAction: () => emit(root, 'cqa:import-request', { group: group() }) })));
       return;
     }
     if (!a.count) {
@@ -263,7 +307,7 @@ export function mount(el, params = {}) {
     }
     const langs = slices('По языкам', a.by_language, (k) => ({ lang: String(k).toLowerCase() }), langName);
     const chans = slices('По каналам', a.by_channel, (k) => ({ channel: k === 'voice call' ? 'voice call' : 'chat' }), channelLabel);
-    root.append(kpis(a),
+    root.append(kpis(a), insights(a),
       h('div', { class: 'cqa-dash__grid cqa-dash__grid--main' }, histogram(a), criteria(a)),
       h('div', { class: 'cqa-dash__grid cqa-dash__grid--three' }, langs, chans, resolvedPanel(a)),
       topicsPanel(a));

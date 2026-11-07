@@ -18,7 +18,7 @@ export function apiBase() {
   return b.replace(/\/+$/, '') + '/api';
 }
 
-const STATUS_TEXT = { 400: 'Запрос отклонён', 404: 'Не найдено', 409: 'Конфликт', 422: 'Данные не прошли проверку' };
+const STATUS_TEXT = { 400: 'Запрос отклонён', 404: 'Не найдено', 409: 'Конфликт', 413: 'Файл слишком большой', 422: 'Данные не прошли проверку' };
 
 // Тело ошибки бэкенда: {detail: str} (400, 404), {detail, errors: [{path, message}]} (422 чек-листа)
 // или {detail: [{loc, msg}]} (422 валидации тела FastAPI).
@@ -32,11 +32,12 @@ function parseErrorBody(body) {
   return { detail, errors };
 }
 
-async function request(method, path, { params, body, failText, netText } = {}) {
+async function request(method, path, { params, body, form, failText, netText } = {}) {
   const url = new URL(apiBase() + path, window.location.href);
   for (const [k, v] of Object.entries(params || {})) if (v !== '' && v != null) url.searchParams.set(k, v);
   const init = { method };
   if (body !== undefined) { init.headers = { 'Content-Type': 'application/json' }; init.body = JSON.stringify(body); }
+  else if (form) init.body = form; // multipart: границу ставит браузер
   let res;
   try { res = await fetch(url, init); }
   catch { throw new ApiError(netText || 'Нет связи с сервером. Проверьте, что бэкенд запущен, или откройте страницу с ?mock=1.', 0); }
@@ -60,7 +61,7 @@ async function fixture(name) {
 }
 
 export async function getHealth() {
-  if (isMock()) return { status: 'ok', provider: 'mock', model: 'fixtures', group_id: 'DEV', mock: true };
+  if (isMock()) return { status: 'ok', provider: 'mock', model: 'fixtures', group_id: 'DEV', organizer_api: false, mock: true };
   return http('/health');
 }
 
@@ -111,6 +112,14 @@ export async function getEvaluation(id) {
 export async function getEvaluationCalls(id) {
   if (isMock()) return fixture(`evaluation-${id}-calls`).catch(() => []);
   return http(`/evaluations/${encodeURIComponent(id)}/calls`);
+}
+
+/** GET /evaluations/{id}/compare?other= → {a, b, criteria: [{key, title, status: same|changed|added|removed, a, b, points_delta}],
+ *  changed, common, total_delta, same_config, config_diff}. `a` — оценка id, `b` — other или предыдущая неупавшая оценка диалога
+ *  (null, если сравнивать не с чем); 422 — оценки разных диалогов. В mock-режиме разница считается в браузере по фикстурам. */
+export async function compareEvaluations(id, other) {
+  if (isMock()) return (await mockStore()).compare(id, other);
+  return request('GET', `/evaluations/${encodeURIComponent(id)}/compare`, { params: { other }, failText: 'Сравнение недоступно' });
 }
 
 /** Настроенные провайдеры и модели: {models: [{provider, model, paid, voice_allowed?}], default_provider, default_strategy, strategies}. */
@@ -194,7 +203,7 @@ let mockRunSeq = 900;
 /** POST /runs → {run_id} (202). body: {conversation_ids? | group_id, checklist_version_id?, provider?, model?, strategy?, reuse?}. */
 export async function createRun(body) {
   if (isMock()) {
-    const total = body.conversation_ids?.length || (await fixture('conversations')).filter((r) => !body.group_id || r.group_id === body.group_id).length;
+    const total = body.conversation_ids?.length || (await (await mockStore()).conversations({ group_id: body.group_id })).length;
     if (!total) throw new ApiError('Запрос отклонён: нет диалогов для оценки (400)', 400, { detail: 'нет диалогов для оценки' });
     const id = ++mockRunSeq;
     mockRuns.set(id, { id, total, t0: Date.now(), provider: body.provider || 'mock', model: body.model || 'fixtures', strategy: body.strategy || 'grouped' });
@@ -207,7 +216,7 @@ export async function createRun(body) {
  * {dialogs, dialogs_with_calls, calls, tokens_in, tokens_out, cost_usd | null, seconds, cost_source: history | pricing | unknown}. */
 export async function estimateRun(body) {
   if (isMock()) {
-    const n = body.conversation_ids?.length || (await fixture('conversations')).filter((r) => !body.group_id || r.group_id === body.group_id).length;
+    const n = body.conversation_ids?.length || (await (await mockStore()).conversations({ group_id: body.group_id })).length;
     const per = body.reuse === 'auto' ? 1 : body.strategy === 'single' ? 1 : body.strategy === 'per_criterion' ? 8 : 4;
     const calls = n * per;
     return { dialogs: n, dialogs_with_calls: n, calls, tokens_in: calls * 5200, tokens_out: calls * 700,
@@ -285,6 +294,20 @@ export async function getReviewQueue(params = {}) {
 export async function createConversation(body) {
   if (isMock()) return (await mockStore()).createConversation(body);
   return request('POST', '/conversations', { body, failText: 'Диалог не сохранён', netText: 'Нет связи с сервером: диалог не сохранён.' });
+}
+// ---------- Импорт набора (FR-DATA-01…04) ----------
+/** POST /datasets/import {group_id} → {group_id, imported, updated, warnings, skipped}: тот же адрес API организаторов из .env,
+ *  меняется только group_id. 400 — ORGANIZER_API_URL не задан; 502 — API недоступен или ответил ошибкой (detail без адреса). */
+export async function importDataset(groupId) {
+  if (isMock()) return (await mockStore()).importDataset(groupId);
+  return request('POST', '/datasets/import', { body: { group_id: groupId }, failText: 'Набор не импортирован', netText: 'Нет связи с сервером: набор не импортирован.' });
+}
+/** POST /datasets/upload (multipart, поле file: JSON в формате API организаторов, до 25 МБ) → то же; 400 — не JSON или нет records; 413 — больше 25 МБ. */
+export async function uploadDataset(file) {
+  if (isMock()) return (await mockStore()).uploadDataset(file);
+  const form = new FormData();
+  form.append('file', file, file.name || 'dataset.json');
+  return request('POST', '/datasets/upload', { form, failText: 'Файл не импортирован', netText: 'Нет связи с сервером: файл не загружен.' });
 }
 /** Группы с диалогами [{group_id, count, default}]: по списку диалогов + группа по умолчанию из /health (даже пустая). */
 export async function listGroups() {

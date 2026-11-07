@@ -1,6 +1,6 @@
 # CONTRACTS
 
-> Версия: **0.5** · Обновлено: 2026-11-07 · Владелец: Claude
+> Версия: **0.5.1** · Обновлено: 2026-11-07 · Владелец: Claude
 > Контракт — это то, на что опираются параллельно фронт, бэк, eval и подагенты. Меняем только с записью в «Журнал версий» внизу. Несовместимое изменение → поднять минорную версию и предупредить в `PROGRESS.md`.
 > Связано: `architecture/evaluation-pipeline.md`, `architecture/data-model.md`, `spec/requirements.md`.
 
@@ -149,9 +149,9 @@
 
 | Метод и путь | Запрос | Ответ |
 |---|---|---|
-| `GET /health` | — | `{status, provider, model, group_id}` |
-| `POST /datasets/import` | `{group_id}` | `{group_id, imported, updated, warnings[]}` |
-| `POST /datasets/upload` | файл JSON (формат API организаторов) | то же |
+| `GET /health` | — | `{status, provider, model, group_id, conversations, organizer_api}`; `organizer_api: bool` — задан ли `ORGANIZER_API_URL` (сам адрес с подписью `sig` не отдаётся) |
+| `POST /datasets/import` | `{group_id}` (пусто — группа из `.env`) | `{group_id, imported, updated, warnings[], skipped}`; 400 — `ORGANIZER_API_URL` не задан; 502 — API организаторов недоступен или вернул ошибку (в тексте нет адреса и подписи) |
+| `POST /datasets/upload` | `multipart/form-data`, поле `file`: JSON в формате API организаторов, до 25 МБ | то же; повторная загрузка той же группы обновляет диалоги (`updated`); 400 — не JSON или нет `records`; 413 — файл больше 25 МБ |
 | `GET /conversations` | `?group_id&language&channel&critical&appeal=open\|any\|none&checklist_version_id` | `[ConversationRow]`; `appeal` — по последней оценке |
 | `POST /conversations` | `{group_id?: "MANUAL", conversation_id?, channel?, language?, transcript: [] \| text}` | `ConversationDetail` (201, FR-DATA-07); 409 — такой `conversation_id` в группе уже есть или группа — набор организаторов; 422 с `errors` (в т. ч. `audio_url` вручную не принимается; текст ≤ 300 000 символов, реплика ≤ 20 000) |
 | `GET /conversations/{id}` | — | `ConversationDetail` (транскрипт с `msg_id`, `t_sec`, `audio_offset_sec`; список оценок) |
@@ -264,6 +264,8 @@ CSV, UTF-8 с BOM, `;` как разделитель, запятая в дроб
 Формат — `data/gold/README.md`. Разбиение dev/holdout — `data/gold/split.json`: `{"dev": [...], "holdout": [...]}`.
 
 ## Журнал версий
+
+- 0.5.1 — 2026-11-07 — импорт из интерфейса: `organizer_api` в `GET /health`, лимит 25 МБ у `POST /datasets/upload` (413), тексты ошибок импорта без адреса API.
 
 - 0.5 — 2026-11-07 — этап 4: апелляции (`AppealRow` с фрагментом, `allowed_answers` и `appeal_history` у критерия, `open_appeals`/`appeals` в списке), `Analytics`, `ReviewItem` с причинами `failed`/`missing`/`appeal`, экспорт CSV/JSON (§5), правила вставки диалога и поправки записи.
 

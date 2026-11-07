@@ -67,6 +67,7 @@ def health(session: Session = Depends(db.get_session)) -> dict:
         "model": _model_name(),
         "group_id": settings.dataset_group_id,
         "conversations": n,
+        "organizer_api": bool(settings.organizer_api_url),  # только признак: сам адрес с подписью sig не отдаём
     }
 
 

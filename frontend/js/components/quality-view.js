@@ -22,8 +22,15 @@ const meets = (t, v) => v != null && t && (t.better > 0 ? v >= t.goal - 1e-9 : v
 
 const runLabel = (r) => r.model || r.provider || r.name;
 const goldBadge = (r) => (r.gold_source || []).includes('draft')
-  ? h('span', { class: 'cqa-badge cqa-badge--warn', title: 'Эталон — черновик Claude, не проверенная Лидой разметка' }, (r.gold_source || []).includes('gold') ? 'gold + черновик' : 'черновик')
-  : (r.gold_source || []).includes('gold') ? h('span', { class: 'cqa-badge cqa-badge--yes' }, 'gold') : null;
+  ? h('span', { class: 'cqa-badge cqa-badge--warn', title: 'Часть эталона — черновая разметка, ещё не проверенная человеком' }, (r.gold_source || []).includes('gold') ? 'эталон + черновик' : 'черновик')
+  : (r.gold_source || []).includes('gold') ? h('span', { class: 'cqa-badge cqa-badge--yes', title: 'Эталонная разметка, проверенная человеком' }, 'эталон') : null;
+
+/** Команды для команды разработки — под раскрывашкой, чтобы не шуметь на экране. */
+function reproduce(cmds, note) {
+  return h('details', { class: 'cqa-q__repro' }, h('summary', null, 'Как воспроизвести'),
+    note ? h('div', { class: 'cqa-faint' }, note) : null,
+    cmds.map((c) => h('code', { class: 'cqa-q__cmd' }, c)));
+}
 
 export function mount(el, params = {}) {
   let p = { ...params };
@@ -114,7 +121,7 @@ export function mount(el, params = {}) {
         if (r.stability) tr.lastChild.title = `доля ответов, сменившихся при повторе; итог в среднем ±${fmtNum(r.stability.mean_total_delta)}`;
         return tr;
       })));
-    return vpanel({ title: 'Прогоны', sub: `Отметьте до ${MAX_SEL} прогонов, чтобы сравнить их ниже. Клик по заголовку — сортировка. ✓ — значение в цели NFR-01. Цена — за один диалог.` },
+    return vpanel({ title: 'Прогоны', sub: `Отметьте до ${MAX_SEL} прогонов, чтобы сравнить их ниже. Клик по заголовку — сортировка. ✓ — значение в цели. Цена — за один диалог.` },
       h('div', { class: 'cqa-tablewrap' }, table));
   }
   function metricSpan(v, t, text) {
@@ -216,10 +223,10 @@ export function mount(el, params = {}) {
         h('div', { class: 'cqa-q__cap' }, `среднее изменение итога; цель ${T.delta.text}`))))
       : null;
     const missing = ds.filter(({ d }) => !d.stability);
-    return vpanel({ title: 'Стабильность', sub: 'NFR-14: повтор с той же конфигурацией почти не меняет ответы.' },
+    return vpanel({ title: 'Стабильность', sub: 'Повтор с той же конфигурацией почти не меняет ответы.' },
       body,
-      missing.length ? h('div', { class: 'cqa-q__hint' }, `${withS.length ? 'Без повтора: ' + missing.map(({ d }) => runLabel(d)).join(', ') + '. ' : 'У выбранных прогонов нет повтора. '}Запустите с повтором:`,
-        h('code', { class: 'cqa-q__cmd' }, 'python eval/run_eval.py … --repeat 2')) : null);
+      missing.length ? h('div', { class: 'cqa-q__hint' }, `${withS.length ? 'Без повтора: ' + missing.map(({ d }) => runLabel(d)).join(', ') + '. ' : 'У выбранных прогонов нет повтора. '}`,
+        reproduce(['python eval/run_eval.py … --repeat 2'])) : null);
   }
 
   function calibrationPanel(ds) {
@@ -269,14 +276,14 @@ export function mount(el, params = {}) {
   function header() {
     return h('div', { class: 'cqa-pagehead' },
       h('div', null, h('h1', { class: 'cqa-h1' }, 'Качество оценки'),
-        h('div', { class: 'cqa-pagehead__sub' }, 'Согласие AI с эталонной разметкой DEV по прогонам run_eval.py: близость итога, точность по критериям и языкам, стабильность, цена.')),
-      h('div', { class: 'cqa-pagehead__actions' }, h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', onclick: () => load() }, '↻ Обновить')));
+        h('div', { class: 'cqa-pagehead__sub' }, 'Насколько оценка AI совпадает с эталонной разметкой DEV: близость итога, точность по критериям и языкам, стабильность, цена.')),
+      h('div', { class: 'cqa-pagehead__actions' }, h('button', { type: 'button', class: 'cqa-btn', onclick: () => load() }, '↻ Обновить')));
   }
 
   function mockBanner() {
     return list?.mock ? h('div', { class: 'cqa-banner cqa-banner--warn cqa-q__mock', role: 'note' }, h('span', { class: 'cqa-banner__icon' }, '!'),
       h('div', null, h('div', { class: 'cqa-banner__title' }, 'Демо-данные: прогоны вымышленные'),
-        h('div', null, 'Режим ?mock=1 показывает, как выглядит экран. Цифры не получены моделью — настоящие метрики появятся после запуска run_eval.py.'))) : null;
+        h('div', null, 'Так экран выглядит с данными. Цифры не получены моделью — настоящие метрики появятся после прогона оценки на эталоне.'))) : null;
   }
 
   let cmpEl = null;
@@ -289,10 +296,10 @@ export function mount(el, params = {}) {
     if (mb) root.append(mb);
     if (!runs().length) {
       root.append(h('div', { class: 'cqa-panel' }, emptyState({ title: 'Прогонов пока нет', icon: '◎',
-        text: `Экран читает файлы прогонов из ${list?.dir || 'eval/runs/'}. Запустите оценку на gold-разметке — бесплатная отладка на Gemini или платный прогон с согласия Лиды:` }),
-      h('div', { class: 'cqa-q__cmds' },
-        h('code', { class: 'cqa-q__cmd' }, 'python eval/run_eval.py --provider gemini --split dev --limit 3'),
-        h('code', { class: 'cqa-q__cmd' }, 'python eval/run_eval.py --provider openrouter --model <модель> --split dev --repeat 2 --approved "Лида, ЧЧ:ММ"'))));
+        text: 'Здесь появятся прогоны оценки на эталонной разметке DEV: точность, близость итога, стабильность и цена.' }),
+      h('div', { class: 'cqa-q__cmds' }, reproduce([
+        'python eval/run_eval.py --provider gemini --split dev --limit 3',
+        'python eval/run_eval.py --provider openrouter --model <модель> --split dev --repeat 2 --approved "<кто, ЧЧ:ММ>"'], `Файлы прогонов читаются из ${list?.dir || 'eval/runs/'}.`))));
       return;
     }
     cmpEl = h('div', { class: 'cqa-q__cmp' });

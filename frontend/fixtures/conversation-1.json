@@ -196,7 +196,17 @@
    "checklist_version_id": 1,
    "ai_total": 95,
    "final_total": 100,
-   "created_at": "2026-11-07T14:20:00Z"
+   "created_at": "2026-11-07T14:20:00Z",
+   "status": "done"
+  },
+  {
+   "id": 100,
+   "model": "gemini-demo-flash",
+   "checklist_version_id": 1,
+   "status": "done",
+   "ai_total": 85,
+   "final_total": 85,
+   "created_at": "2026-11-07T11:40:00Z"
   }
  ],
  "has_audio": false

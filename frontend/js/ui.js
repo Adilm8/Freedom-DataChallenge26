@@ -52,7 +52,15 @@ export function fmtDate(s) {
   const d = new Date(s);
   return isNaN(d) ? String(s) : d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
-export function fmtMoney(v) { return v == null ? '—' : '$' + Number(v).toFixed(4); }
+/** $0 · $0.0712 · $4.38: ноль без нулей, мелкие суммы — до 4 знаков, от доллара — 2. */
+export function fmtMoney(v) {
+  if (v == null) return '—';
+  const n = Number(v);
+  if (!n) return '$0';
+  if (Math.abs(n) >= 1) return '$' + n.toFixed(2);
+  const s = +n.toFixed(4);
+  return s ? '$' + String(s) : '< $0.0001';
+}
 
 export function langChip(l) { return h('span', { class: 'cqa-chip' }, LANG[String(l).toLowerCase()] || String(l).toUpperCase()); }
 export function channelBadge(c) {
@@ -60,7 +68,7 @@ export function channelBadge(c) {
 }
 
 /** Единый бейдж ответа: Да / Нет / N/A / ступень / флаг. */
-export function answerBadge(c, answer) {
+export function answerBadge(c, answer, opts = {}) {
   answer = answer === undefined ? c.final_answer : answer;
   if (c.type === 'flag') {
     return answer === 'yes'
@@ -70,8 +78,23 @@ export function answerBadge(c, answer) {
   if (answer === 'na') return h('span', { class: 'cqa-badge cqa-badge--na' }, 'N/A');
   if (answer === 'yes') return h('span', { class: 'cqa-badge cqa-badge--yes' }, 'Да');
   if (answer === 'no') return h('span', { class: 'cqa-badge cqa-badge--no' }, 'Нет');
-  const max = c.scale_max ?? c.weight;
-  return h('span', { class: 'cqa-badge cqa-badge--step' }, `Ступень ${answer} из ${max}`);
+  // Шкала: цвет по доле балла (полный — зелёный, 0 — красный, между — янтарный). words — «Полностью / Частично / Нет»,
+  // когда баллы стоят рядом (карточка), иначе «15 из 20».
+  const max = Number(c.scale_max ?? c.weight), v = Number(answer);
+  if (!Number.isFinite(max) || !Number.isFinite(v) || max <= 0) return h('span', { class: 'cqa-badge cqa-badge--step' }, String(answer));
+  const tone = v >= max ? 'yes' : v <= 0 ? 'no' : 'warn';
+  const text = opts.words ? (v >= max ? 'Полностью' : v <= 0 ? 'Нет' : 'Частично') : `${+v.toFixed(2)} из ${+max.toFixed(2)}`;
+  return h('span', { class: `cqa-badge cqa-badge--${tone} cqa-badge--scale`, title: `Шкала: ${+v.toFixed(2)} из ${+max.toFixed(2)}` }, text);
+}
+
+/** Не выполнен (Нет / шкала 0) или выполнен частично (0 < шкала < max). Флаг — отдельно. */
+export function answerState(c, answer) {
+  answer = answer === undefined ? c.final_answer : answer;
+  if (c.type === 'flag' || answer == null || answer === 'na' || answer === 'yes') return null;
+  if (answer === 'no') return 'no';
+  const max = Number(c.scale_max ?? c.weight), v = Number(answer);
+  if (!Number.isFinite(v)) return null;
+  return v <= 0 ? 'no' : Number.isFinite(max) && v < max ? 'part' : null;
 }
 
 export function skeletonRows(n = 6) {

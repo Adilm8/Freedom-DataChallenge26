@@ -143,12 +143,14 @@ export function mount(el, params = {}) {
     root.append(audio, ui.main,
       h('div', { class: 'cqa-ap__sub' },
         ui.legend,
-        h('div', { class: 'cqa-ap__fix', role: 'group', 'aria-label': 'Поправка смещения записи' },
-          h('span', { class: 'cqa-ap__fixlabel' }, 'Поправка'),
-          nudge(-5, '−5', 'Реплики раньше на 5 с'), nudge(-0.5, '−0,5', 'Реплики раньше на 0,5 с'),
-          ui.fixIn, h('span', { class: 'cqa-faint' }, 'с'),
-          nudge(0.5, '+0,5', 'Реплики позже на 0,5 с'), nudge(5, '+5', 'Реплики позже на 5 с'),
-          ui.reset, ui.anchor),
+        // Ручная поправка смещения нужна редко — под раскрывашкой (сдвиг виден чипом рядом со временем).
+        h('details', { class: 'cqa-ap__fixbox' },
+          h('summary', { class: 'cqa-ap__fixsum', title: 'Если реплики звучат раньше или позже, чем показано в транскрипте' }, 'Поправка смещения'),
+          h('div', { class: 'cqa-ap__fix', role: 'group', 'aria-label': 'Поправка смещения записи' },
+            nudge(-5, '−5', 'Реплики раньше на 5 с'), nudge(-0.5, '−0,5', 'Реплики раньше на 0,5 с'),
+            ui.fixIn, h('span', { class: 'cqa-faint' }, 'с'),
+            nudge(0.5, '+0,5', 'Реплики позже на 0,5 с'), nudge(5, '+5', 'Реплики позже на 5 с'),
+            ui.reset, ui.anchor)),
         ui.follow),
       ui.err, ui.mini);
 

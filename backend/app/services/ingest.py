@@ -1,6 +1,8 @@
 """Импорт наборов диалогов: API организаторов или загруженный JSON (FR-DATA-01…04)."""
 from __future__ import annotations
 
+import logging
+import re
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -11,9 +13,26 @@ from ..config import settings
 from ..models import Conversation, DatasetImport, utcnow
 from .normalize import normalize
 
+logging.getLogger("httpx").setLevel(logging.WARNING)  # httpx пишет полный URL запроса (с подписью sig) на уровне INFO
+
 
 class IngestError(Exception):
     """Понятная пользователю ошибка импорта (без секретных URL)."""
+
+
+def scrub(text: str) -> str:
+    """Убирает из текста адрес API организаторов (с любым group_id) и значения его параметров (подпись sig)."""
+    url = settings.organizer_api_url
+    if not url:
+        return text
+    parts = urlsplit(url)
+    if parts.netloc:
+        text = re.sub(re.escape(f"{parts.scheme}://{parts.netloc}") + r"\S*", "<адрес API организаторов>", text)
+    raw = [p.split("=", 1) for p in parts.query.split("&") if "=" in p]
+    vals = {v for k, v in raw + parse_qsl(parts.query) if k != "group_id" and len(v) >= 6}
+    for v in sorted(vals, key=len, reverse=True):
+        text = text.replace(v, "***")
+    return text
 
 
 def with_group(url: str, group: str) -> str:
@@ -37,7 +56,10 @@ def fetch_payload(group_id: str) -> dict:
 
 
 def import_from_api(session: Session, group_id: str) -> dict:
-    return import_payload(session, fetch_payload(group_id), "api", group_id=group_id)
+    try:
+        return import_payload(session, fetch_payload(group_id), "api", group_id=group_id)
+    except IngestError as e:  # текст ошибки API тоже может повторить адрес запроса
+        raise IngestError(scrub(str(e))) from None
 
 
 def import_payload(session: Session, payload: Any, source: str = "upload", group_id: str | None = None) -> dict:

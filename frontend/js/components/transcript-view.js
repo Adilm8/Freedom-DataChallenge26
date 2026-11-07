@@ -5,6 +5,8 @@
 // Звонок (параметр audio: 'seek' | 'times', segments): у реплики — секунда записи «▶ 0:40» (с поправкой из cqa:audio-fix {fix});
 // при 'seek' клик по реплике отправляет наружу cqa:msg-click {msg_id}. Звучащая реплика — событие cqa:playing {msg_id, scroll}.
 // Реплики внутри паузы записи помечены «вне записи», внутри удержания и консультации — «внутренний разговор».
+// foldBot (по умолчанию true): переписка с ботом до перевода на оператора свёрнута в одну строку; подсветка,
+// диапазон или звучащая реплика внутри неё раскрывают блок.
 import { h, clear, emit, ROLE, EVENT_LABEL, skeletonRows, errorState, emptyState } from '../ui.js';
 import { getConversation } from '../api.js';
 
@@ -23,6 +25,18 @@ function offRecord(messages, segments) {
     for (const m of messages) if ((m.idx ?? 0) > s.start_idx && (m.idx ?? 0) < end && m.speaker !== 'system') out.add(m.msg_id);
   }
   return out;
+}
+
+const plural = (n, one, few, many) => {
+  const a = Math.abs(n) % 100, b = a % 10;
+  return a > 10 && a < 20 ? many : b === 1 ? one : b >= 2 && b <= 4 ? few : many;
+};
+const HANDOFF = new Set(['escalation', 'agent_joined']);
+/** Сколько первых реплик свернуть: всё до перевода на оператора (событие или первая реплика оператора), если там есть бот. */
+export function preambleLength(messages) {
+  const end = messages.findIndex((m) => m.speaker === 'operator' || (m.speaker === 'system' && HANDOFF.has(m.event)));
+  if (end < 3) return 0;
+  return messages.slice(0, end).some((m) => m.speaker === 'bot') ? end : 0;
 }
 
 function scrollParent(node) {
@@ -54,6 +68,7 @@ export function mount(el, params = {}) {
   let recEls = new Map();
   let fix = 0;
   let playingId = null;
+  let fold = null; // { box, body, btn } — свёрнутая переписка с ботом
   const root = h('div', { class: 'cqa-tr-root' });
   el.append(root);
 
@@ -63,7 +78,7 @@ export function mount(el, params = {}) {
       for (const id of e.msg_ids || []) {
         if (!map.has(id)) map.set(id, []);
         const arr = map.get(id);
-        if (!arr.some((t) => t.key === e.key)) arr.push({ key: e.key, flag: !!e.flag, title: e.title });
+        if (!arr.some((t) => t.key === e.key)) arr.push({ key: e.key, flag: !!e.flag, bad: !!e.bad, part: !!e.part, title: e.title });
       }
     }
     return map;
@@ -82,7 +97,26 @@ export function mount(el, params = {}) {
     const seek = p.audio === 'seek';
     const off = p.audio ? offRecord(transcript, p.segments) : new Set();
     const list = h('div', { class: `cqa-tr ${seek ? 'cqa-tr--seek' : ''}`, role: 'log' });
-    for (const m of transcript) {
+    const nFold = p.foldBot === false ? 0 : preambleLength(transcript);
+    fold = null;
+    if (nFold) {
+      const pre = transcript.slice(0, nFold);
+      const nb = pre.filter((m) => m.speaker === 'bot').length, nc = pre.filter((m) => m.speaker === 'client').length;
+      const firstClient = pre.find((m) => m.speaker === 'client');
+      const keys = [...new Set(pre.flatMap((m) => (tags.get(m.msg_id) || []).map((t) => t.key)))];
+      const body = h('div', { class: 'cqa-tr__foldbody', id: 'cqa-tr-fold', hidden: true });
+      const btn = h('button', { type: 'button', class: 'cqa-tr__foldbtn', 'aria-expanded': 'false', 'aria-controls': 'cqa-tr-fold', onclick: () => setFold(body.hidden) },
+        h('span', { class: 'cqa-tr__foldicon', 'aria-hidden': 'true' }, '▸'),
+        h('span', { class: 'cqa-tr__foldmain' },
+          h('b', null, `До оператора: ${nFold} ${plural(nFold, 'реплика', 'реплики', 'реплик')}`),
+          h('span', { class: 'cqa-faint' }, ` · бот ${nb}${nc ? `, клиент ${nc}` : ''}`),
+          firstClient ? h('span', { class: 'cqa-tr__foldprev' }, `Клиент: «${firstClient.text}»`) : null),
+        keys.length ? h('span', { class: 'cqa-tr__foldtags', title: 'Здесь есть доказательства для критериев' }, keys.map((k) => h('span', { class: 'cqa-msg__tag' }, k))) : null);
+      const box = h('div', { class: 'cqa-tr__fold' }, btn, body);
+      fold = { box, body, btn };
+      list.append(box);
+    }
+    transcript.forEach((m, i) => {
       const cls = ['cqa-msg', `cqa-msg--${m.speaker}`, m.internal ? 'cqa-msg--internal' : '', off.has(m.msg_id) ? 'cqa-msg--offrec' : ''].join(' ');
       const time = String(m.timestamp || '').includes('T') ? m.timestamp.slice(11, 19) : m.timestamp;
       const textEl = h('div', { class: 'cqa-msg__text' }, m.text);
@@ -96,17 +130,29 @@ export function mount(el, params = {}) {
           h('span', { class: 'cqa-msg__id' }, m.msg_id),
           (tags.get(m.msg_id) || []).length
             ? h('span', { class: 'cqa-msg__tags', 'aria-label': 'Критерии, для которых реплика — доказательство' }, tags.get(m.msg_id).map((t) =>
-              h('button', { type: 'button', class: `cqa-msg__tag cqa-tip ${t.flag ? 'cqa-msg__tag--flag' : ''}`,
-                'data-tip': `${t.key}${t.title ? ' · ' + t.title : ''}: показать критерий`, 'aria-label': `Критерий ${t.key}: показать в результате`,
+              h('button', { type: 'button', class: `cqa-msg__tag cqa-tip ${t.flag ? 'cqa-msg__tag--flag' : t.bad ? 'cqa-msg__tag--bad' : t.part ? 'cqa-msg__tag--part' : ''}`,
+                'data-tip': `${t.key}${t.title ? ' · ' + t.title : ''}${t.flag ? ' — грубая ошибка' : t.bad ? ' — не выполнен' : t.part ? ' — выполнен частично' : ''}: показать критерий`, 'aria-label': `Критерий ${t.key}: показать в результате`,
                 onclick: () => emit(root, 'cqa:criterion-click', { key: t.key, msg_id: m.msg_id }) }, t.key)))
             : null),
         textEl);
       msgEls.set(m.msg_id, node);
       msgText.set(m.msg_id, { el: textEl, text: m.text });
-      list.append(node);
-    }
+      (i < nFold ? fold.body : list).append(node);
+    });
     if (seek) list.addEventListener('click', onListClick);
     root.append(list);
+  }
+
+  function setFold(open) {
+    if (!fold) return;
+    fold.body.hidden = !open;
+    fold.box.classList.toggle('cqa-tr__fold--open', open);
+    fold.btn.setAttribute('aria-expanded', String(open));
+    fold.btn.querySelector('.cqa-tr__foldicon').textContent = open ? '▾' : '▸';
+  }
+  /** Реплика внутри свёрнутого блока — раскрыть его, чтобы подсветка и прокрутка были видны. */
+  function reveal(ids) {
+    if (fold && fold.body.hidden && ids.some((id) => fold.body.contains(msgEls.get(id)))) setFold(true);
   }
 
   function recChip(m, offRec, seek) {
@@ -148,6 +194,7 @@ export function mount(el, params = {}) {
     if (!node) return;
     node.classList.add('cqa-msg--playing');
     if (!scroll) return;
+    reveal([msg_id]);
     const box = scrollParent(node);
     const r = node.getBoundingClientRect();
     const top = box ? box.getBoundingClientRect().top : 0;
@@ -195,6 +242,7 @@ export function mount(el, params = {}) {
       if (i === range.length - 1) n.classList.add('cqa-msg--range-end');
     });
     const ids = msg_ids.filter((id) => msgEls.has(id));
+    if (scroll) reveal([...ids, ...range]);
     ids.forEach((id, i) => {
       msgEls.get(id).classList.add('cqa-msg--hl', 'cqa-msg--pulse');
       markQuote(id, quotes?.[i] ?? (i === 0 ? quote : null));
