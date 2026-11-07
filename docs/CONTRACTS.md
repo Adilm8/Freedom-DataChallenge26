@@ -155,7 +155,7 @@
 | `POST /conversations` | `{group_id?: "MANUAL", conversation_id?, channel, language, transcript: [] \| text}` (текст — строки `роль: текст`) | `ConversationDetail` (FR-DATA-07) |
 | `GET /conversations/{id}` | — | `ConversationDetail` (транскрипт с `msg_id`, `t_sec`, `audio_offset_sec`; список оценок) |
 | `PATCH /conversations/{id}` | `{audio_offset_fix_sec}` | `ConversationDetail` |
-| `GET /conversations/{id}/audio` | — | прокси записи (если браузер не может открыть `audio_url` напрямую) |
+| `GET /conversations/{id}/audio` | заголовок `Range` (необязательно) | поток записи через бэкенд: 200 или 206 с `Content-Range`, `Accept-Ranges: bytes`, тип по сигнатуре файла; источник без `Range` — файл кэшируется в памяти и режется на бэкенде; 404 — записи нет; 502 — источник недоступен (без адреса источника в ответе и логах) |
 | `GET /checklists` | — | `[{id, key, version, name, note, is_active, created_at}]` |
 | `GET /checklists/{version_id}` | — | `{id, key, version, ..., body}` |
 | `POST /checklists` | `{body, note, parent_id?, activate?: bool}` | версия; 422 с `[{path, message}]`, если невалидно |
