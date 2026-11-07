@@ -1,4 +1,4 @@
-// Демо-режим (?mock=1) для апелляций, очереди «требует проверки», нового диалога, экспорта и групп.
+// Демо-режим (?mock=1) для апелляций, очереди «требует проверки», нового диалога, импорта набора из файла, экспорта и групп.
 // Состояние живёт в памяти вкладки поверх фикстур frontend/fixtures/*.json (формат CONTRACTS.md v0.5).
 // Пересчёт итога после решения по апелляции — та же формула, что в scoring.py: N/A вне расчёта, вес перераспределяется.
 // Оценка нового диалога в демо-режиме не выполняется: модели здесь нет.
@@ -230,7 +230,7 @@ export async function reviewQueue(params = {}) {
 
 // ---------- Новый диалог ----------
 function rowOf(c) {
-  return { id: c.id, conversation_id: c.conversation_id, group_id: c.group_id, channel: c.channel, language: c.language, source: 'manual', latest: null };
+  return { id: c.id, conversation_id: c.conversation_id, group_id: c.group_id, channel: c.channel, language: c.language, source: c.source || 'manual', latest: null };
 }
 const LANG = { ru: 'RU', kz: 'KZ', kk: 'KZ', en: 'EN' };
 function guessLanguage(msgs) {
@@ -339,4 +339,50 @@ export async function compare(aId, bId) {
   const ta = a.ai_score?.total, tb = b.ai_score?.total;
   return clone({ a: cmpSide(a), b: cmpSide(b), criteria, changed, common, total_delta: ta != null && tb != null ? Math.round((ta - tb) * 100) / 100 : null,
     same_config: !diff.length, config_diff: diff });
+}
+
+// ---------- Импорт набора (как services/ingest.py, упрощённо) ----------
+// Файл разбирается в браузере, диалоги живут в памяти вкладки (как новый диалог): список, карточка и запуск оценки с ними работают.
+// Импорта из API в демо-режиме нет: адреса организаторов здесь нет.
+const MAX_UPLOAD = 25 * 1024 * 1024;
+const rejected = (detail, status = 400) => new ApiError(`${status === 413 ? 'Файл слишком большой' : 'Запрос отклонён'}: ${detail} (${status})`, status, { detail });
+const CHANNELS = { chat: 'agent chat', 'agent chat': 'agent chat', 'voice call': 'voice call', call: 'voice call', voice: 'voice call' };
+
+export async function importDataset() {
+  throw rejected('в демо-данных импорт из API недоступен — загрузите файл набора');
+}
+
+export async function uploadDataset(file) {
+  if (file.size > MAX_UPLOAD) throw rejected('файл больше 25 МБ — разделите набор на части или импортируйте его из API организаторов', 413);
+  let payload;
+  try { payload = JSON.parse(String(await file.text()).replace(/^\uFEFF/, '')); } catch { throw rejected('файл не является корректным JSON'); }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw rejected('ожидался JSON-объект в формате API организаторов');
+  if (payload.isSuccess === false) throw rejected(`API вернул ошибку: ${payload.error || 'без текста'}`);
+  const data = 'data' in payload ? payload.data : payload;
+  if (!data || typeof data !== 'object' || !Array.isArray(data.records)) throw rejected('в данных нет списка records');
+  const group = String(data.dataset_group_id || 'DEV');
+  const base = new Set((await rows()).filter((r) => r.group_id === group).map((r) => r.conversation_id));
+  const warnings = [], skipped = {};
+  let imported = 0, updated = 0;
+  data.records.forEach((rec, i) => {
+    const cid = rec && typeof rec === 'object' ? String(rec.conversation_id ?? '').trim() : '';
+    if (!cid) { warnings.push(`запись #${i}: нет conversation_id, пропущена`); return; }
+    if (!Array.isArray(rec.transcript)) { warnings.push(`${cid}: transcript — не список; пропущена`); skipped[cid] = 'Запись набора не разобрана: transcript — не список'; return; }
+    const raw = String(rec.channel || '').trim().toLowerCase();
+    const channel = CHANNELS[raw] || 'agent chat';
+    if (!CHANNELS[raw]) warnings.push(`${cid}: неизвестный канал «${rec.channel ?? ''}», считаем чатом`);
+    const t0 = clockSec(rec.transcript.find((m) => m?.timestamp)?.timestamp);
+    const messages = rec.transcript.filter((m) => m && typeof m === 'object').map((m, k) => {
+      const t = clockSec(m.timestamp);
+      return { msg_id: `m${k}`, idx: k, speaker: String(m.speaker || '').toLowerCase(), text: String(m.text ?? ''), timestamp: m.timestamp ?? '',
+        t_sec: t == null || t0 == null ? null : t - t0, audio_offset_sec: null, internal: false, event: null };
+    });
+    if (base.has(cid)) { updated += 1; return; } // диалог из фикстур: в демо-режиме не меняем, только считаем
+    const language = LANG[String(rec.language || '').toLowerCase()] || guessLanguage(messages);
+    const c = { conversation_id: cid, group_id: group, channel, language, source: 'upload', has_audio: false, audio_url: null, audio_offset_fix_sec: 0,
+      imported_at: now(), messages, segments: [], events: [], warnings: [], evaluations: [], latest: null };
+    const old = st.manual.find((x) => x.group_id === group && x.conversation_id === cid);
+    if (old) { Object.assign(old, c); updated += 1; } else { st.manual.push({ id: ++st.seq, ...c }); imported += 1; }
+  });
+  return { group_id: group, imported, updated, warnings, skipped };
 }

@@ -2,7 +2,7 @@
 // Параметры: group (группа данных), version (id версии чек-листа; по умолчанию — активная).
 // Данные — GET /analytics и GET /conversations той же версии (итоги по диалогам для корзин гистограммы).
 // Клик по цифре или полосе → cqa:navigate в список диалогов с фильтром (#/conversations?lang=…, ?ids=…&label=…).
-// Наружу: cqa:navigate {to}, cqa:run-request {ids: [], group, rows}. Внутрь: cqa:refresh на el — перечитать.
+// Наружу: cqa:navigate {to}, cqa:run-request {ids: [], group, rows}, cqa:import-request {group} (пустая группа). Внутрь: cqa:refresh на el — перечитать.
 import { h, clear, emit, errorState, emptyState, fmtScore, scoreClass, LANG, channelLabel } from '../ui.js';
 import { getAnalytics, listConversations } from '../api.js';
 import { createTip, fmtPct, fmtPct100, fmtUsd, plural, tableToggle, vpanel, legend, clamp01 } from './viz.js';
@@ -252,7 +252,8 @@ export function mount(el, params = {}) {
     root.append(header(a));
     if (!a.conversations) {
       root.append(h('div', { class: 'cqa-panel' }, emptyState({ title: `В группе ${group()} пока нет диалогов`, icon: '⇩',
-        text: 'Импортируйте набор диалогов организаторов в списке диалогов, затем запустите оценку.', actionLabel: 'К списку диалогов', onAction: () => go(listUrl()) })));
+        text: 'Импортируйте набор диалогов организаторов — по group_id из API или из JSON-файла, затем запустите оценку.', actionLabel: 'Импорт набора',
+        onAction: () => emit(root, 'cqa:import-request', { group: group() }) })));
       return;
     }
     if (!a.count) {

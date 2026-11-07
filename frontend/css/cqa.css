@@ -1580,3 +1580,59 @@ button.cqa-chip.cqa-cmp-chip--uniq { border-color: var(--cqa-accent); color: var
   .cqa-cmp-row__body { padding: 0 var(--cqa-s-3) var(--cqa-s-3); }
   .cqa-card__cmpnote { margin: 10px var(--cqa-s-4) 0; }
 }
+
+/* ==========================================================================
+   Импорт набора (import-dialog.js): окно поверх оболочки и встроенный вариант pages/import-dialog.html.
+   Только токены: светлая и тёмная темы — через переменные .cqa-root.
+   ========================================================================== */
+.cqa-imp__intro { margin: 0 0 var(--cqa-s-4); color: var(--cqa-muted); font-size: var(--cqa-text-sm); }
+.cqa-imp .cqa-seg__btn:disabled { opacity: .5; cursor: not-allowed; }
+.cqa-imp__note { display: flex; gap: 8px; align-items: flex-start; margin-top: 4px; padding: 8px 10px; border-radius: var(--cqa-r-sm);
+  background: var(--cqa-surface-2); border: 1px solid var(--cqa-border); color: var(--cqa-muted); font-size: var(--cqa-text-xs); overflow-wrap: anywhere; }
+.cqa-imp__note b { color: var(--cqa-text); }
+.cqa-imp__noteicon { flex: none; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: var(--cqa-text-xs);
+  background: var(--cqa-na-bg); color: var(--cqa-na); }
+.cqa-imp__drop { display: grid; justify-items: center; gap: 6px; padding: var(--cqa-s-5) var(--cqa-s-4); text-align: center;
+  border: 2px dashed var(--cqa-border-strong); border-radius: var(--cqa-r-md); background: var(--cqa-surface-2); transition: border-color .12s, background .12s; }
+.cqa-imp__drop--over { border-color: var(--cqa-accent); background: var(--cqa-accent-soft); }
+.cqa-imp__drop--has { justify-items: stretch; text-align: left; padding: var(--cqa-s-3) var(--cqa-s-4); border-style: solid; border-width: 1px; }
+.cqa-imp__drop--has.cqa-imp__drop--over { border-style: dashed; }
+.cqa-imp__dropicon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 20px; font-weight: 800;
+  background: var(--cqa-accent-soft); color: var(--cqa-accent-2); }
+.cqa-imp__droptitle { font-weight: 700; }
+.cqa-imp__dropsub { font-size: var(--cqa-text-xs); color: var(--cqa-muted); }
+.cqa-imp__code { font-family: var(--cqa-mono); font-size: var(--cqa-text-xs); overflow-wrap: anywhere; }
+.cqa-imp__file { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--cqa-s-3); align-items: center; }
+.cqa-imp__fileicon { width: 36px; height: 36px; border-radius: var(--cqa-r-sm); display: grid; place-items: center; font-family: var(--cqa-mono);
+  font-size: var(--cqa-text-xs); font-weight: 700; background: var(--cqa-accent-soft); color: var(--cqa-accent-2); }
+.cqa-imp__filemain { min-width: 0; }
+.cqa-imp__filename { font-weight: 600; overflow-wrap: anywhere; }
+.cqa-imp__filemeta { font-size: var(--cqa-text-xs); color: var(--cqa-muted); overflow-wrap: anywhere; }
+.cqa-imp__filemeta--warn { color: var(--cqa-warn); }
+.cqa-imp__filemeta--bad { color: var(--cqa-no); font-weight: 600; }
+.cqa-imp__busy { display: grid; gap: 8px; color: var(--cqa-muted); font-size: var(--cqa-text-sm); overflow-wrap: anywhere; }
+.cqa-imp__bar { position: relative; height: 6px; border-radius: var(--cqa-r-pill); background: var(--cqa-accent-soft); overflow: hidden; }
+.cqa-imp__bar::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; border-radius: inherit; background: var(--cqa-accent);
+  animation: cqa-imp-slide 1.1s ease-in-out infinite; }
+@keyframes cqa-imp-slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+.cqa-imp__errbody { min-width: 0; overflow-wrap: anywhere; }
+.cqa-imp__errhint { margin-top: 4px; font-size: var(--cqa-text-xs); opacity: .85; }
+.cqa-imp__done { display: grid; gap: var(--cqa-s-3); }
+.cqa-imp__ok { background: var(--cqa-yes-bg); border-color: var(--cqa-yes-bd); border-left: 5px solid var(--cqa-yes); color: var(--cqa-text); }
+.cqa-imp__ok .cqa-banner__icon { background: var(--cqa-yes); color: var(--cqa-surface); }
+.cqa-imp__ok .cqa-banner__title { overflow-wrap: anywhere; }
+.cqa-imp__oksub { color: var(--cqa-muted); font-size: var(--cqa-text-xs); margin-top: 2px; overflow-wrap: anywhere; }
+.cqa-imp__warns { border: 1px solid var(--cqa-warn-bd); border-radius: var(--cqa-r-sm); background: var(--cqa-warn-bg); padding: 8px 12px; font-size: var(--cqa-text-sm); }
+.cqa-imp__warns > summary { cursor: pointer; font-weight: 600; color: var(--cqa-warn); border-radius: 4px; }
+.cqa-imp__warns ul { margin: 8px 0 0; padding-left: 18px; max-height: 220px; overflow-y: auto; font-size: var(--cqa-text-xs); color: var(--cqa-text); }
+.cqa-imp__warns li { overflow-wrap: anywhere; }
+.cqa-imp__warns li + li { margin-top: 2px; }
+@media (max-width: 560px) {
+  .cqa-imp__drop { padding: var(--cqa-s-4) var(--cqa-s-3); }
+  .cqa-imp__file { grid-template-columns: minmax(0, 1fr) auto; }
+  .cqa-imp__fileicon { display: none; }
+  .cqa-imp .cqa-modal__foot .cqa-btn { flex: 1 1 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cqa-imp__bar::after { animation: none; width: 100%; opacity: .45; }
+}
