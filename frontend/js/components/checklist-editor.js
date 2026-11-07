@@ -4,8 +4,8 @@
 // сохранение новой версией (POST /checklists с parent_id), «Переоценить диалоги…» (событие cqa:run-request
 // с версией и reuse auto), история версий с отличиями, импорт и экспорт JSON.
 // Проверки — checklist-model.js (повторяют domain.py), 422 бэкенда подсвечивает поле по path.
-import { h, clear, emit, toast, fmtDate, skeletonRows, errorState, emptyState, channelBadge, langChip, score } from '../ui.js';
-import { listChecklists, getChecklist, createChecklist, activateChecklist, checkChecklist, listConversations, getFactLabels, isMock } from '../api.js';
+import { h, clear, emit, toast, fmtDate, fmtMoney, skeletonRows, errorState, emptyState, channelBadge, langChip, score } from '../ui.js';
+import { listChecklists, getChecklist, createChecklist, activateChecklist, checkChecklist, listConversations, getFactLabels, draftCriterion, isMock } from '../api.js';
 import { plural } from './run-dialog.js';
 import { openTrial } from './criterion-trial.js';
 import {
@@ -830,9 +830,63 @@ function criterionEditor({ mode, orig, tpl, idx, body, serverErrs, focus, factNa
   const prevFocus = document.activeElement;
   const onKey = (e) => {
     if (e.key === 'Escape') { e.stopPropagation(); close(); }
-    else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); done(); }
+    else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); if (e.target?.id === 'cqa-ce-ai-desc') askDraft(); else done(); }
   };
   const groups = [...new Set((body.criteria || []).map((c) => txt(c.group)).filter(Boolean))];
+  // «Черновик с ИИ»: описание и тип → текстовые поля формы. Код, секцию и вес модель не трогает, сохраняет человек.
+  const ai = { open: false, desc: '', type: f.type, busy: false, error: null, result: null };
+
+  async function askDraft() {
+    if (ai.busy) return;
+    if (blank(ai.desc)) { ai.error = 'Опишите одной-двумя фразами, что проверять.'; render(); box.querySelector('#cqa-ce-ai-desc')?.focus(); return; }
+    ai.busy = true; ai.error = null; render();
+    try {
+      const res = await draftCriterion({ description: ai.desc.trim(), type: ai.type, language: body.settings?.output_language || undefined });
+      if (closed) return;
+      applyDraft(res.criterion || {});
+      ai.result = res; ai.open = false;
+    } catch (e) {
+      if (closed) return;
+      ai.error = e?.message || 'Черновик не получен.';
+    } finally { ai.busy = false; }
+    if (!closed) { render(); box.querySelector(ai.open ? '#cqa-ce-ai-desc' : '#cqa-ce-title')?.focus(); }
+  }
+  function applyDraft(c) {
+    const t = TYPES.includes(c.type) ? c.type : ai.type;
+    f.type = t;
+    if (t === 'flag') { f.weight = '0'; f.na_allowed = false; }
+    f.title = c.title ?? ''; f.definition = c.definition ?? '';
+    f.yes_when = t === 'scale' ? '' : c.yes_when ?? ''; f.no_when = t === 'scale' ? '' : c.no_when ?? '';
+    f.na_allowed = t !== 'flag' && !!c.na_allowed; f.na_when = f.na_allowed ? c.na_when ?? '' : '';
+    if (t === 'scale') f.scale = (c.scale || []).map((x) => ({ value: String(x.value ?? ''), label: x.label ?? '' }));
+    f.guidance = c.guidance ?? ''; f.voice_guidance = c.voice_guidance ?? '';
+    for (const k of ['type', 'title', 'definition', 'yes_when', 'no_when', 'na_allowed', 'na_when', 'scale', 'guidance', 'voice_guidance']) touch(k);
+  }
+  function aiView() {
+    const r = ai.result;
+    const tokens = r?.tokens ? (r.tokens.in || 0) + (r.tokens.out || 0) : 0;
+    const note = r ? h('div', { class: 'cqa-banner cqa-banner--warn cqa-ce-banner cqa-ce-ai__note', id: 'cqa-ce-ai-note', role: 'status' }, h('span', { class: 'cqa-banner__icon' }, '!'),
+      h('div', null, h('div', { class: 'cqa-banner__title' }, 'Черновик модели — проверьте перед сохранением'),
+        h('div', { class: 'cqa-faint' }, [r.mock ? 'демо-режим, без модели' : r.model, `стоимость ${fmtMoney(r.cost_usd)}`, tokens ? `${tokens} токенов` : null].filter(Boolean).join(' · ')))) : null;
+    const toggle = h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', id: 'cqa-ce-ai-toggle', 'aria-expanded': String(ai.open), 'aria-controls': 'cqa-ce-ai-panel',
+      onclick: () => { ai.open = !ai.open; ai.error = null; if (ai.open) ai.type = f.type; render(); if (ai.open) box.querySelector('#cqa-ce-ai-desc')?.focus(); } },
+    ai.open ? 'Скрыть черновик с ИИ' : r ? 'Новый черновик с ИИ' : 'Черновик с ИИ');
+    const panel = ai.open ? h('div', { class: 'cqa-ce-ai__panel', id: 'cqa-ce-ai-panel' },
+      h('label', { class: 'cqa-field__label', for: 'cqa-ce-ai-desc' }, 'Что проверять'),
+      h('textarea', { class: 'cqa-input cqa-ce-area', id: 'cqa-ce-ai-desc', rows: 2, maxlength: 2000, disabled: ai.busy,
+        placeholder: 'Например: оператор предупредил клиента о рисках инвестиций',
+        oninput: (e) => { ai.desc = e.target.value; },
+      }, ai.desc),
+      h('div', { class: 'cqa-ce-ai__row' },
+        h('div', { class: 'cqa-seg', role: 'radiogroup', 'aria-label': 'Тип ответа черновика', id: 'cqa-ce-ai-type' },
+          TYPES.map((t) => h('button', { type: 'button', class: 'cqa-seg__btn', role: 'radio', 'aria-checked': String(ai.type === t), 'aria-pressed': String(ai.type === t),
+            dataset: { type: t }, disabled: ai.busy, onclick: () => { ai.type = t; render(); } }, TYPE_LABEL[t]))),
+        h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-btn--primary', id: 'cqa-ce-ai-go', disabled: ai.busy, onclick: askDraft },
+          ai.busy ? 'Модель формулирует…' : 'Сформулировать')),
+      h('div', { class: 'cqa-field__hint' }, 'Модель заполнит название, определение, условия «Да» и «Нет», N/A, ступени шкалы и подсказки. Код, секцию и вес задаёте вы. Ничего не сохраняется, пока вы не сохраните версию.'),
+      ai.error ? h('div', { class: 'cqa-ce-err', role: 'alert', id: 'cqa-ce-ai-error' }, ai.error) : null) : null;
+    return h('div', { class: 'cqa-ce-ai' }, note, h('div', { class: 'cqa-ce-ai__bar' }, toggle), panel);
+  }
 
   // временное тело с этим критерием на его месте: те же проверки, что у всего чек-листа
   function trial() {
@@ -969,6 +1023,7 @@ function criterionEditor({ mode, orig, tpl, idx, body, serverErrs, focus, factNa
         h('div', null, `Новый критерий встанет на место ${orig.key}: секция «${sectionTitle(orig.section)}», вес ${fmtNum(Number(orig.weight))}`,
           orig.export_id ? [', код в файле сдачи ', h('b', { class: 'cqa-mono' }, orig.export_id)] : '',
           `. Критерий ${orig.key} выключится и останется в версии для истории. Опишите, что проверять: название, определение, когда «Да» и когда «Нет».`)) : null,
+      aiView(),
       h('div', { class: 'cqa-ce-f cqa-ce-general' }, errSlot('_')),
       h('form', { class: 'cqa-ce-grid', onsubmit: (e) => { e.preventDefault(); done(); } },
         fld('Код', 'key', input('key', { spellcheck: 'false', class: 'cqa-input cqa-mono' }), mode === 'edit' ? 'Смена кода: прошлые ответы по критерию не переиспользуются.' : 'Латиница, цифры, «_», «-».', 'cqa-ce-key'),

@@ -1,6 +1,6 @@
 # CONTRACTS
 
-> Версия: **0.5.3** · Обновлено: 2026-11-07 · Владелец: Claude
+> Версия: **0.5.4** · Обновлено: 2026-11-07 · Владелец: Claude
 > Контракт — это то, на что опираются параллельно фронт, бэк, eval и подагенты. Меняем только с записью в «Журнал версий» внизу. Несовместимое изменение → поднять минорную версию и предупредить в `PROGRESS.md`.
 > Связано: `architecture/evaluation-pipeline.md`, `architecture/data-model.md`, `spec/requirements.md`.
 
@@ -161,6 +161,7 @@
 | `GET /checklists/{version_id}` | — | `{id, key, version, ..., body}` |
 | `POST /checklists` | `{body, note, parent_id?, activate?: bool}` | версия; 422 с `[{path, message}]`, если невалидно |
 | `POST /checklists/{version_id}/activate` | — | версия |
+| `POST /checklists/draft-criterion` | `{description, type: "binary" \| "scale" \| "flag", language?, provider?, model?}` (описание ≤ 2000 символов; `language` по умолчанию — `output_language` активного чек-листа) | `{criterion, provider, model, cost_usd, tokens: {in, out}, latency_ms, attempts, calls: [{attempt, provider, model, finish_reason, tokens_in, tokens_out, cost_usd, latency_ms, request, response_raw}]}`; `criterion` — поля §1, текст пишет модель, `key`, `section`, `weight`, `export_id`, `group` — `null` (их задаёт человек). Ничего не сохраняет; строгая схема, один ретрай (обрезка по длине — с удвоенным `max_tokens`); образцы стиля — 1–2 критерия активного чек-листа. 400 — пустое описание, неизвестный тип или провайдер; 502 — `{detail, calls}`: провайдер недоступен или черновик не прошёл проверку после ретрая |
 | `POST /runs` | `{conversation_ids? \| group_id, checklist_version_id?, provider?, model?, strategy?, reuse?: "auto" \| "none"}` | `{run_id}` (202); `reuse: auto` — инкрементальная переоценка (FR-CHK-10), «Оценить повторно» = те же параметры и `reuse: none` |
 | `POST /runs/estimate` | то же тело, что у `POST /runs` | `{dialogs, dialogs_with_calls, calls, tokens_in, tokens_out, cost_usd \| null, seconds, cost_source: history \| pricing \| unknown}`; LLM не вызывается (FR-UX-03) |
 | `GET /meta/facts` | — | `{labels: {имя факта: подпись}}` |
@@ -268,6 +269,8 @@ CSV, UTF-8 с BOM, `;` как разделитель, запятая в дроб
 Формат — `data/gold/README.md`. Разбиение dev/holdout — `data/gold/split.json`: `{"dev": [...], "holdout": [...]}`.
 
 ## Журнал версий
+
+- 0.5.4 — 2026-11-07 — `POST /checklists/draft-criterion`: черновик критерия с ИИ для конструктора.
 
 - 0.5.3 — 2026-11-07 — «Второе мнение ИИ»: `POST /appeals/{id}/second-opinion`, `second_opinion` в `AppealRow`, таблица `appeal_second_opinion`.
 
