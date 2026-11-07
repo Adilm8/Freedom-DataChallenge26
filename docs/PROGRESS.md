@@ -3,7 +3,7 @@
 Статус работы. Подключён в `CLAUDE.md`, обновляется после каждого шага.
 
 ## Сейчас
-Фаза 0 закрывается: ТЗ, архитектура, контракты v0.1, ADR и план готовы (`docs/README.md` — карта). Ждём ответы Лиды на открытые вопросы (`docs/spec/open-questions.md`), затем Ф1 по `docs/PLAN.md`.
+Фаза 0 закрыта: ТЗ, архитектура, контракты v0.1, ADR-001…013, план и ответы Лиды (`docs/README.md` — карта). Сдаём репозиторий, презентацию и описание. Следующее — Ф1 по `docs/PLAN.md`, по сигналу Лиды.
 
 ## Готово
 - 2026-11-07 — среда: CLAUDE.md (работа вдвоём, OpenRouter + Gemini), `docs/MEMORY.md`, подагенты, скелет FastAPI (`/api/health`), `scripts/fetch_dataset.py`, `scripts/render_dataset.py`, `docs/checklist.md`, `docs/task/`, pytest зелёный.
@@ -12,7 +12,7 @@
 - 2026-11-07 — ТЗ `docs/spec/requirements.md` (FR/NFR с ID), архитектура `docs/architecture/*`, `docs/CONTRACTS.md` v0.1, ADR-001…012, `docs/PLAN.md` (вехи M0–M6), сценарий демо, открытые вопросы.
 
 ## Ждёт Лиду
-- Ответы на открытые вопросы — `docs/spec/open-questions.md`.
+- Q-07: информация от организаторов о формате результатов (если появится).
 - Ключи: в `.env` на ноутбуке есть; в облачной среде `Freedom-DataChallenge26` — network secrets для openrouter.ai и generativelanguage.googleapis.com (Bearer). Ключи, засвеченные в чате, Лиде нужно заменить.
 
 
