@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     gemini_concurrency: int = 2
     eval_strategy: str = "grouped"  # single | grouped | per_criterion
 
+    # Маскирование персональных данных перед отправкой в модель (services/pii.py)
+    pii_masking: bool = True
+
     # Сдача результатов (docs/task/results-format.md)
     team_name: str = ""
     model_mode: str = "external_api"  # local | external_api | hybrid

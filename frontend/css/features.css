@@ -1,0 +1,13 @@
+/* Доп. функции: маскирование персональных данных, песочница критерия, коучинг-отчёт.
+   Только переменные из cqa.css, чтобы тёмная тема работала без отдельных правил. */
+
+/* --- персональные данные (privacy-panel.js) --- */
+.cqa-privacy { margin-bottom: var(--cqa-s-3); }
+.cqa-privacy__line { display: flex; gap: var(--cqa-s-2); align-items: baseline; flex-wrap: wrap;
+  padding: var(--cqa-s-2) var(--cqa-s-3); font-size: var(--cqa-text-sm); }
+.cqa-privacy__icon { flex: none; }
+.cqa-privacy__tag { background: var(--cqa-accent-soft); color: var(--cqa-accent-2); border: 1px solid var(--cqa-accent-bd);
+  border-radius: var(--cqa-r-sm); padding: 0 4px; font-family: var(--cqa-mono); font-size: var(--cqa-text-xs); }
+.cqa-privacy__text { white-space: pre-wrap; word-break: break-word; }
+.cqa-privacy .cqa-facts__row { grid-template-columns: 52px minmax(0, 1fr); }
+.cqa-privacy .cqa-facts__val.cqa-privacy__text { display: block; line-height: 1.7; }

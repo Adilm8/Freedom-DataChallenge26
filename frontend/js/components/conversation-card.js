@@ -12,6 +12,7 @@ import { plural } from './viz.js';
 import { mount as mountTranscript } from './transcript-view.js';
 import { mount as mountResult } from './result-panel.js';
 import { mount as mountFacts } from './facts-panel.js';
+import { mount as mountPrivacy } from './privacy-panel.js';
 import { mount as mountPlayer } from './audio-player.js';
 import { mount as mountTimeline } from './timeline.js';
 
@@ -174,10 +175,11 @@ export function mount(el, params = {}) {
       left.append(playerEl, scrollEl);
     }
     const factsEl = h('div');
+    const privEl = h('div');
     tlEl = h('div', { class: 'cqa-card__timeline' }); // таймлайн (FR-UX-01): клик по метке — cqa:evidence-click, как у доказательства
     trEl = h('div');
     resEl = h('div');
-    scrollEl.append(tlEl, factsEl, h('div', { class: 'cqa-panel' },
+    scrollEl.append(tlEl, factsEl, privEl, h('div', { class: 'cqa-panel' },
       h('div', { class: 'cqa-panel__head cqa-trhead' }, h('h3', { class: 'cqa-h3' }, 'Транскрипт'),
         h('span', { class: 'cqa-faint cqa-trhead__n' }, `${conv.messages.length} реплик`),
         isCall ? h('span', { class: 'cqa-faint cqa-trhead__hint' }, withAudio ? 'расшифровка устной речи · клик по реплике — слушать' : 'расшифровка устной речи') : null),
@@ -185,12 +187,13 @@ export function mount(el, params = {}) {
     right.append(resEl);
 
     const fx = ev ? mountFacts(factsEl, { facts: ev.facts }) : null;
+    const pv = conv.privacy ? mountPrivacy(privEl, { privacy: conv.privacy }) : null;
     const tr = mountTranscript(trEl, { messages: conv.messages, evidence: evidenceMap(ev),
       audio: isCall ? (withAudio ? 'seek' : 'times') : undefined, segments: conv.segments });
     const rs = mountResult(resEl, { evaluation: ev, mode: p.mode, conversationId: conv.id });
     const pl = playerEl ? mountPlayer(playerEl, { conversation: conv, evidence: evidenceMap(ev) }) : null;
     const tl = mountTimeline(tlEl, { conversation: conv, evaluation: ev });
-    kids = [tr, rs, fx, pl, tl].filter(Boolean);
+    kids = [tr, rs, fx, pv, pl, tl].filter(Boolean);
     if (p.focus && ev) {
       const key = p.focus;
       p = { ...p, focus: undefined }; // один раз: после «Оценить повторно» карточка открывается сверху
