@@ -54,7 +54,11 @@ function parseHash() {
   const [path, qs] = raw.split('?');
   const seg = path.split('/').filter(Boolean);
   const q = Object.fromEntries(new URLSearchParams(qs || ''));
-  return { name: seg[0] || 'dashboard', arg: seg[1], q };
+  // Привычные адреса во множественном числе: #/checklists → редактор, #/conversations/<id> → карточка.
+  let name = seg[0] || 'dashboard';
+  if (name === 'checklists') name = 'checklist';
+  if (name === 'conversations' && seg[1]) name = 'conversation';
+  return { name, arg: seg[1], q };
 }
 
 const MODE_HINT = { analyst: 'Смотрит оценки и подаёт апелляции', reviewer: 'Решает апелляции и меняет оценки' };

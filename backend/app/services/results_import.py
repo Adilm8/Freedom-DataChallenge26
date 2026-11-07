@@ -63,37 +63,49 @@ def _evidence(conv: Conversation, turns) -> list[dict]:
     return out
 
 
-def _code_facts(conv: Conversation, cl: Checklist) -> dict:
-    """Факты, которые конвейер считает кодом до вызова модели; без них карточка показывала бы «Факты: 0»."""
-    from .evaluator import _facts
+def _prepare(conv: Conversation, cl: Checklist) -> tuple[dict, str | None]:
+    """Факты (как в конвейере: код, до вызова модели) и отпечаток контекста для хешей критериев."""
+    from .evaluator import prepare
 
     try:
-        return _facts(NormalizedConversation.model_validate(conv.normalized), cl)[0]
+        f, context = prepare(NormalizedConversation.model_validate(conv.normalized), cl)
+        return f[0], context
     except Exception as e:  # noqa: BLE001 — факты вспомогательные, импорт оценок важнее
         log.warning("факты для %s не посчитаны: %s", conv.conversation_id, type(e).__name__)
-        return {}
+        return {}, None
 
 
 def overview_path(root, target: str):
     return root / "data" / "results_extras" / f"{target}_overview.json"
 
 
-def load_overviews(root, target: str) -> dict:
-    """`{conversation_id: {summary, topic, resolved}}` из файла рядом с репозиторием; нет файла — пусто."""
+def _read_extras(root, target: str) -> dict:
     path = overview_path(root, target)
     if not path.exists():
         return {}
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-        ov = data.get("overviews") or {}
-        return {str(k): v for k, v in ov.items() if isinstance(v, dict)}
-    except (OSError, ValueError, AttributeError) as e:
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError) as e:
         log.warning("обзоры %s не прочитаны: %s", path.name, e)
         return {}
 
 
+def load_overviews(root, target: str) -> dict:
+    """`{conversation_id: {summary, topic, resolved}}` из файла рядом с репозиторием; нет файла — пусто."""
+    ov = _read_extras(root, target).get("overviews") or {}
+    return {str(k): v for k, v in ov.items() if isinstance(v, dict)} if isinstance(ov, dict) else {}
+
+
+def source_prompt_version(root, target: str) -> str | None:
+    """Версия промпта, которой посчитан файл сдачи (записана рядом с обзорами)."""
+    pv = _read_extras(root, target).get("prompt_version")
+    return str(pv) if pv else None
+
+
 def import_results(session: Session, doc: dict, group_id: str, *, checklist_version_id: int | None = None,
-                   replace: bool = False, source: str = "results.json", overviews: dict | None = None) -> dict:
+                   replace: bool = False, source: str = "results.json", overviews: dict | None = None,
+                   prompt_version: str | None = None) -> dict:
     """Пишет оценки из файла сдачи. Диалоги, у которых уже есть полная оценка по этой версии чек-листа,
     пропускаются (если не `replace`): повторный запуск ничего не дублирует."""
     if not isinstance(doc, dict) or not isinstance(doc.get("results"), list):
@@ -137,7 +149,15 @@ def import_results(session: Session, doc: dict, group_id: str, *, checklist_vers
     session.flush()
     report["run_id"] = run.id
 
+    # Хеши критериев (для `reuse: auto`) пишем, только если файл посчитан текущей версией промпта:
+    # тогда ответ из файла — то же, что вернул бы конвейер, и переоценка не платит за неизменённые критерии.
+    from . import prompt_builder
+    from .evaluator import criterion_hash
+
+    hash_pv = prompt_version if prompt_version and prompt_version == prompt_builder.prompt_version() else None
+    report["reusable"] = bool(hash_pv)
     for conv, r in todo:
+        facts, context = _prepare(conv, cl)
         answers, rows = {}, []
         for item in r.get("criteria") or []:
             c = by_code.get(item.get("criterion_id"))
@@ -156,7 +176,7 @@ def import_results(session: Session, doc: dict, group_id: str, *, checklist_vers
         ev = Evaluation(
             conversation_pk=conv.id, checklist_version_id=ver.id, run_id=run.id, provider=PROVIDER, model=model,
             strategy="import", prompt_version=PROMPT_VERSION, status="partial" if missing else "done",
-            params={"source": source}, facts=_code_facts(conv, cl),
+            params={"source": source}, facts=facts,
             overview=(overviews or {}).get(conv.conversation_id), ai_score=dump, final_score=dump, ai_total=score.total,
             final_total=score.total, critical=bool(score.critical), needs_review=False,
         )
@@ -168,7 +188,8 @@ def import_results(session: Session, doc: dict, group_id: str, *, checklist_vers
             session.add(CriterionResult(
                 evaluation_id=ev.id, criterion_key=c.key, ai_answer=str(ans), ai_points=pts,
                 reasoning=str(item.get("rationale") or ""), evidence=_evidence(conv, item.get("evidence_turns")),
-                confidence="medium",
+                confidence="",  # в файле сдачи уверенности нет — не показываем выдуманную
+                criterion_hash=criterion_hash(c, hash_pv, model, context) if hash_pv and context is not None else "",
                 final_answer=str(ans), final_points=pts,
             ))
         run.done += 1
@@ -203,5 +224,6 @@ def autoload(session: Session, root) -> list[dict]:
             ingest.import_payload(session, json.loads(raw.read_text(encoding="utf-8-sig")), "file", group_id=group)
         doc = json.loads(path.read_text(encoding="utf-8"))
         out.append(import_results(session, doc, group, source=f"results/{target}/results.json",
-                                  overviews=load_overviews(root, target)))
+                                  overviews=load_overviews(root, target),
+                                  prompt_version=source_prompt_version(root, target)))
     return out

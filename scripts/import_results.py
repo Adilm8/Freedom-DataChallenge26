@@ -30,7 +30,8 @@ def main() -> None:
         doc = json.loads(args.file.read_text(encoding="utf-8"))
         target = args.file.parent.name if args.file.parent.name in ("dev", "prod") else ""
         r = results_import.import_results(s, doc, args.group, replace=args.replace, source=args.file.name,
-                                          overviews=results_import.load_overviews(ROOT, target) if target else None)
+                                          overviews=results_import.load_overviews(ROOT, target) if target else None,
+                                          prompt_version=results_import.source_prompt_version(ROOT, target) if target else None)
     print(f"группа {r['group_id']}: загружено {r['imported']}, уже были {r['skipped_existing']}, "
           f"ошибки в файле {r['skipped_error']}, нет в БД {len(r['missing'])}")
     if r["missing"]:

@@ -47,7 +47,7 @@ function formBody(box, { evaluation, criterion: c, onSaved, onCancel, inline }) 
       inline ? null : h('button', { type: 'button', class: 'cqa-modal__x', 'aria-label': 'Закрыть', onclick: onCancel }, '×')),
     h('div', { class: 'cqa-apf__crit' },
       h('div', { class: 'cqa-apf__title' }, h('span', { class: 'cqa-code' }, c.key), h('b', null, c.title)),
-      h('div', { class: 'cqa-apf__ans' }, h('span', { class: 'cqa-faint' }, 'Ответ AI'), answerBadge(c, c.ai_answer), h('span', { class: 'cqa-faint' }, ptsText(c, c.ai_points)),
+      h('div', { class: 'cqa-apf__ans' }, h('span', { class: 'cqa-faint' }, 'Ответ AI'), answerBadge(c, c.ai_answer, { words: true }), h('span', { class: 'cqa-faint' }, ptsText(c, c.ai_points)),
         c.overridden ? [h('span', { class: 'cqa-faint' }, '· сейчас'), answerBadge(c, c.final_answer)] : null),
       c.reasoning ? h('div', { class: 'cqa-apf__why' }, c.reasoning) : null,
       decided.length ? h('div', { class: 'cqa-faint cqa-apf__prev' }, `По критерию уже ${decided.length === 1 ? 'была апелляция' : `было апелляций: ${decided.length}`} — новая пойдёт проверяющему повторно.`) : null),

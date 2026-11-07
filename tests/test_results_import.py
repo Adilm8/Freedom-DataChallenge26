@@ -102,3 +102,33 @@ def test_load_overviews(tmp_path):
     assert results_import.load_overviews(tmp_path, "dev") == {"a": {"resolved": "no"}}
     p.write_text("{broken", encoding="utf-8")
     assert results_import.load_overviews(tmp_path, "dev") == {}
+
+
+def test_import_with_current_prompt_is_reusable(env):  # noqa: F811
+    """Файл посчитан текущей версией промпта → у ответов есть хеши, и переоценка берёт их без вызовов."""
+    from backend.app.domain import Checklist
+    from backend.app.models import ChecklistVersion, Conversation, CriterionResult
+    from backend.app.services import evaluator, prompt_builder, reuse
+
+    upload(env, payload())
+    with Session(db.engine) as s:
+        r = results_import.import_results(s, _doc(), "T", prompt_version=prompt_builder.prompt_version())
+        assert r["reusable"]
+        rows = s.exec(select(CriterionResult)).all()
+        assert rows and all(x.criterion_hash for x in rows) and all(x.confidence == "" for x in rows)
+        conv = s.exec(select(Conversation).where(Conversation.conversation_id == "t-chat-1")).one()
+        cl = Checklist.model_validate(s.exec(select(ChecklistVersion)).first().body)
+        from backend.app.domain import NormalizedConversation
+        _, ctx = evaluator.prepare(NormalizedConversation.model_validate(conv.normalized), cl)
+        plan = reuse.plan(s, conv.id, cl.enabled_criteria(), model="x/model",
+                          prompt_version=prompt_builder.prompt_version(), context=ctx)
+        assert set(plan.reused) == {c.key for c in cl.enabled_criteria()}
+
+
+def test_import_with_other_prompt_is_not_reusable(env):  # noqa: F811
+    from backend.app.models import CriterionResult
+    upload(env, payload())
+    with Session(db.engine) as s:
+        r = results_import.import_results(s, _doc(), "T", prompt_version="p0-old")
+        assert not r["reusable"]
+        assert all(x.criterion_hash == "" for x in s.exec(select(CriterionResult)).all())
