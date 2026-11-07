@@ -26,6 +26,13 @@ export function emit(el, name, detail) {
 }
 
 export const LANG = { ru: 'RU', kz: 'KZ', en: 'EN' };
+export const EVENT_LABEL = {
+  escalation: 'Эскалация на оператора', identity_verified: 'Личность клиента подтверждена', operator_closed: 'Оператор закрыл чат',
+  client_left: 'Клиент покинул чат', client_ended: 'Клиент завершил диалог', connection_lost: 'Соединение прервано',
+  agent_joined: 'Оператор подключился', consult_start: 'Консультация с коллегой: начало', consult_end: 'Консультация с коллегой: конец',
+  consult_initiated: 'Оператор начал консультацию', hold_start: 'Клиент поставлен на удержание', hold_end: 'Удержание снято',
+  recording_started: 'Запись начата', recording_paused: 'Запись приостановлена', recording_resumed: 'Запись возобновлена', language_changed: 'Язык изменён',
+};
 export const channelLabel = (c) => (c === 'voice call' ? 'Звонок' : 'Чат');
 export const ROLE = { client: 'Клиент', operator: 'Оператор', bot: 'Бот', system: 'Система' };
 
@@ -46,7 +53,7 @@ export function fmtDate(s) {
 }
 export function fmtMoney(v) { return v == null ? '—' : '$' + Number(v).toFixed(4); }
 
-export function langChip(l) { return h('span', { class: 'cqa-chip' }, LANG[l] || String(l).toUpperCase()); }
+export function langChip(l) { return h('span', { class: 'cqa-chip' }, LANG[String(l).toLowerCase()] || String(l).toUpperCase()); }
 export function channelBadge(c) {
   return h('span', { class: 'cqa-badge cqa-badge--muted' }, channelLabel(c));
 }

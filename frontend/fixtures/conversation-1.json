@@ -2,129 +2,200 @@
  "id": 1,
  "conversation_id": "p1-ru-014",
  "group_id": "DEV",
- "channel": "chat",
- "language": "ru",
+ "channel": "agent chat",
+ "language": "RU",
  "audio_url": null,
- "duration_sec": null,
- "transcript": [
+ "source": "fixture",
+ "audio_offset_fix_sec": 0,
+ "imported_at": "2026-11-07T14:20:00Z",
+ "messages": [
   {
    "msg_id": "m0",
-   "role": "bot",
+   "idx": 0,
+   "speaker": "bot",
    "text": "Здравствуйте! Я виртуальный помощник Freedom Broker. Чем могу помочь?",
+   "timestamp": "00:00",
    "t_sec": 0,
-   "time": "00:00",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
   },
   {
    "msg_id": "m1",
-   "role": "client",
+   "idx": 1,
+   "speaker": "client",
    "text": "Здравствуйте, хочу вывести деньги с брокерского счёта на карту. Как это сделать?",
+   "timestamp": "00:12",
    "t_sec": 12,
-   "time": "00:12",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
   },
   {
    "msg_id": "m2",
-   "role": "bot",
+   "idx": 2,
+   "speaker": "bot",
    "text": "Я не могу выполнять операции по счёту. Перевожу вас на оператора.",
+   "timestamp": "00:18",
    "t_sec": 18,
-   "time": "00:18",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
   },
   {
    "msg_id": "m3",
-   "role": "system",
+   "idx": 3,
+   "speaker": "system",
    "text": "Эскалация на оператора.",
+   "timestamp": "00:25",
    "t_sec": 25,
-   "time": "00:25",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": "escalation"
   },
   {
    "msg_id": "m4",
-   "role": "operator",
+   "idx": 4,
+   "speaker": "operator",
    "text": "Здравствуйте! Меня зовут Айгерим, я помогу вам с выводом средств.",
+   "timestamp": "00:48",
    "t_sec": 48,
-   "time": "00:48",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
   },
   {
    "msg_id": "m5",
-   "role": "operator",
+   "idx": 5,
+   "speaker": "operator",
    "text": "Для начала подтвердите, пожалуйста, ваше ФИО и кодовое слово.",
+   "timestamp": "00:55",
    "t_sec": 55,
-   "time": "00:55",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
   },
   {
    "msg_id": "m6",
-   "role": "client",
+   "idx": 6,
+   "speaker": "client",
    "text": "Иванов Пётр Сергеевич, кодовое слово «Орион».",
+   "timestamp": "01:20",
    "t_sec": 80,
-   "time": "01:20",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
   },
   {
    "msg_id": "m7",
-   "role": "system",
+   "idx": 7,
+   "speaker": "system",
    "text": "Личность клиента подтверждена.",
+   "timestamp": "01:22",
    "t_sec": 82,
-   "time": "01:22",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": "identity_verified"
   },
   {
    "msg_id": "m8",
-   "role": "operator",
+   "idx": 8,
+   "speaker": "operator",
    "text": "Спасибо, Пётр Сергеевич. Вывод доступен в приложении: раздел «Счета», кнопка «Вывести». Средства поступят на карту в течение одного рабочего дня.",
+   "timestamp": "01:50",
    "t_sec": 110,
-   "time": "01:50",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
   },
   {
    "msg_id": "m9",
-   "role": "client",
+   "idx": 9,
+   "speaker": "client",
    "text": "Понял. А комиссия за вывод есть?",
+   "timestamp": "02:05",
    "t_sec": 125,
-   "time": "02:05",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
   },
   {
    "msg_id": "m10",
-   "role": "operator",
+   "idx": 10,
+   "speaker": "operator",
    "text": "Вывод на карту казахстанского банка бесплатный, на карту иностранного банка комиссию берёт банк-получатель по своему тарифу. Спасибо, что уточнили заранее.",
+   "timestamp": "02:20",
    "t_sec": 140,
-   "time": "02:20",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
   },
   {
    "msg_id": "m11",
-   "role": "client",
+   "idx": 11,
+   "speaker": "client",
    "text": "Спасибо, всё понятно.",
+   "timestamp": "02:35",
    "t_sec": 155,
-   "time": "02:35",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
   },
   {
    "msg_id": "m12",
-   "role": "operator",
+   "idx": 12,
+   "speaker": "operator",
    "text": "Рада была помочь! Если появятся вопросы, обращайтесь. Всего доброго!",
+   "timestamp": "02:45",
    "t_sec": 165,
-   "time": "02:45",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": null
   },
   {
    "msg_id": "m13",
-   "role": "system",
+   "idx": 13,
+   "speaker": "system",
    "text": "Оператор закрыл чат.",
+   "timestamp": "02:48",
    "t_sec": 168,
-   "time": "02:48",
-   "internal": false
+   "audio_offset_sec": null,
+   "internal": false,
+   "event": "operator_closed"
   }
  ],
+ "segments": [],
+ "events": [
+  {
+   "type": "escalation",
+   "idx": 3,
+   "msg_id": "m3",
+   "t_sec": 25,
+   "text": "Эскалация на оператора."
+  },
+  {
+   "type": "identity_verified",
+   "idx": 7,
+   "msg_id": "m7",
+   "t_sec": 82,
+   "text": "Личность клиента подтверждена."
+  },
+  {
+   "type": "operator_closed",
+   "idx": 13,
+   "msg_id": "m13",
+   "t_sec": 168,
+   "text": "Оператор закрыл чат."
+  }
+ ],
+ "warnings": [],
  "evaluations": [
   {
    "id": 101,
    "model": "demo/fixture-model",
+   "checklist_version_id": 1,
    "ai_total": 95,
+   "final_total": 100,
    "created_at": "2026-11-07T14:20:00Z"
   }
  ]

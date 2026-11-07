@@ -144,7 +144,7 @@
 
 ## 3. API
 
-Все ответы JSON, ошибки — `{"detail": str}` с кодом 4xx/5xx. Префикс `/api`.
+Все ответы JSON, ошибки — `{"detail": str}` с кодом 4xx/5xx; у 422 невалидного чек-листа дополнительно `errors: [{path, message}]`. Префикс `/api`. Маршруты фронта и `/conversations/{id}` используют суррогатный числовой `id`.
 
 | Метод и путь | Запрос | Ответ |
 |---|---|---|
@@ -178,11 +178,15 @@
 
 ```text
 ConversationRow  = {id, conversation_id, group_id, channel, language, latest: {evaluation_id, ai_total, final_total, critical, needs_review, open_appeals} | null}
-Evaluation       = {id, conversation_id, checklist_version_id, provider, model, strategy, prompt_version, status,
+ConversationDetail = {id, conversation_id, group_id, channel, language, has_audio, audio_url (путь прокси `/api/conversations/{id}/audio`, исходная подписанная ссылка в браузер не уходит), source, audio_offset_fix_sec, imported_at,
+                    messages: [{msg_id, idx, speaker, text, timestamp, t_sec, audio_offset_sec, internal, event}],
+                    segments: [{type, start_idx, end_idx, start_sec, end_sec}], events: [{type, idx, msg_id, t_sec, text}], warnings: [str],
+                    evaluations: [{id, model, checklist_version_id, ai_total, final_total, created_at}]}
+Evaluation       = {id, conversation_id, checklist_version_id, provider, model, strategy, prompt_version, status, needs_review,
                     facts, overview: {summary, topic, resolved} | null, params: {temperature, seed, reuse},
                     ai_score: ScoreResult, final_score: ScoreResult, criteria: [CriterionResult],
                     tokens_in, tokens_out, cost_usd, latency_ms, created_at}
-CriterionResult  = {key, title, section, type, weight, ai_answer, ai_points, final_answer, final_points, overridden,
+CriterionResult  = {key, title, section, type, weight, scale_max, ai_answer, ai_points, final_answer, final_points, overridden,
                     reasoning, confidence, advice, evidence: [{msg_id, quote, quote_ok}], checked_range: {from, to} | null, na_reason, issues: [str],
                     reused_from_evaluation_id: int | null,
                     appeal: Appeal | null}
@@ -223,5 +227,6 @@ CSV, UTF-8 с BOM, `;` как разделитель (Excel в RU-локали).
 
 ## Журнал версий
 
+- 0.3 — 2026-11-07 — `ConversationDetail` по факту бэкенда, `scale_max` в `CriterionResult`, `needs_review` в `Evaluation`, `errors` у 422.
 - 0.2 — 2026-11-07 — уточнение организаторов: `confidence`, `advice`, `overview` в ответе LLM; `quote_threshold` по каналу; вставка диалога, оценка стоимости, `reuse` в запуске, аналитика, очередь «требует проверки».
 - 0.1 — 2026-11-07 — первая версия: чек-лист, схема ответа LLM, API, сигнатуры, экспорт.

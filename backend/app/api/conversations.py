@@ -44,7 +44,9 @@ def get_conversation(pk: int, session: Session = Depends(get_session)) -> dict:
     keys = ("msg_id", "speaker", "text", "timestamp", "t_sec", "audio_offset_sec", "internal", "event")
     return {
         **_row(c),
-        "audio_url": c.audio_url,
+        # Подписанная ссылка на запись не уходит в браузер: запись отдаётся прокси /api/conversations/{id}/audio (шаг 12).
+        "has_audio": bool(c.audio_url),
+        "audio_url": f"/api/conversations/{c.id}/audio" if c.audio_url else None,
         "source": c.source,
         "audio_offset_fix_sec": c.audio_offset_fix_sec,
         "imported_at": c.imported_at.isoformat() if c.imported_at else None,

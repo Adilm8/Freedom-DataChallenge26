@@ -1,5 +1,5 @@
 // Транскрипт: реплики блоками, метки критериев на репликах-доказательствах, подсветка и прокрутка.
-import { h, clear, emit, ROLE, skeletonRows, errorState, emptyState } from '../ui.js';
+import { h, clear, emit, ROLE, EVENT_LABEL, skeletonRows, errorState, emptyState } from '../ui.js';
 import { getConversation } from '../api.js';
 
 export function mount(el, params = {}) {
@@ -22,7 +22,8 @@ export function mount(el, params = {}) {
     return map;
   }
 
-  function renderMsgs(transcript) {
+  function renderMsgs(messages) {
+    const transcript = messages;
     clear(root);
     msgEls = new Map();
     order = transcript.map((m) => m.msg_id);
@@ -30,12 +31,13 @@ export function mount(el, params = {}) {
     const tags = tagsByMsg();
     const list = h('div', { class: 'cqa-tr', role: 'log' });
     for (const m of transcript) {
-      const cls = ['cqa-msg', `cqa-msg--${m.role}`, m.internal ? 'cqa-msg--internal' : ''].join(' ');
-      const time = String(m.time || '').includes('T') ? m.time.slice(11, 19) : m.time;
+      const cls = ['cqa-msg', `cqa-msg--${m.speaker}`, m.internal ? 'cqa-msg--internal' : ''].join(' ');
+      const time = String(m.timestamp || '').includes('T') ? m.timestamp.slice(11, 19) : m.timestamp;
       const node = h('div', { class: cls, id: `msg-${m.msg_id}`, dataset: { msgId: m.msg_id } },
         h('div', { class: 'cqa-msg__meta' },
-          h('span', { class: 'cqa-msg__role' }, ROLE[m.role] || m.role),
+          h('span', { class: 'cqa-msg__role' }, ROLE[m.speaker] || m.speaker),
           m.internal ? h('span', { class: 'cqa-badge cqa-badge--warn' }, 'внутренний разговор') : null,
+          m.event ? h('span', { class: 'cqa-badge cqa-badge--muted' }, EVENT_LABEL[m.event] || m.event) : null,
           h('span', { class: 'cqa-msg__time' }, time),
           h('span', { class: 'cqa-msg__id' }, m.msg_id),
           (tags.get(m.msg_id) || []).length
@@ -53,8 +55,8 @@ export function mount(el, params = {}) {
   async function load() {
     clear(root).append(skeletonRows(7));
     try {
-      let tr = p.transcript;
-      if (!tr) tr = (await getConversation(p.conversation)).transcript;
+      let tr = p.messages;
+      if (!tr) tr = (await getConversation(p.conversation)).messages;
       renderMsgs(tr);
     } catch (e) {
       clear(root).append(errorState(e, load));
@@ -83,14 +85,14 @@ export function mount(el, params = {}) {
   el.addEventListener('cqa:highlight', onHl);
   el.addEventListener('cqa:evidence-click', onEv);
 
-  if (p.transcript || p.conversation != null) load();
+  if (p.messages || p.conversation != null) load();
   else root.append(emptyState({ title: 'Нет диалога', text: 'Укажите параметр conversation.' }));
 
   return {
     update(np) {
-      const reload = np.transcript !== p.transcript || np.conversation !== p.conversation;
+      const reload = np.messages !== p.messages || np.conversation !== p.conversation;
       p = { ...p, ...np };
-      if (reload) load(); else if (p.transcript) renderMsgs(p.transcript);
+      if (reload) load(); else if (p.messages) renderMsgs(p.messages);
     },
     highlight,
     unmount() {

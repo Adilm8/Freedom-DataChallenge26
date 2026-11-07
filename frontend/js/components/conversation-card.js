@@ -44,6 +44,7 @@ export function mount(el, params = {}) {
     const next = idx >= 0 && idx < rows.length - 1 ? rows[idx + 1] : null;
     const go = (to) => emit(root, 'cqa:navigate', { to });
     const isCall = conv.channel === 'voice call';
+    const duration = Math.round(Math.max(0, ...conv.messages.map((m) => m.t_sec || 0)));
 
     root.append(h('div', { class: 'cqa-card__head' },
       h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', onclick: () => go('#/conversations') }, '← К списку'),
@@ -68,14 +69,14 @@ export function mount(el, params = {}) {
           h('div', { style: 'font-weight:600;font-size:var(--cqa-text-sm)' }, 'Запись звонка'),
           h('div', { class: 'cqa-faint', style: 'font-size:var(--cqa-text-xs)' }, conv.audio_url ? 'Плеер будет подключён на следующем шаге' : 'Запись недоступна: audio_url не задан'),
           h('div', { class: 'cqa-player__bar', style: 'margin-top:6px' })),
-        conv.duration_sec ? h('span', { class: 'cqa-chip' }, `${Math.floor(conv.duration_sec / 60)}:${String(conv.duration_sec % 60).padStart(2, '0')}`) : null));
+        duration ? h('span', { class: 'cqa-chip' }, `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`) : null));
     }
     const trEl = h('div'), resEl = h('div');
     left.append(h('div', { class: 'cqa-panel' }, trEl));
     right.append(resEl);
 
-    const tr = mountTranscript(trEl, { transcript: conv.transcript, evidence: evidenceMap(ev) });
-    const rs = mountResult(resEl, { evaluation: ev, mode: p.mode });
+    const tr = mountTranscript(trEl, { messages: conv.messages, evidence: evidenceMap(ev) });
+    const rs = mountResult(resEl, { evaluation: ev, mode: p.mode, conversationId: conv.id });
     kids = [tr, rs];
 
     // Результат -> транскрипт, и обратно, через события.

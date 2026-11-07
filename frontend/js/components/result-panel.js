@@ -179,7 +179,7 @@ export function mount(el, params = {}) {
     try {
       ev = p.evaluation || (p.eval ? await getEvaluation(p.eval) : null);
       if (!ev) {
-        clear(root).append(h('div', { class: 'cqa-panel' }, emptyState({ title: 'Диалог ещё не оценён', text: 'Выберите его в списке и нажмите «Оценить». Результат с баллами, обоснованием и цитатами появится здесь.', icon: '☆' })));
+        clear(root).append(h('div', { class: 'cqa-panel' }, emptyState({ title: 'Оценки ещё нет', text: 'Запустите оценку: здесь появятся баллы, обоснование и цитаты-доказательства по каждому критерию.', icon: '☆', actionLabel: 'Оценить', onAction: () => emit(root, 'cqa:run-request', { ids: [p.conversationId] }) })));
         return;
       }
       render();

@@ -14,8 +14,8 @@ export function mount(el, params = {}) {
     let r = rows.filter((x) => {
       const l = x.latest;
       if (st.q && !x.conversation_id.toLowerCase().includes(st.q.toLowerCase())) return false;
-      if (st.lang && x.language !== st.lang) return false;
-      if (st.channel && x.channel !== st.channel) return false;
+      if (st.lang && String(x.language).toLowerCase() !== st.lang) return false;
+      if (st.channel && (x.channel === 'voice call' ? 'voice call' : 'chat') !== st.channel) return false;
       if (st.flag && !l?.critical) return false;
       if (st.review && !l?.needs_review) return false;
       if (st.appeals && !(l?.open_appeals > 0)) return false;

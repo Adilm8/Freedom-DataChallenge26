@@ -3,8 +3,8 @@
   "id": 1,
   "conversation_id": "p1-ru-014",
   "group_id": "DEV",
-  "channel": "chat",
-  "language": "ru",
+  "channel": "agent chat",
+  "language": "RU",
   "latest": {
    "evaluation_id": 101,
    "ai_total": 95,
@@ -18,8 +18,8 @@
   "id": 2,
   "conversation_id": "p2-kz-007",
   "group_id": "DEV",
-  "channel": "chat",
-  "language": "kz",
+  "channel": "agent chat",
+  "language": "KZ",
   "latest": {
    "evaluation_id": 102,
    "ai_total": 91.82,
@@ -33,8 +33,8 @@
   "id": 3,
   "conversation_id": "p3-en-012",
   "group_id": "DEV",
-  "channel": "chat",
-  "language": "en",
+  "channel": "agent chat",
+  "language": "EN",
   "latest": {
    "evaluation_id": 103,
    "ai_total": 21.33,
@@ -48,8 +48,8 @@
   "id": 4,
   "conversation_id": "p1-ru-021",
   "group_id": "DEV",
-  "channel": "chat",
-  "language": "ru",
+  "channel": "agent chat",
+  "language": "RU",
   "latest": {
    "evaluation_id": 104,
    "ai_total": 85.5,
@@ -64,7 +64,7 @@
   "conversation_id": "p4-ru-002",
   "group_id": "DEV",
   "channel": "voice call",
-  "language": "ru",
+  "language": "RU",
   "latest": {
    "evaluation_id": 105,
    "ai_total": 90.5,
@@ -78,8 +78,8 @@
   "id": 6,
   "conversation_id": "p1-ru-030",
   "group_id": "DEV",
-  "channel": "chat",
-  "language": "ru",
+  "channel": "agent chat",
+  "language": "RU",
   "latest": null
  }
 ]

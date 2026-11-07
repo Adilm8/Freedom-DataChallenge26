@@ -10,7 +10,7 @@
   "key": "default",
   "name": "Чек-лист качества чатов",
   "settings": {
-   "output_language": "ru",
+   "output_language": "RU",
    "rounding": 2,
    "critical_policy": "flag",
    "first_response_threshold_sec": 180,
