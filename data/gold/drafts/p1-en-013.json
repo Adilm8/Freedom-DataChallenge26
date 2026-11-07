@@ -1,0 +1,80 @@
+{
+  "conversation_id": "p1-en-013",
+  "drafted_by": "claude-session",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "yes",
+      "reasoning": "«Hi, I'm Adrian» — приветствие и имя.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "na",
+      "reasoning": "Вопрос, как найти облигации, понятен; оператор сразу ответил.",
+      "evidence": [
+        "m0",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "03": {
+      "answer": "na",
+      "reasoning": "Общий вопрос о навигации; данные счёта не раскрывались.",
+      "evidence": [
+        "m0",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "04": {
+      "answer": 20,
+      "reasoning": "Верный путь (Quotes, поиск по названию или тикеру), клиент нашёл поиск. Предложение платной консультации учтено в 08.",
+      "evidence": [
+        "m9",
+        "m10"
+      ],
+      "confidence": "medium"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Тон вежливый; клиент отказался (m12) без явного недовольства. Закрытие чата учтено в 07.",
+      "evidence": [
+        "m9",
+        "m11"
+      ],
+      "confidence": "medium"
+    },
+    "06": {
+      "answer": 10,
+      "reasoning": "Реплики ясные, клиент не переспрашивал.",
+      "evidence": [
+        "m9",
+        "m11"
+      ],
+      "confidence": "medium"
+    },
+    "07": {
+      "answer": "no",
+      "reasoning": "После отказа клиента оператор закрыл чат без прощания.",
+      "evidence": [
+        "m12",
+        "m13"
+      ],
+      "confidence": "high"
+    },
+    "08": {
+      "answer": "yes",
+      "reasoning": "Просит личный номер и предлагает платную частную консультацию: «I charge for private advice and can tell you which bonds to buy».",
+      "evidence": [
+        "m11"
+      ],
+      "confidence": "high"
+    }
+  },
+  "total": 92.31,
+  "critical": true,
+  "notes": "Пара к p1-ru-023 / p1-kz-013."
+}

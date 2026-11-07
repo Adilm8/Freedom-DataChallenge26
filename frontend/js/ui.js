@@ -29,6 +29,7 @@ export const LANG = { ru: 'RU', kz: 'KZ', en: 'EN' };
 export const EVENT_LABEL = {
   escalation: 'Эскалация на оператора', identity_verified: 'Личность клиента подтверждена', operator_closed: 'Оператор закрыл чат',
   client_left: 'Клиент покинул чат', client_ended: 'Клиент завершил диалог', connection_lost: 'Соединение прервано',
+  session_timeout: 'Сессия закрыта по таймауту',
   agent_joined: 'Оператор подключился', consult_start: 'Консультация с коллегой: начало', consult_end: 'Консультация с коллегой: конец',
   consult_initiated: 'Оператор начал консультацию', hold_start: 'Клиент поставлен на удержание', hold_end: 'Удержание снято',
   recording_started: 'Запись начата', recording_paused: 'Запись приостановлена', recording_resumed: 'Запись возобновлена', language_changed: 'Язык изменён',

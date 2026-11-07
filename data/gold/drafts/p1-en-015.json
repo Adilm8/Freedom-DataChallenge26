@@ -1,0 +1,83 @@
+{
+  "conversation_id": "p1-en-015",
+  "drafted_by": "claude-session",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "no",
+      "reasoning": "Первая реплика — сразу инструкция («Open settings then go back…»): нет ни приветствия, ни представления.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "no",
+      "reasoning": "Бот спрашивал, приложение или сайт, клиент не ответил; оператор дал инструкцию, не уточнив, где клиент входит, — клиенту пришлось пояснять (m10).",
+      "evidence": [
+        "m3",
+        "m4",
+        "m9",
+        "m10"
+      ],
+      "confidence": "high"
+    },
+    "03": {
+      "answer": "na",
+      "reasoning": "Проблема со входом решена подсказкой адреса; данные счёта не раскрывались.",
+      "evidence": [
+        "m0",
+        "m11"
+      ],
+      "confidence": "high"
+    },
+    "04": {
+      "answer": 20,
+      "reasoning": "Первая инструкция не подходила, но затем дан верный адрес (tradernet.global), клиент вошёл — вопрос закрыт. Ошибка первой инструкции учтена в 06.",
+      "evidence": [
+        "m11",
+        "m12"
+      ],
+      "confidence": "medium"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Грубости нет, клиент недовольства не выражал; отсутствие приветствия учтено в 01.",
+      "evidence": [
+        "m11",
+        "m13"
+      ],
+      "confidence": "medium"
+    },
+    "06": {
+      "answer": 4,
+      "reasoning": "Из-за неподходящей первой инструкции клиенту пришлось переспросить («Settings where?»).",
+      "evidence": [
+        "m9",
+        "m10"
+      ],
+      "confidence": "medium"
+    },
+    "07": {
+      "answer": "yes",
+      "reasoning": "«Bye.» после «That worked.» — прощание после решения, но без итога и предложения помощи; при строгом прочтении — «Нет».",
+      "evidence": [
+        "m12",
+        "m13"
+      ],
+      "confidence": "low"
+    },
+    "08": {
+      "answer": "no",
+      "reasoning": "Нарушений нет.",
+      "evidence": [
+        "m9",
+        "m11"
+      ],
+      "confidence": "high"
+    }
+  },
+  "total": 57.5,
+  "critical": false,
+  "notes": "Пара к p1-ru-016. 07 — самый пограничный случай «голого» прощания."
+}
