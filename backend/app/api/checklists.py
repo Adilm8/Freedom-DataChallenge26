@@ -6,8 +6,9 @@ from sqlmodel import Session, select
 from ..db import get_session
 from ..models import ChecklistVersion
 from ..config import settings
-from ..providers import configured_models
+from ..providers import configured_models, get_provider
 from ..services import checklists as svc
+from ..services import criterion_draft as draft_svc
 from ..services import trial as trial_svc
 
 router = APIRouter(prefix="/checklists", tags=["checklists"])
@@ -62,6 +63,49 @@ def create(body: CreateBody, session: Session = Depends(get_session)):
     return {**_full(v), "warnings": warnings}
 
 
+def _resolve_model(provider: str | None, model: str | None) -> tuple[str, str]:
+    name = (provider or settings.llm_provider).strip().lower()
+    known = {m["provider"]: m["model"] for m in configured_models()}
+    if name not in known:
+        raise HTTPException(400, f"неизвестный провайдер «{name}»")
+    chosen = model or known[name]
+    if not chosen:
+        raise HTTPException(400, f"у провайдера «{name}» не задана модель")
+    return name, chosen
+
+
+class DraftBody(BaseModel):
+    description: str = ""
+    type: str = "binary"
+    language: str | None = None      # язык формулировок; по умолчанию — язык обоснований активного чек-листа
+    provider: str | None = None
+    model: str | None = None
+
+
+@router.post("/draft-criterion")
+def draft_criterion(b: DraftBody, session: Session = Depends(get_session)):
+    """Черновик критерия с ИИ: описание и тип → поля критерия. Ничего не сохраняет (services/criterion_draft.py)."""
+    if not b.description.strip():
+        raise HTTPException(400, "опишите, что проверять")
+    active = svc.get_active(session)
+    checklist = None
+    if active:
+        try:
+            checklist = svc.validate(active.body)
+        except svc.ChecklistInvalid:
+            checklist = None
+    language = b.language or (checklist.settings.output_language if checklist else "ru")
+    provider, model = _resolve_model(b.provider, b.model)
+    try:
+        out = draft_svc.draft(get_provider(provider), b.description, b.type, checklist=checklist,
+                              language=language, model=model)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from None
+    except draft_svc.DraftError as e:
+        return JSONResponse(status_code=502, content={"detail": str(e), "calls": e.calls})
+    return out
+
+
 class CheckBody(BaseModel):
     body: dict
 
@@ -105,13 +149,7 @@ def trial(b: TrialBody):
         raise HTTPException(400, "выберите хотя бы один диалог")
     if len(b.conversation_ids) > trial_svc.MAX_DIALOGS:
         raise HTTPException(400, f"не больше {trial_svc.MAX_DIALOGS} диалогов за раз")
-    provider = (b.provider or settings.llm_provider).strip().lower()
-    known = {m["provider"]: m["model"] for m in configured_models()}
-    if provider not in known:
-        raise HTTPException(400, f"неизвестный провайдер «{provider}»")
-    model = b.model or known[provider]
-    if not model:
-        raise HTTPException(400, f"у провайдера «{provider}» не задана модель")
+    provider, model = _resolve_model(b.provider, b.model)
     try:
         return trial_svc.run(checklist, b.criterion_key, b.conversation_ids, provider_name=provider, model=model,
                              base_version_id=b.base_version_id, compare_key=b.compare_key)

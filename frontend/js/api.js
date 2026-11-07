@@ -353,3 +353,10 @@ export async function trialCriterion(payload) {
   if (isMock()) throw new ApiError('Проверка критерия работает только с сервером: в демо-данных нет модели.', 0);
   return request('POST', '/checklists/trial', { body: payload, failText: 'Проверка не выполнена', netText: 'Нет связи с сервером: проверка не выполнена.' });
 }
+
+/** Черновик критерия с ИИ: {description, type, language?, provider?, model?} → {criterion, model, cost_usd, tokens, latency_ms}.
+ *  Ничего не сохраняет. В mock-режиме — детерминированный фиктивный черновик из js/mock-store.js, без модели. */
+export async function draftCriterion(payload) {
+  if (isMock()) return (await mockStore()).draftCriterion(payload);
+  return request('POST', '/checklists/draft-criterion', { body: payload, failText: 'Черновик не получен', netText: 'Нет связи с сервером: черновик не получен.' });
+}
