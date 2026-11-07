@@ -7,6 +7,8 @@ from sqlmodel import Session, func, select
 
 from . import db
 from .api import audio as audio_api
+from .api import analytics as analytics_api
+from .api import appeals as appeals_api
 from .api import checklists as checklists_api
 from .api import conversations as conversations_api
 from .api import datasets as datasets_api
@@ -39,6 +41,8 @@ app.include_router(runs_api.router, prefix="/api")
 app.include_router(evaluations_api.router, prefix="/api")
 app.include_router(gold_api.router, prefix="/api")
 app.include_router(export_api.router, prefix="/api")
+app.include_router(appeals_api.router, prefix="/api")
+app.include_router(analytics_api.router, prefix="/api")
 
 
 def _model_name() -> str:

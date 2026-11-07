@@ -1,6 +1,6 @@
 # CONTRACTS
 
-> Версия: **0.1 (черновик)** · Обновлено: 2026-11-07 · Владелец: Claude
+> Версия: **0.5** · Обновлено: 2026-11-07 · Владелец: Claude
 > Контракт — это то, на что опираются параллельно фронт, бэк, eval и подагенты. Меняем только с записью в «Журнал версий» внизу. Несовместимое изменение → поднять минорную версию и предупредить в `PROGRESS.md`.
 > Связано: `architecture/evaluation-pipeline.md`, `architecture/data-model.md`, `spec/requirements.md`.
 
@@ -144,17 +144,17 @@
 
 ## 3. API
 
-Все ответы JSON, ошибки — `{"detail": str}` с кодом 4xx/5xx; у 422 невалидного чек-листа дополнительно `errors: [{path, message}]`. Префикс `/api`. Маршруты фронта и `/conversations/{id}` используют суррогатный числовой `id`.
+Все ответы JSON, ошибки — `{"detail": str}` с кодом 4xx/5xx; у 422 проверки данных (чек-лист, новый диалог, апелляция, поправка записи) дополнительно `errors: [{path, message}]`. Префикс `/api`. Маршруты фронта и `/conversations/{id}` используют суррогатный числовой `id`.
 
 | Метод и путь | Запрос | Ответ |
 |---|---|---|
 | `GET /health` | — | `{status, provider, model, group_id}` |
 | `POST /datasets/import` | `{group_id}` | `{group_id, imported, updated, warnings[]}` |
 | `POST /datasets/upload` | файл JSON (формат API организаторов) | то же |
-| `GET /conversations` | `?group_id&language&channel&critical&appeal&checklist_version_id` | `[ConversationRow]` |
-| `POST /conversations` | `{group_id?: "MANUAL", conversation_id?, channel, language, transcript: [] \| text}` (текст — строки `роль: текст`) | `ConversationDetail` (FR-DATA-07) |
+| `GET /conversations` | `?group_id&language&channel&critical&appeal=open\|any\|none&checklist_version_id` | `[ConversationRow]`; `appeal` — по последней оценке |
+| `POST /conversations` | `{group_id?: "MANUAL", conversation_id?, channel?, language?, audio_url?, transcript: [] \| text}` | `ConversationDetail` (201, FR-DATA-07); 409 — такой `conversation_id` в группе уже есть; 422 с `errors` |
 | `GET /conversations/{id}` | — | `ConversationDetail` (транскрипт с `msg_id`, `t_sec`, `audio_offset_sec`; список оценок) |
-| `PATCH /conversations/{id}` | `{audio_offset_fix_sec}` | `ConversationDetail` |
+| `PATCH /conversations/{id}` | `{audio_offset_fix_sec}` (секунды, от −3600 до 3600) | `ConversationDetail`; `messages[].audio_offset_sec` не меняется, плеер прибавляет поправку сам |
 | `GET /conversations/{id}/audio` | заголовок `Range` (необязательно) | поток записи через бэкенд: 200 или 206 с `Content-Range`, `Accept-Ranges: bytes`, тип по сигнатуре файла; источник без `Range` — файл кэшируется в памяти и режется на бэкенде; 404 — записи нет; 502 — источник недоступен (без адреса источника в ответе и логах) |
 | `GET /checklists` | — | `[{id, key, version, name, note, is_active, created_at}]` |
 | `GET /checklists/{version_id}` | — | `{id, key, version, ..., body}` |
@@ -166,37 +166,60 @@
 | `GET /runs/{run_id}` | — | `{status, total, done, failed, cost_usd, started_at, finished_at}` |
 | `GET /evaluations/{id}` | — | `Evaluation` |
 | `GET /evaluations/{id}/calls` | — | `[LLMCall]` с сырыми ответами |
-| `POST /appeals` | `{evaluation_id, criterion_key, comment}` | `Appeal`; 409, если уже есть открытая |
-| `GET /appeals` | `?status=open` | `[AppealRow]` (с фрагментом диалога) |
-| `POST /appeals/{id}/decision` | `{action: "confirm" \| "change", answer?, reason}` | `{appeal, evaluation}` (с пересчитанным `final_score`) |
-| `GET /export` | `?group_id&checklist_version_id&format=json\|csv` | файл |
-| `GET /analytics` | `?group_id&checklist_version_id` | `Analytics` (FR-ANL-01) |
-| `GET /review-queue` | `?group_id` | `[ReviewItem]` (FR-UX-02) |
+| `POST /appeals` | `{evaluation_id, criterion_key, comment}` (комментарий обязателен) | `Appeal` (201); 404 — нет оценки или критерия; 409 — по критерию уже есть открытая; 422 с `errors` |
+| `GET /appeals` | `?status=open\|confirmed\|changed\|closed&group_id&evaluation_id&conversation_id` (id диалога в БД); без `status` — все | `[AppealRow]`, новые сверху |
+| `POST /appeals/{id}/decision` | `{action: "confirm" \| "change", answer?, reason}` (причина обязательна; `answer` — из `allowed_answers` критерия и не равен текущему) | `{appeal, evaluation}` с пересчитанным `final_score`; 409 — апелляция уже рассмотрена; 422 с `errors` |
+| `GET /export` | `?group_id&checklist_version_id&format=csv\|json` (по умолчанию группа из `.env`, активная версия, csv) | файл (`Content-Disposition: attachment`), §5 |
+| `GET /analytics` | `?group_id&checklist_version_id` (по умолчанию группа из `.env` и активная версия) | `Analytics` (FR-ANL-01…03) |
+| `GET /review-queue` | `?group_id&checklist_version_id` (по умолчанию — как у аналитики) | `[ReviewItem]` (FR-UX-02), важные сверху |
 | `GET /meta/models` | — | настроенные провайдеры и модели, стратегия по умолчанию |
 | `GET /gold/{conversation_id}`, `PUT /gold/{conversation_id}` | разметка по формату `data/gold/README.md` | для экрана gold-разметки (только DEV) |
 
 Основные объекты:
 
 ```text
-ConversationRow  = {id, conversation_id, group_id, channel, language, latest: {evaluation_id, ai_total, final_total, critical, needs_review, open_appeals} | null}
+ConversationRow  = {id, conversation_id, group_id, channel, language, source,
+                    latest: {evaluation_id, status, ai_total, final_total, critical, needs_review, open_appeals, appeals} | null}   # appeals — всего по оценке
 ConversationDetail = {id, conversation_id, group_id, channel, language, has_audio, audio_url (путь прокси `/api/conversations/{id}/audio`, исходная подписанная ссылка в браузер не уходит), source, audio_offset_fix_sec, imported_at,
                     messages: [{msg_id, idx, speaker, text, timestamp, t_sec, audio_offset_sec, internal, event}],
                     segments: [{type, start_idx, end_idx, start_sec, end_sec}], events: [{type, idx, msg_id, t_sec, text}], warnings: [str],
-                    evaluations: [{id, model, checklist_version_id, ai_total, final_total, created_at}]}
-Evaluation       = {id, conversation_id, checklist_version_id, provider, model, strategy, prompt_version, status, needs_review,
+                    evaluations: [{id, model, checklist_version_id, status, ai_total, final_total, created_at}]}
+Evaluation       = {id, conversation_id, checklist_version_id, provider, model, strategy, prompt_version, status, needs_review, critical, open_appeals,
                     facts, overview: {summary, topic, resolved} | null, params: {temperature, seed, reuse},
                     ai_score: ScoreResult, final_score: ScoreResult, criteria: [CriterionResult],
                     tokens_in, tokens_out, cost_usd, latency_ms, created_at}
 CriterionResult  = {key, title, section, type, weight, scale_max, ai_answer, ai_points, final_answer, final_points, overridden,
                     reasoning, confidence, advice, evidence: [{msg_id, quote, quote_ok}], checked_range: {from, to} | null, na_reason, issues: [str],
-                    reused_from_evaluation_id: int | null,
-                    appeal: Appeal | null}
+                    reused_from_evaluation_id: int | null, allowed_answers: [Answer],
+                    appeal: Appeal | null (последняя), appeal_history: [Appeal] (от старых к новым)}
 ScoreResult      = {total: float | null, applicable_weight, points_sum, sections: [{id, title, points, applicable_weight, pct}],
                     criteria: {key: {points, contribution}}, critical: [key]}
-Analytics        = {count, avg_total, histogram: [{from, to, count}], by_criterion: [{key, title, pass_rate, avg_pct, na_rate}],
-                    by_language: {lang: {count, avg_total}}, by_channel: {...}, critical_count, needs_review_count, topics: [{topic, count, resolved_rate}]}
-ReviewItem       = {evaluation_id, conversation_id, criterion_key, reason: "low_confidence" | "validator" | "guard", issues: [str]}
-Appeal           = {id, evaluation_id, criterion_key, comment, status, ai_answer_snapshot, decision_answer, decision_reason, created_at, decided_at}
+Analytics        = {group_id, checklist_version_id, checklist_version: {id, key, version, name} | null,
+                    conversations, count (с оценкой), not_evaluated, status_counts: {done, partial, failed},
+                    avg_total (= avg_final_total), avg_ai_total, avg_final_total,
+                    histogram: [{from, to, count, ai_count}] (корзины по 10 п.п., 100 — в последней; count — по финальному итогу),
+                    by_criterion: [{key, title, section, type, weight, count, pass_rate, ai_pass_rate, avg_pct, ai_avg_pct, na_rate,
+                                    answers: {ответ: n}, not_passed_ids: [id диалога], low_confidence_count,
+                                    overridden_count, appeals_count, appeals_changed}],
+                    by_language: {lang: Slice}, by_channel: {channel: Slice},
+                    critical_count, ai_critical_count, critical_ids: [id диалога], needs_review_count, review_queue_count,
+                    appeals: {open, confirmed, changed}, resolved: {yes, no, unclear},
+                    topics: [{topic, count, resolved_rate, avg_total, weakest: {key, title, avg_pct} | null, ids: [id диалога]}],
+                    cost: {latest_usd, total_usd (все оценки группы, с повторными), evaluations_total, avg_per_dialog_usd,
+                           tokens_in, tokens_out, models: [{model, count}]}}
+Slice            = {conversations, count, avg_total, avg_ai_total, critical_count, needs_review_count}
+ReviewItem       = {evaluation_id, conversation_id (id диалога в БД), conversation_code, group_id, channel, language,
+                    criterion_key | null (null — оценка не получена), criterion_title,
+                    reason: "failed" | "missing" | "appeal" | "guard" | "validator" | "low_confidence", reasons: [..], severity,
+                    message, messages: [str], issues: [str], confidence, ai_answer, final_answer, appeal_id | null}
+AppealRow        = Appeal + {conversation: {id, conversation_id, group_id, channel, language},
+                    evaluation: {id, model, checklist_version_id, status, ai_total, final_total, critical, created_at},
+                    criterion: {key, title, type, weight, scale_max, scale, allowed_answers, ai_answer, ai_points, final_answer, final_points,
+                                overridden, reasoning, confidence, na_reason, advice, evidence, checked_range, issues} | null,
+                    fragment: [{msg_id, idx, speaker, text, timestamp, t_sec, audio_offset_sec, internal, event,
+                                is_evidence, quotes: [str], gap_before}]}
+Appeal           = {id, evaluation_id, criterion_key, comment, status: "open" | "confirmed" | "changed", ai_answer_snapshot,
+                    decision_answer, decision_reason, created_at, decided_at}   # ответы — как в API: "yes" | "no" | "na" | int
 ```
 
 ## 4. Сигнатуры ядра
@@ -212,15 +235,21 @@ guards.apply(answers: dict, facts: dict, criteria: list[Criterion]) -> tuple[dic
 scoring.compute(checklist: Checklist, answers: dict[str, Answer]) -> ScoreResult
 reuse.criterion_hash(criterion: Criterion, prompt_version: str, model: str) -> str   # только поля, которые попадают в промпт
 reuse.plan(criteria: list[Criterion], previous: Evaluation | None, *, model: str, prompt_version: str) -> tuple[dict[str, CriterionResult], list[Criterion]]   # переиспользуем, вызываем
-analytics.summarize(group_id: str, checklist_version_id: int | None) -> Analytics
+analytics.summarize(session, group_id: str | None, checklist_version_id: int | None) -> Analytics
 evaluator.evaluate(conversation_pk: int, checklist_version_id: int, *, provider: str, model: str, strategy: str) -> int   # evaluation_id
-appeals.decide(appeal_id: int, action: str, answer: Answer | None, reason: str) -> Evaluation
+appeals.decide(session, appeal_id: int, action: str, answer: Answer | None, reason: str) -> tuple[Appeal, Evaluation]
+review.queue(session, group_id: str | None, version_id: int | None) -> list[ReviewItem]
+manual.create(session, body: dict) -> Conversation
 LLMProvider.complete(messages, *, model, json_schema, max_tokens, temperature, timeout_s) -> LLMResult
 ```
 
 ## 5. Экспорт (`GET /export`)
 
-CSV, UTF-8 с BOM, `;` как разделитель (Excel в RU-локали). Колонки: `conversation_id, channel, language, checklist_version, model, c<key>_answer, c<key>_points …, ai_total, final_total, critical, cost_usd`. JSON — массив тех же объектов плюс обоснования.
+По последней оценке каждого диалога группы для версии чек-листа (по умолчанию активной); диалог без оценки — строка со `status: not_evaluated` и пустыми ответами.
+
+CSV, UTF-8 с BOM, `;` как разделитель, запятая в дробях, строки `\r\n` (Excel в RU-локали). Колонки: `conversation_id, channel, language, checklist_version` (`default v2`), `model, status, c<key>_answer, c<key>_points …` (включённые критерии по порядку; ответ и баллы финальные, у флага баллов нет), `ai_total, final_total, critical, needs_review` (`yes`/`no`), `overridden` (коды критериев, изменённых апелляцией, через запятую), `open_appeals, cost_usd, evaluation_id`. JSON — массив тех же объектов (числа и `true/false`) плюс `criteria: [{key, title, ai_answer, ai_points, final_answer, final_points, overridden, confidence, reasoning, na_reason, advice, evidence, issues, appeal: {id, status, comment, decision_reason} | null}]` и `overview`.
+
+Новый диалог (`POST /conversations`, FR-DATA-07): `transcript` — массив реплик API организаторов, текст или JSON строкой (массив, запись `{conversation_id, channel, language, transcript}` или набор из одной записи). Текст — по реплике в строке: `[MM:SS] роль: текст` (время необязательно); роли `client/operator/bot/system`, `клиент/оператор/бот/система`, `К`/`О`; строка без роли продолжает предыдущую реплику. `channel` по умолчанию `agent chat` (`чат`/`звонок` тоже понимаются), `language` не указан — определяется по репликам клиента, предупреждение в `warnings`. `conversation_id` не дан — `manual-001`, `manual-002`… в группе.
 
 ### 5.1 Файл сдачи (`results/<dev|prod>/results.json`, `GET /api/export/results?group_id=`)
 
@@ -231,6 +260,8 @@ CSV, UTF-8 с BOM, `;` как разделитель (Excel в RU-локали).
 Формат — `data/gold/README.md`. Разбиение dev/holdout — `data/gold/split.json`: `{"dev": [...], "holdout": [...]}`.
 
 ## Журнал версий
+
+- 0.5 — 2026-11-07 — этап 4: апелляции (`AppealRow` с фрагментом, `allowed_answers` и `appeal_history` у критерия, `open_appeals`/`appeals` в списке), `Analytics`, `ReviewItem` с причинами `failed`/`missing`/`appeal`, экспорт CSV/JSON (§5), правила вставки диалога и поправки записи.
 
 - 0.4 — 2026-11-07 — формат сдачи организаторов: `export_id` у критерия, `results.json` 1.0, `GET /api/export/results`.
 

@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 
 from .. import db  # noqa: F401  (engine берётся в runs.py)
 from ..domain import Checklist, NormalizedConversation
-from ..models import ChecklistVersion, Conversation, CriterionResult, Evaluation, LLMCall
+from ..models import Appeal, ChecklistVersion, Conversation, CriterionResult, Evaluation, LLMCall
 from ..providers import ProviderError, get_provider
 from . import evaluator, prompt_builder
 from . import reuse as reuse_mod
@@ -155,9 +155,14 @@ def evaluate_one(
 
 
 def to_api(session: Session, ev: Evaluation) -> dict:
+    from . import appeals as appeals_mod  # appeals импортирует этот модуль
+
     ver = session.get(ChecklistVersion, ev.checklist_version_id)
     cl = Checklist.model_validate(ver.body) if ver else None
     rows = {r.criterion_key: r for r in session.exec(select(CriterionResult).where(CriterionResult.evaluation_id == ev.id))}
+    history: dict[str, list[dict]] = {}
+    for a in session.exec(select(Appeal).where(Appeal.evaluation_id == ev.id).order_by(Appeal.id)):
+        history.setdefault(a.criterion_key, []).append(appeals_mod.to_api(a))
     criteria = []
     order = [c for c in cl.criteria if c.key in rows] if cl else []
     seen = {c.key for c in order}
@@ -177,12 +182,16 @@ def to_api(session: Session, ev: Evaluation) -> dict:
             "reasoning": r.reasoning, "confidence": r.confidence, "advice": r.advice,
             "evidence": r.evidence or [], "checked_range": r.checked_range, "na_reason": r.na_reason,
             "issues": r.issues or [], "reused_from_evaluation_id": r.reused_from_evaluation_id,
-            "appeal": None,
+            "allowed_answers": c.allowed_answers() if c else [],
+            "appeal": (history.get(r.criterion_key) or [None])[-1],   # последняя апелляция
+            "appeal_history": history.get(r.criterion_key, []),       # все, от старых к новым (FR-APL-05)
         })
     return {
         "id": ev.id, "conversation_id": ev.conversation_pk, "checklist_version_id": ev.checklist_version_id,
         "provider": ev.provider, "model": ev.model, "strategy": ev.strategy, "prompt_version": ev.prompt_version,
-        "status": ev.status, "needs_review": ev.needs_review, "facts": ev.facts, "overview": ev.overview,
+        "status": ev.status, "needs_review": ev.needs_review, "critical": ev.critical,
+        "open_appeals": sum(1 for h in history.values() for a in h if a["status"] == "open"),
+        "facts": ev.facts, "overview": ev.overview,
         "params": ev.params, "ai_score": ev.ai_score, "final_score": ev.final_score, "criteria": criteria,
         "tokens_in": ev.tokens_in, "tokens_out": ev.tokens_out, "cost_usd": ev.cost_usd,
         "latency_ms": ev.latency_ms, "created_at": ev.created_at.isoformat(),
