@@ -16,7 +16,7 @@ const clone = (x) => (x == null ? x : JSON.parse(JSON.stringify(x)));
 const trunc = (s, n) => { const t = String(s || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
 const nCrit = (n) => `${n} ${plural(n, 'критерий', 'критерия', 'критериев')}`;
 const nDialogs = (n) => `${n} ${plural(n, 'диалог', 'диалога', 'диалогов')}`;
-const LONG_FIELDS = new Set(['title', 'definition', 'yes_when', 'no_when', 'na_when', 'guidance']);
+const LONG_FIELDS = new Set(['title', 'definition', 'yes_when', 'no_when', 'na_when', 'guidance', 'voice_guidance']);
 
 // Несохранённые правки переживают уход с экрана внутри вкладки (переход в карточку и обратно).
 let kept = null;
@@ -646,9 +646,9 @@ export function mount(el, params = {}) {
       : mode === 'replace'
         ? { key: nextKey(body, orig.key), export_id: orig.export_id ?? null, title: '', section: orig.section, type: orig.type, weight: orig.weight,
           na_allowed: false, na_when: null, definition: '', yes_when: null, no_when: null, scale: orig.type === 'scale' ? clone(orig.scale) : null,
-          guidance: null, group: orig.group ?? null, context_refs: [], guards: [], enabled: true }
+          guidance: null, voice_guidance: null, group: orig.group ?? null, context_refs: [], guards: [], enabled: true }
         : { key: nextKey(body), export_id: null, title: '', section: section || body.sections?.[0]?.id || '', type: 'binary', weight: 10,
-          na_allowed: false, na_when: null, definition: '', yes_when: null, no_when: null, scale: null, guidance: null, group: null, context_refs: [], guards: [], enabled: true };
+          na_allowed: false, na_when: null, definition: '', yes_when: null, no_when: null, scale: null, guidance: null, voice_guidance: null, group: null, context_refs: [], guards: [], enabled: true };
     const serverErrs = mode === 'edit' ? st.serverErrors.filter((e) => e.at?.kind === 'criterion' && e.refs?.[e.at.idx] === orig) : [];
     editor = criterionEditor({
       mode, orig, tpl, idx, body, serverErrs, focus, factNames,
@@ -753,14 +753,14 @@ function toForm(c) {
   return {
     key: c.key ?? '', title: c.title ?? '', section: c.section ?? '', type: TYPES.includes(c.type) ? c.type : 'binary', weight: String(c.weight ?? 0),
     na_allowed: !!c.na_allowed, na_when: c.na_when ?? '', definition: c.definition ?? '', yes_when: c.yes_when ?? '', no_when: c.no_when ?? '',
-    scale: (c.scale || []).map((s) => ({ value: String(s.value ?? ''), label: s.label ?? '' })), guidance: c.guidance ?? '', group: c.group ?? '',
+    scale: (c.scale || []).map((s) => ({ value: String(s.value ?? ''), label: s.label ?? '' })), guidance: c.guidance ?? '', voice_guidance: c.voice_guidance ?? '', group: c.group ?? '',
     context_refs: (c.context_refs || []).join('\n'),
     guards: (c.guards || []).map((g) => ({ when: (g.when || []).join(', '), expect: (g.expect || []).map(String), action: g.action || 'flag', set: g.set ?? '' })),
     enabled: c.enabled !== false, export_id: c.export_id ?? '',
   };
 }
 const KNOWN_FIELDS = ['key', 'export_id', 'title', 'section', 'type', 'weight', 'na_allowed', 'na_when', 'definition', 'yes_when', 'no_when', 'scale',
-  'guidance', 'group', 'context_refs', 'guards', 'enabled'];
+  'guidance', 'voice_guidance', 'group', 'context_refs', 'guards', 'enabled'];
 const num = (raw) => { const t = String(raw ?? '').trim().replace(',', '.'); if (t === '') return null; const n = Number(t); return Number.isFinite(n) ? n : String(raw); };
 
 function fromForm(f, base) {
@@ -771,7 +771,7 @@ function fromForm(f, base) {
     na_allowed: na, na_when: na ? txt(f.na_when) : null, definition: f.definition.trim(),
     yes_when: f.type === 'scale' ? null : txt(f.yes_when), no_when: f.type === 'scale' ? null : txt(f.no_when),
     scale: f.type === 'scale' ? f.scale.map((s) => ({ value: num(s.value), label: s.label.trim() })) : null,
-    guidance: txt(f.guidance), group: txt(f.group),
+    guidance: txt(f.guidance), voice_guidance: txt(f.voice_guidance), group: txt(f.group),
     context_refs: f.context_refs.split(/[\n,]/).map((s) => s.trim()).filter(Boolean),
     guards: f.guards.map((g) => {
       const o = { when: g.when.split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean), expect: [...g.expect], action: g.action };
@@ -956,6 +956,7 @@ function criterionEditor({ mode, orig, tpl, idx, body, serverErrs, focus, factNa
           f.na_allowed && !isFlag ? area('na_when', 2, { placeholder: 'Когда критерий неприменим, например: ожидания не было', 'aria-label': 'Когда N/A' }) : null,
           errSlot('na_when')),
         fld('Подсказка оценщику', 'guidance', area('guidance', 2, { placeholder: 'На что смотреть: какие реплики и факты, типичные ошибки' }), 'Попадает в промпт как подсказка модели.', 'cqa-ce-wide'),
+        fld('Подсказка для звонков', 'voice_guidance', area('voice_guidance', 2, { placeholder: 'Как применять критерий к устной речи: паузы, формулировки, проверка личности голосом' }), 'Попадает в промпт только для звонков.', 'cqa-ce-wide'),
         fld('Код в файле сдачи', 'export_id', input('export_id', { list: 'cqa-ce-export', spellcheck: 'false', class: 'cqa-input cqa-mono', placeholder: 'closure' }),
           mode === 'replace' ? `Взят у ${orig.key}: в results.json новый критерий пойдёт под этим кодом.` : 'criterion_id в results.json организаторов.'),
         fld('Группа вызова', 'group', input('group', { list: 'cqa-ce-groups', spellcheck: 'false', class: 'cqa-input cqa-mono', placeholder: 'свой вызов' }),

@@ -18,11 +18,11 @@ export const ORGANIZER_CODES = [
 export const FIELD_LABEL = {
   key: 'Код', title: 'Название', section: 'Секция', type: 'Тип ответа', weight: 'Вес', na_allowed: 'N/A разрешён',
   na_when: 'Когда N/A', definition: 'Определение', yes_when: '«Да», когда', no_when: '«Нет», когда', scale: 'Ступени шкалы',
-  guidance: 'Подсказка оценщику', group: 'Группа вызова', context_refs: 'Справки', guards: 'Страховки', enabled: 'Включён',
+  guidance: 'Подсказка оценщику', voice_guidance: 'Подсказка для звонков', group: 'Группа вызова', context_refs: 'Справки', guards: 'Страховки', enabled: 'Включён',
   export_id: 'Код в файле сдачи',
 };
 // Поля промпта и хеша критерия (services/evaluator._PROMPT_FIELDS): их правка требует нового вызова модели.
-export const PROMPT_FIELDS = new Set(['key', 'title', 'type', 'definition', 'yes_when', 'no_when', 'na_allowed', 'na_when', 'scale', 'guidance', 'context_refs']);
+export const PROMPT_FIELDS = new Set(['key', 'title', 'type', 'definition', 'yes_when', 'no_when', 'na_allowed', 'na_when', 'scale', 'guidance', 'voice_guidance', 'context_refs']);
 // Настройки, которые не попадают в промпт (prompt_builder._SCORING_ONLY_SETTINGS): только пересчёт баллов.
 export const SCORING_ONLY_SETTINGS = new Set(['rounding', 'critical_policy']);
 export const DEFAULT_SETTINGS = {
@@ -67,7 +67,7 @@ export function normCriterion(c) {
     weight: Number(c.weight ?? 0), na_allowed: !!c.na_allowed, na_when: txt(c.na_when), definition: String(c.definition ?? '').trim(),
     yes_when: txt(c.yes_when), no_when: txt(c.no_when),
     scale: Array.isArray(c.scale) && c.scale.length ? c.scale.map((s) => ({ value: Number(s.value), label: String(s.label ?? '').trim() })) : null,
-    guidance: txt(c.guidance), group: txt(c.group), context_refs: (c.context_refs || []).map(String),
+    guidance: txt(c.guidance), voice_guidance: txt(c.voice_guidance), group: txt(c.group), context_refs: (c.context_refs || []).map(String),
     guards: (c.guards || []).map((g) => ({ when: (g.when || []).map(String), expect: (g.expect || []).map(String), action: g.action || 'flag',
       set: g.action === 'override' ? txt(g.set) : null })),
     enabled: c.enabled !== false, export_id: txt(c.export_id),
