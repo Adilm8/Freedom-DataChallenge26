@@ -55,6 +55,7 @@ def test_openrouter_strict_schema_and_cost_from_usage():
     assert res.parsed == {"x": "ok"}
     assert (res.tokens_in, res.tokens_out, res.cached_tokens, res.cost_usd) == (1000, 50, 800, 0.0021)
     assert res.request["response_format"] == {"type": "json_schema"}
+    assert res.request["messages"] == [{"role": "user", "content": "hi"}]   # промпт сохраняется вместе с вызовом
 
 
 def test_temperature_and_schema_dropped_when_model_does_not_support_them():

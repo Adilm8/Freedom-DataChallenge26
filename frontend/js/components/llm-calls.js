@@ -9,6 +9,15 @@ function pretty(raw) {
   try { return JSON.stringify(JSON.parse(raw), null, 2); } catch { return raw; }
 }
 
+const withoutMessages = (r) => { if (!r || typeof r !== 'object') return r; const { messages, ...rest } = r; return rest; };
+
+/** Промпт вызова: сообщения по ролям. У старых оценок промпт не сохранялся — блока нет. */
+function promptBlock(messages) {
+  if (!Array.isArray(messages) || !messages.length) return null;
+  const text = messages.map((m) => `=== ${m.role} ===\n${typeof m.content === 'string' ? m.content : JSON.stringify(m.content, null, 2)}`).join('\n\n');
+  return jsonBlock('Промпт', text, `${messages.length} сообщ. · ${text.length.toLocaleString('ru-RU')} симв.`);
+}
+
 function jsonBlock(title, text, hint) {
   const pre = h('pre', { class: 'cqa-pre' }, text || '(пусто)');
   const copy = h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-btn--ghost',
@@ -48,7 +57,8 @@ export function mount(el, params = {}) {
       h('div', { class: 'cqa-calls__sub cqa-faint' }, [c.provider, c.model].filter(Boolean).join(' · ')),
       c.error ? h('div', { class: 'cqa-warnbox' }, h('b', null, 'Ошибка вызова'), h('div', null, c.error)) : null,
       jsonBlock('Ответ модели', resp, resp ? `${resp.length.toLocaleString('ru-RU')} симв.` : 'нет ответа'),
-      jsonBlock('Параметры запроса', pretty(c.request), 'без текста промпта'));
+      promptBlock(c.request?.messages),
+      jsonBlock('Параметры запроса', pretty(withoutMessages(c.request)), 'модель, формат ответа, sampling'));
   }
 
   async function load() {

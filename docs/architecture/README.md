@@ -63,7 +63,7 @@ backend/app/
               evaluator.py appeals.py export.py reuse.py analytics.py
               facts/  __init__.py (реестр) timing.py events.py greeting.py language.py risk_terms.py
   providers/  base.py openai_compat.py pricing.py
-  prompts/    system.md channel_voice.md transcript.md criterion.md output_rules.md
+  prompts/    system.md channel_voice.md output_rules.md VERSION (транскрипт и критерии собирает prompt_builder.py)
 data/
   checklists/default.json   config/lexicons.json  config/system_events.json
   gold/gold_labels.json     raw/ (не в git)  cqa.db (не в git)
