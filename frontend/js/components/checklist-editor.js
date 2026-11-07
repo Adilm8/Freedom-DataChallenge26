@@ -279,7 +279,7 @@ export function mount(el, params = {}) {
     const c = curMeta();
     headEl.append(h('div', { class: 'cqa-pagehead' },
       h('div', { class: 'cqa-chk-title' },
-        h('h1', { class: 'cqa-h1' }, 'Чек-лист'),
+        h('h1', { class: 'cqa-h1' }, 'Чек-листы'),
         h('div', { class: 'cqa-pagehead__sub' }, c
           ? [h('span', null, `${st.cur.body?.name || c.name} · `), h('b', null, `версия ${c.version}`), ' ',
             c.is_active ? h('span', { class: 'cqa-badge cqa-badge--yes', id: 'cqa-chk-active-badge' }, 'активная') : h('span', { class: 'cqa-badge cqa-badge--muted' }, 'не активная'),

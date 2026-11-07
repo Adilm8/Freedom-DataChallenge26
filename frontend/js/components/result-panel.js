@@ -63,7 +63,7 @@ export function mount(el, params = {}) {
   function evidenceRow(c, e) {
     const bad = e.quote_ok === false;
     return h('div', { class: `cqa-ev__row ${bad ? 'cqa-ev__row--bad' : ''}` },
-      h('button', { type: 'button', class: 'cqa-chip cqa-tip', 'data-tip': 'Показать реплику в транскрипте',
+      h('button', { type: 'button', class: 'cqa-chip cqa-tip', 'data-tip': 'Показать реплику в расшифровке',
         onclick: () => emit(root, 'cqa:evidence-click', { msg_id: e.msg_id, key: c.key, quote: bad ? null : e.quote }) }, e.msg_id),
       bad
         ? h('span', { class: 'cqa-ev__bad' },
@@ -110,13 +110,13 @@ export function mount(el, params = {}) {
       `↺ ответ из оценки #${c.reused_from_evaluation_id}`));
     }
     if (c.evidence?.length || c.checked_range) {
-      foot.push(h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-btn--ghost', onclick: () => showInTranscript(c) }, 'Показать в транскрипте'));
+      foot.push(h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-btn--ghost', onclick: () => showInTranscript(c) }, 'Перейти к фрагменту'));
     }
     if (p.mode !== 'reviewer') {
       const open = c.appeal?.status === 'open';
       const why = open ? `Апелляция №${c.appeal.id} уже ждёт решения проверяющего` : c.final_answer == null ? 'Ответа нет — оспаривать нечего' : '';
       foot.push(h('button', { type: 'button', class: `cqa-btn cqa-btn--sm cqa-crit__appeal ${why ? 'cqa-tip' : ''}`, disabled: !!why, 'data-tip': why || null,
-        dataset: { appeal: c.key }, onclick: () => appeal(c) }, c.appeal ? 'Оспорить снова' : 'Оспорить'));
+        dataset: { appeal: c.key }, onclick: () => appeal(c) }, c.appeal ? 'Оспорить снова' : 'Оспорить оценку'));
     }
 
     return h('article', { class: `cqa-panel cqa-crit ${state ? `cqa-crit--${state}` : ''} ${review ? 'cqa-crit--review' : ''}`, id: `crit-${c.key}`, dataset: { key: c.key, state: state || 'ok' }, tabindex: -1 },
@@ -223,8 +223,35 @@ export function mount(el, params = {}) {
           h('div', { class: 'cqa-bar', role: 'img', 'aria-label': `${s.title}: ${s.pct}%` }, h('div', { class: `cqa-bar__fill ${cls}`, style: `width:${s.pct}%` })));
       })));
     }
+    parts.push(whyLowered());
     return h('div', { class: 'cqa-panel cqa-sum' }, parts);
   }
+
+  // «Почему снижена оценка»: критерии, где финальный балл ниже веса, и грубые ошибки — по убыванию потерь.
+  function whyLowered() {
+    const firstSentence = (t) => { const x = String(t || '').trim(); const m = /^(.{20,220}?[.!?])(\s|$)/.exec(x); return m ? m[1] : x.length > 220 ? x.slice(0, 217) + '…' : x; };
+    const items = ev.criteria.map((c) => {
+      if (c.type === 'flag') return c.final_answer === 'yes' ? { c, lost: Infinity, label: 'грубая ошибка' } : null;
+      const max = Number(c.weight), pts = Number(c.final_points);
+      if (c.final_answer == null || c.final_answer === 'na' || !Number.isFinite(pts) || !(pts < max)) return null;
+      return { c, lost: max - pts, label: `−${fmtNum(max - pts)} из ${fmtNum(max)}` };
+    }).filter(Boolean).sort((a, b) => b.lost - a.lost);
+    const head = h('div', { class: 'cqa-why__title' }, 'Почему снижена оценка');
+    if (!items.length) return h('div', { class: 'cqa-why', id: 'cqa-why' }, head, h('div', { class: 'cqa-faint' }, 'Не снижена: все применимые критерии выполнены полностью.'));
+    return h('div', { class: 'cqa-why', id: 'cqa-why' }, head,
+      h('ul', { class: 'cqa-why__list' }, items.map(({ c, label }) => {
+        const canAppeal = p.mode !== 'reviewer' && c.appeal?.status !== 'open';
+        return h('li', { class: `cqa-why__item ${c.type === 'flag' ? 'cqa-why__item--flag' : ''}` },
+          h('div', { class: 'cqa-why__main' },
+            h('div', { class: 'cqa-why__head' }, h('span', { class: 'cqa-code' }, c.key), h('b', null, c.title), h('span', { class: 'cqa-why__lost' }, label)),
+            c.reasoning ? h('div', { class: 'cqa-why__text' }, firstSentence(c.reasoning)) : null),
+          h('div', { class: 'cqa-why__acts' },
+            c.evidence?.length || c.checked_range ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-btn--primary', onclick: () => showInTranscript(c) }, 'Перейти к фрагменту') : null,
+            canAppeal ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', onclick: () => appeal(c) }, 'Оспорить оценку') : null,
+            h('button', { type: 'button', class: 'cqa-linkbtn', onclick: () => { const el = root.querySelector(`#crit-${CSS.escape(c.key)}`); el?.scrollIntoView({ block: 'start', behavior: 'smooth' }); el?.focus({ preventScroll: true }); } }, 'подробнее')));
+      })));
+  }
+  const fmtNum = (v) => (Number.isInteger(v) ? String(v) : Number(v).toFixed(2).replace(/\.?0+$/, ''));
 
   function metaPanel() {
     const pr = ev.params || {};
@@ -331,7 +358,7 @@ export function mount(el, params = {}) {
       if (!ev) {
         clear(root).append(h('div', { class: 'cqa-panel' }, emptyState({ title: 'Диалог ещё не оценён',
           text: 'Запустите оценку: здесь появятся баллы по 8 критериям, обоснование, цитаты-доказательства и подсказки оператору.',
-          icon: '☆', actionLabel: 'Оценить', onAction: () => emit(root, 'cqa:run-request', { ids: [p.conversationId] }) })));
+          icon: '—', actionLabel: 'Оценить', onAction: () => emit(root, 'cqa:run-request', { ids: [p.conversationId] }) })));
         return;
       }
       render();

@@ -1740,8 +1740,8 @@ button.cqa-chip.cqa-cmp-chip--uniq { border-color: var(--cqa-accent); color: var
 .cqa-pal { position: fixed; inset: 0; z-index: 120; background: rgba(15, 20, 35, .42); backdrop-filter: blur(3px);
   display: flex; justify-content: center; align-items: flex-start; padding: 12vh 16px 16px; animation: cqa-fade .12s ease; }
 .cqa-pal__box { width: min(640px, 100%); background: var(--cqa-surface); border: 1px solid var(--cqa-border); border-radius: 16px;
-  box-shadow: 0 24px 70px rgba(15, 20, 40, .35); overflow: hidden; display: flex; flex-direction: column; max-height: 72vh; animation: cqa-pal-in .16s cubic-bezier(.2, .9, .3, 1.2); }
-@keyframes cqa-pal-in { from { transform: translateY(-8px) scale(.98); opacity: 0; } }
+  box-shadow: 0 24px 70px rgba(15, 20, 40, .35); overflow: hidden; display: flex; flex-direction: column; max-height: 72vh; animation: cqa-pal-in .14s ease-out; }
+@keyframes cqa-pal-in { from { transform: translateY(-4px); opacity: 0; } }
 .cqa-pal__search { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--cqa-border); }
 .cqa-pal__icon { font-size: 22px; color: var(--cqa-accent); line-height: 1; }
 .cqa-pal__input { flex: 1; border: 0; outline: 0; background: none; font-size: 17px !important; min-width: 0; }
@@ -1770,7 +1770,7 @@ button.cqa-chip.cqa-cmp-chip--uniq { border-color: var(--cqa-accent); color: var
 .cqa-help__grid dd { margin: 0 0 6px; color: var(--cqa-text); font-size: var(--cqa-text-sm); }
 
 .cqa-tour { position: fixed; inset: 0; z-index: 130; pointer-events: auto; }
-.cqa-tour__spot { position: fixed; border-radius: 14px; box-shadow: 0 0 0 3px var(--cqa-accent), 0 0 30px 6px rgba(106, 92, 240, .55), 0 0 0 200vmax rgba(12, 16, 30, .6);
+.cqa-tour__spot { position: fixed; border-radius: 10px; box-shadow: 0 0 0 2px var(--cqa-accent), 0 0 0 200vmax rgba(12, 16, 30, .55);
   transition: left .35s ease, top .35s ease, width .35s ease, height .35s ease; pointer-events: none; }
 .cqa-tour__card { position: fixed; background: var(--cqa-surface); border-radius: 14px; padding: 16px 18px; box-shadow: var(--cqa-shadow-lg); border: 1px solid var(--cqa-accent-bd);
   transition: top .35s ease, left .35s ease, opacity .2s; }
@@ -1781,7 +1781,7 @@ button.cqa-chip.cqa-cmp-chip--uniq { border-color: var(--cqa-accent); color: var
 .cqa-tour__foot { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
 .cqa-tour__dots { display: flex; gap: 5px; margin-right: auto; }
 .cqa-tour__dots span { width: 6px; height: 6px; border-radius: 3px; background: var(--cqa-border-strong); transition: width .2s, background .2s; }
-.cqa-tour__dots span.is-on { width: 18px; background: var(--cqa-accent); }
+.cqa-tour__dots span.is-on { background: var(--cqa-accent); }
 .cqa-tour__skip { font-size: var(--cqa-text-sm); }
 
 .cqa-list__heat { width: 1%; white-space: nowrap; }
@@ -1793,7 +1793,6 @@ button.cqa-chip.cqa-cmp-chip--uniq { border-color: var(--cqa-accent); color: var
 .cqa-heat__c--na { background: repeating-linear-gradient(135deg, var(--cqa-na-bg) 0 3px, var(--cqa-surface) 3px 5px); }
 .cqa-heat__c--clear { background: var(--cqa-surface); box-shadow: inset 0 0 0 1.5px var(--cqa-yes-bd); margin-left: 4px; }
 .cqa-heat__c--flag { background: var(--cqa-flag); box-shadow: 0 0 0 2px var(--cqa-flag-bg); margin-left: 4px; }
-tr:hover .cqa-heat__c { transform: scaleY(1.08); }
 @media (prefers-reduced-motion: reduce) { .cqa-tour__spot, .cqa-tour__card, .cqa-pal, .cqa-pal__box { transition: none; animation: none; } }
 
 /* ---------- Кольца итога и движение ---------- */
@@ -1809,7 +1808,7 @@ tr:hover .cqa-heat__c { transform: scaleY(1.08); }
 .cqa-route { animation: cqa-route-in .22s ease both; }
 @keyframes cqa-route-in { from { opacity: 0; transform: translateY(4px); } }
 .cqa-header { background: color-mix(in srgb, var(--cqa-surface) 86%, transparent); backdrop-filter: saturate(1.4) blur(10px); }
-button.cqa-kpi:hover { transform: translateY(-1px); box-shadow: var(--cqa-shadow-md); }
+button.cqa-kpi:hover { box-shadow: var(--cqa-shadow-md); }
 button.cqa-kpi { transition: border-color .12s, box-shadow .15s, transform .15s; }
 .cqa-list-table tbody tr { transition: background .12s; }
 .cqa-list-table tbody tr:focus-visible { outline: none; box-shadow: inset 3px 0 0 var(--cqa-accent); background: var(--cqa-accent-soft); }
@@ -1827,3 +1826,16 @@ button.cqa-kpi { transition: border-color .12s, box-shadow .15s, transform .15s;
 .cqa-runform__group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 /* Переключатель «Включён» отделён от кнопок строки: так по нему не попадают случайно. */
 @media (min-width: 901px) { .cqa-chk-row:not(.cqa-chk-row--head) .cqa-chk-cell--acts { border-left: 1px solid var(--cqa-border); padding-left: 10px; } }
+
+/* ---------- «Почему снижена оценка» (сводка карточки) ---------- */
+.cqa-why { border-top: 1px solid var(--cqa-border); margin-top: var(--cqa-s-4); padding-top: var(--cqa-s-4); }
+.cqa-why__title { font-weight: 700; font-size: var(--cqa-text-md); margin-bottom: var(--cqa-s-2); }
+.cqa-why__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.cqa-why__item { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  padding: 10px 12px; border: 1px solid var(--cqa-border); border-left: 3px solid var(--cqa-warn-line); border-radius: var(--cqa-r-md); background: var(--cqa-surface-2); }
+.cqa-why__item--flag { border-left-color: var(--cqa-flag); background: var(--cqa-flag-bg); }
+.cqa-why__main { flex: 1 1 100%; min-width: 0; }
+.cqa-why__head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.cqa-why__lost { margin-left: auto; font-weight: 700; color: var(--cqa-no); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cqa-why__text { color: var(--cqa-muted); font-size: var(--cqa-text-sm); margin-top: 3px; }
+.cqa-why__acts { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }

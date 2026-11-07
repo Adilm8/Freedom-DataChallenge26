@@ -33,7 +33,7 @@ export function mount(el, params = {}) {
     const ver = a?.checklist_version;
     return h('div', { class: 'cqa-pagehead' },
       h('div', null,
-        h('h1', { class: 'cqa-h1' }, 'Дашборд'),
+        h('h1', { class: 'cqa-h1' }, 'Аналитика'),
         h('div', { class: 'cqa-pagehead__sub' },
           `Группа ${group()}`, ver ? ` · «${ver.name || ver.key}» v${ver.version}` : '',
           ' · последние оценки с учётом апелляций')),

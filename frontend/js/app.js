@@ -8,8 +8,8 @@ import { initShellUx, openPalette } from './shell-ux.js';
 const appEl = document.getElementById('app');
 
 const NAV = [
-  ['dashboard', 'Дашборд'], ['conversations', 'Диалоги'], ['review', 'Требует проверки'],
-  ['appeals', 'Апелляции'], ['checklist', 'Чек-лист'],
+  ['dashboard', 'Аналитика'], ['conversations', 'Диалоги'], ['review', 'Требует проверки'],
+  ['appeals', 'Апелляции'], ['checklist', 'Чек-листы'],
 ];
 const ROUTES = {
   dashboard: { nav: 'dashboard', load: () => import('./components/dashboard-view.js') },

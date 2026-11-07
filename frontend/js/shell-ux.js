@@ -8,8 +8,8 @@ let paletteEl = null;
 let helpEl = null;
 let gPending = 0; // время нажатия «g» для двухклавишных переходов
 
-const GO = { d: ['#/dashboard', 'Дашборд'], l: ['#/conversations', 'Диалоги'], r: ['#/review', 'Требует проверки'],
-  a: ['#/appeals', 'Апелляции'], c: ['#/checklist', 'Чек-лист'], n: ['#/new', 'Новый диалог'] };
+const GO = { d: ['#/dashboard', 'Аналитика'], l: ['#/conversations', 'Диалоги'], r: ['#/review', 'Требует проверки'],
+  a: ['#/appeals', 'Апелляции'], c: ['#/checklist', 'Чек-листы'], n: ['#/new', 'Новый диалог'] };
 
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform || '');
 const MOD = isMac ? '⌘' : 'Ctrl';
@@ -22,22 +22,27 @@ const modalOpen = () => !!document.querySelector('.cqa-modal, .cqa-tour');
 // ---------- Палитра ----------
 function commands() {
   const a = ctx.actions;
-  const nav = Object.entries(GO).map(([k, [to, label]]) => ({ group: 'Перейти', label, hint: `G ${k.toUpperCase()}`, icon: '→', run: () => { location.hash = to; } }));
+  const nav = Object.entries(GO).map(([k, [to, label]]) => ({ group: 'Перейти', label, hint: `G ${k.toUpperCase()}`, run: () => { location.hash = to; } }));
   // На карточке диалога — действия этого диалога (кнопки карточки, если они есть).
   const here = [];
-  const cardBtn = (sel, label, icon, kw) => { const b = document.querySelector(sel); if (b) here.push({ group: 'Этот диалог', label, icon, kw, run: () => b.click() }); };
+  const cardBtn = (sel, label, kw) => { const b = document.querySelector(sel); if (b) here.push({ group: 'Этот диалог', label, kw, run: () => b.click() }); };
   if (location.hash.startsWith('#/conversation/')) {
-    cardBtn('#cqa-card-coach', 'Отчёт оператору', '✎', 'coaching report отчет pdf');
+    cardBtn('#cqa-card-coach', 'Отчёт оператору', 'coaching report отчет pdf');
   }
-  return [...here, ...nav,
-    { group: 'Действия', label: 'Оценить группу…', icon: '▶', run: a.runGroup, kw: 'run evaluate оценка прогон' },
-    { group: 'Действия', label: 'Импорт набора…', icon: '⇩', run: a.importSet, kw: 'import загрузить api' },
-    { group: 'Действия', label: 'Сменить тему (светлая / тёмная)', icon: '◐', hint: 'T', run: a.toggleTheme, kw: 'dark light theme' },
-    { group: 'Действия', label: 'Режим демо: крупный шрифт', icon: '⛶', run: a.toggleDemo, kw: 'demo проектор' },
-    { group: 'Действия', label: 'Режим: аналитик', icon: '◔', run: () => a.setMode('analyst'), kw: 'analyst' },
-    { group: 'Действия', label: 'Режим: проверяющий', icon: '◕', run: () => a.setMode('reviewer'), kw: 'reviewer' },
-    { group: 'Помощь', label: 'Тур по интерфейсу', icon: '✦', run: a.startTour, kw: 'tour help обучение' },
-    { group: 'Помощь', label: 'Горячие клавиши', icon: '⌨', hint: '?', run: openHelp, kw: 'keyboard shortcuts' },
+  const quick = [
+    { group: 'Быстрые фильтры', label: 'Диалоги с грубой ошибкой', kw: 'критич 08 flag gross', run: () => { location.hash = '#/conversations?flag=1'; } },
+    { group: 'Быстрые фильтры', label: 'Диалоги, требующие проверки', kw: 'review низкая уверенность', run: () => { location.hash = '#/conversations?review=1'; } },
+    { group: 'Быстрые фильтры', label: 'Открытые апелляции', kw: 'appeal', run: () => { location.hash = '#/conversations?appeal=open'; } },
+  ];
+  return [...here, ...nav, ...quick,
+    { group: 'Действия', label: 'Оценить группу…', run: a.runGroup, kw: 'run evaluate оценка прогон' },
+    { group: 'Действия', label: 'Импорт набора…', run: a.importSet, kw: 'import загрузить api' },
+    { group: 'Действия', label: 'Сменить тему (светлая / тёмная)', hint: 'T', run: a.toggleTheme, kw: 'dark light theme' },
+    { group: 'Действия', label: 'Режим демо: крупный шрифт', run: a.toggleDemo, kw: 'demo проектор' },
+    { group: 'Действия', label: 'Режим: аналитик', run: () => a.setMode('analyst'), kw: 'analyst' },
+    { group: 'Действия', label: 'Режим: проверяющий', run: () => a.setMode('reviewer'), kw: 'reviewer' },
+    { group: 'Помощь', label: 'Тур по интерфейсу', run: a.startTour, kw: 'tour help обучение' },
+    { group: 'Помощь', label: 'Горячие клавиши', hint: '?', run: openHelp, kw: 'keyboard shortcuts' },
   ];
 }
 
@@ -106,7 +111,7 @@ export function openPalette() {
         h('span', { class: 'cqa-pal__meta' }, `${LANG[norm(r.language)] || r.language} · ${channelLabel(r.channel)}`),
         r.latest?.critical ? h('span', { class: 'cqa-pal__flag' }, '08') : null,
         r.latest?.final_total != null ? h('b', { class: `cqa-pal__score ${scoreClass(r.latest.final_total)}` }, fmtScore(r.latest.final_total)) : h('span', { class: 'cqa-pal__meta' }, 'не оценён')]
-      : [h('span', { class: 'cqa-pal__ico', 'aria-hidden': 'true' }, it.icon), h('span', { class: 'cqa-pal__label' }, it.label), it.hint ? h('kbd', null, it.hint) : null];
+      : [h('span', { class: 'cqa-pal__label' }, it.label), it.hint ? h('kbd', null, it.hint) : null];
     return h('div', { class: 'cqa-pal__item', id: `cqa-pal-${i}`, role: 'option', 'aria-selected': String(i === active),
       onmousemove: () => { if (active !== i) { active = i; mark(); } }, onclick: () => choose(i) }, body);
   }
@@ -129,7 +134,7 @@ export function closePalette() { paletteEl?.remove(); paletteEl = null; }
 
 // ---------- Справка ----------
 const HELP = [
-  ['Везде', [[`${MOD} K`, 'Палитра команд: диалог, экран или действие'], ['?', 'Эта справка'], ['G, затем D / L / R / A / C / N', 'Дашборд · Диалоги · Проверка · Апелляции · Чек-лист · Новый'], ['T', 'Светлая / тёмная тема'], ['Esc', 'Закрыть окно']]],
+  ['Везде', [[`${MOD} K`, 'Палитра команд: диалог, экран или действие'], ['?', 'Эта справка'], ['G, затем D / L / R / A / C / N', 'Аналитика · Диалоги · Проверка · Апелляции · Чек-листы · Новый'], ['T', 'Светлая / тёмная тема'], ['Esc', 'Закрыть окно']]],
   ['Списки', [['/', 'Перейти к поиску'], ['J / K', 'Следующая / предыдущая строка'], ['Enter', 'Открыть строку']]],
   ['Карточка диалога', [['[ / ]', 'Предыдущий / следующий диалог'], ['Пробел', 'Пуск / пауза записи (фокус на шкале плеера)']]],
 ];
@@ -142,7 +147,7 @@ export function openHelp() {
         h('button', { type: 'button', class: 'cqa-modal__x', 'aria-label': 'Закрыть', onclick: close }, '×')),
       h('div', { class: 'cqa-help__grid' }, HELP.map(([title, rows]) => h('section', null, h('h3', null, title),
         h('dl', null, rows.flatMap(([k, v]) => [h('dt', null, k.split(' / ').flatMap((p, i) => [i ? ' / ' : null, h('kbd', null, p)])), h('dd', null, v)]))))),
-      h('div', { class: 'cqa-modal__foot' }, h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', onclick: () => { close(); ctx.actions.startTour(); } }, '✦ Тур по интерфейсу'))));
+      h('div', { class: 'cqa-modal__foot' }, h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', onclick: () => { close(); ctx.actions.startTour(); } }, 'Тур по интерфейсу'))));
   ctx.appEl.append(helpEl);
   helpEl.querySelector('.cqa-modal__x').focus();
   helpEl.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
