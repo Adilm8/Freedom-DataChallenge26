@@ -85,7 +85,7 @@ export function mount(el, params) {      // el — любой <div>, params — 
 | Запуск и прогресс | `components/run-dialog.js` | список, чек-лист |
 | Экран качества | `components/quality-view.js` | качество |
 | Проверка gold | `components/gold-review.js` | проверка gold |
-| Сравнение | `components/compare-view.js` | сравнение |
+| Сравнение | `components/evaluation-compare.js` | сравнение |
 | Дашборд | `components/dashboard-view.js` | дашборд |
 | Таймлайн | `components/timeline.js` | карточка |
 | Очередь «требует проверки» | `components/review-queue.js` | требует проверки |
