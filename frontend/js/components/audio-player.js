@@ -203,6 +203,8 @@ export function mount(el, params = {}) {
       src = s;
       if (!src) { fail('у звонка нет адреса записи'); return; }
       if (!src.mock) { ui.open.href = src.url; ui.open.hidden = false; }
+      else ui.main.querySelector('.cqa-ap__title')?.after(h('span', { class: 'cqa-chip cqa-ap__demo cqa-tip',
+        'data-tip': 'Демо-режим (?mock=1): вместо записи короткие сигналы в начале каждой реплики. Настоящие записи — без ?mock=1 в адресе' }, 'демо: сигналы вместо записи'));
       audio.src = src.url;
       loadPeaks(src.url).then((r) => { if (my === token) wave?.setPeaks(r.peaks); })
         .catch(() => { if (my === token && ui.waveBox) ui.waveBox.dataset.nopeaks = '1'; });
