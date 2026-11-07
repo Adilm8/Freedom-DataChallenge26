@@ -9,6 +9,10 @@ from __future__ import annotations
 from ..domain import Criterion
 from .validator import CriterionOutput, Issue
 
+OVERRIDE_PREFIX = "ответ заменён правилом: "
+FLAG_PREFIX = "противоречие фактам: "
+GUARD_PREFIXES = (OVERRIDE_PREFIX, FLAG_PREFIX)  # по ним reuse снимает старые пометки перед повторным применением
+
 
 def _holds(cond: str, facts: dict[str, bool]) -> bool | None:
     neg = cond.startswith("!")
@@ -36,10 +40,10 @@ def apply(results: dict[str, CriterionOutput], facts: dict[str, bool], criteria:
                     new = c.coerce_answer(g.set)
                 except ValueError:
                     continue
-                out.issues.append(f"ответ заменён правилом: {out.answer} → {new}")
+                out.issues.append(f"{OVERRIDE_PREFIX}{out.answer} → {new}")
                 out.answer = new
                 issues.append(Issue("G-override", msg, c.key))
             else:
-                out.issues.append("противоречие фактам: " + ", ".join(g.when))
+                out.issues.append(FLAG_PREFIX + ", ".join(g.when))
                 issues.append(Issue("G-flag", msg, c.key))
     return issues

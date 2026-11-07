@@ -110,27 +110,37 @@ def evaluate_conversation(
     seed: int | None = 7,
     criteria: list[Criterion] | None = None,
     facts_override: tuple[dict, str, dict] | None = None,
+    reused: dict[str, CriterionOutput] | None = None,
+    reused_overview: dict | None = None,
 ) -> EvalOutcome:
-    """Оценивает диалог по включённым критериям (или по `criteria` — для частичной переоценки)."""
+    """Оценивает диалог по включённым критериям (или по `criteria`).
+
+    `reused` — готовые ответы из прошлой оценки (services/reuse.py): по ним вызовов нет,
+    остальные критерии идут в вызовы по стратегии; страховки и баллы считаются по всем."""
     criteria = criteria if criteria is not None else checklist.enabled_criteria()
+    reused = dict(reused or {})
     facts_json, facts_block, booleans = facts_override or _facts(conv, checklist)
     sections = {s.id: s.title for s in checklist.sections}
     pv = prompt_builder.prompt_version()
     model_name = model or getattr(provider, "default_model", "") or ""
 
-    batches = partition(criteria, strategy)
+    batches = partition([c for c in criteria if c.key not in reused], strategy)
+    want_overview = reused_overview is None
 
     def run_batch(i: int, batch: list[Criterion]) -> judge.JudgeOutput:
-        msgs, schema = prompt_builder.build(conv, facts_block, batch, checklist.settings, sections, include_overview=(i == 0))
+        msgs, schema = prompt_builder.build(conv, facts_block, batch, checklist.settings, sections,
+                                            include_overview=want_overview and i == 0)
         return judge.run(provider, msgs, schema, batch, conv, checklist.settings, model=model, seed=seed)
 
-    with ThreadPoolExecutor(max_workers=max(1, len(batches))) as pool:
-        outs = list(pool.map(lambda a: run_batch(*a), enumerate(batches)))
+    outs: list[judge.JudgeOutput] = []
+    if batches:
+        with ThreadPoolExecutor(max_workers=len(batches)) as pool:
+            outs = list(pool.map(lambda a: run_batch(*a), enumerate(batches)))
 
-    results: dict[str, CriterionOutput] = {}
+    results: dict[str, CriterionOutput] = {k: v for k, v in reused.items() if any(c.key == k for c in criteria)}
     issues: list[Issue] = []
     calls: list[CallRecord] = []
-    overview = None
+    overview = reused_overview
     for batch, out in zip(batches, outs):
         keys = [c.key for c in batch]
         results.update(out.results)

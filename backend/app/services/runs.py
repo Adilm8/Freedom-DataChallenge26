@@ -18,7 +18,8 @@ def active_version_id(session: Session) -> int | None:
     return v.id if v else None
 
 
-def _execute(run_id: int, conv_pks: list[int], version_id: int, provider: str, model: str, strategy: str) -> None:
+def _execute(run_id: int, conv_pks: list[int], version_id: int, provider: str, model: str, strategy: str,
+             reuse: str = "none") -> None:
     lock = threading.Lock()
     with Session(db.engine) as s:
         run = s.get(EvaluationRun, run_id)
@@ -31,7 +32,7 @@ def _execute(run_id: int, conv_pks: list[int], version_id: int, provider: str, m
         try:
             with Session(db.engine) as s:
                 eid = evaluations.evaluate_one(s, pk, version_id, provider_name=provider, model=model,
-                                               strategy=strategy, run_id=run_id)
+                                               strategy=strategy, run_id=run_id, reuse=reuse)
                 ev = s.get(Evaluation, eid)
                 ok, cost = ev.status != "failed", ev.cost_usd or 0.0
         except Exception:  # noqa: BLE001  один диалог не валит прогон
@@ -64,6 +65,7 @@ def start_run(
     provider: str,
     model: str,
     strategy: str,
+    reuse: str = "none",
 ) -> int:
     version_id = checklist_version_id or active_version_id(session)
     run = EvaluationRun(group_id=group_id, checklist_version_id=version_id, provider=provider, model=model,
@@ -71,6 +73,6 @@ def start_run(
     session.add(run)
     session.commit()
     run_id = run.id
-    threading.Thread(target=_execute, args=(run_id, list(conv_pks), version_id, provider, model, strategy),
+    threading.Thread(target=_execute, args=(run_id, list(conv_pks), version_id, provider, model, strategy, reuse),
                      daemon=True).start()
     return run_id

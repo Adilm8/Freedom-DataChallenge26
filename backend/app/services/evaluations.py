@@ -7,9 +7,11 @@ from .. import db  # noqa: F401  (engine берётся в runs.py)
 from ..domain import Checklist, NormalizedConversation
 from ..models import ChecklistVersion, Conversation, CriterionResult, Evaluation, LLMCall
 from ..providers import ProviderError, get_provider
-from . import evaluator
+from . import evaluator, prompt_builder
+from . import reuse as reuse_mod
 
-PARAMS = {"temperature": 0, "seed": 7, "reuse": "none"}
+PARAMS = {"temperature": 0, "seed": 7}
+REUSE_MODES = ("none", "auto")
 
 
 def _ans_str(a) -> str:
@@ -32,7 +34,10 @@ def persist(
     model: str,
     strategy: str,
     run_id: int | None = None,
+    reuse: str = "none",
+    reused_from: dict[str, int] | None = None,
 ) -> int:
+    reused_from = reused_from or {}
     actual = next((c.result.model for c in outcome.calls if c.result and c.result.model), None)
     tin, tout = outcome.tokens
     score = outcome.score.model_dump()
@@ -47,7 +52,7 @@ def persist(
         status=outcome.status,
         facts=outcome.facts or {},
         overview=outcome.overview,
-        params=dict(PARAMS),
+        params={**PARAMS, "reuse": reuse},
         ai_score=score,
         final_score=score,
         ai_total=outcome.score.total,
@@ -68,7 +73,7 @@ def persist(
             evaluation_id=ev.id, criterion_key=key, ai_answer=_ans_str(r.answer), ai_points=pts,
             reasoning=r.reasoning, na_reason=r.na_reason, evidence=list(r.evidence), checked_range=r.checked_range,
             issues=list(r.issues), confidence=r.confidence, advice=r.advice,
-            criterion_hash=outcome.hashes.get(key, ""),
+            criterion_hash=outcome.hashes.get(key, ""), reused_from_evaluation_id=reused_from.get(key),
             final_answer=_ans_str(r.answer), final_points=pts,
         ))
     for c in outcome.calls:
@@ -105,20 +110,30 @@ def evaluate_one(
     model: str,
     strategy: str,
     run_id: int | None = None,
+    reuse: str = "none",
 ) -> int:
+    """`reuse="auto"` — ответы критериев с тем же хешем берутся из прошлых оценок диалога (FR-CHK-10)."""
+    if reuse not in REUSE_MODES:
+        raise ValueError(f"неизвестный режим reuse «{reuse}»")
     conv_row = session.get(Conversation, conversation_pk)
     ver = session.get(ChecklistVersion, checklist_version_id)
     if not conv_row or not ver:
         raise ValueError("диалог или версия чек-листа не найдены")
     conv = NormalizedConversation.model_validate(conv_row.normalized)
     checklist = Checklist.model_validate(ver.body)
+    plan = reuse_mod.ReusePlan()
+    if reuse == "auto":
+        plan = reuse_mod.plan(session, conversation_pk, checklist.enabled_criteria(), model=model,
+                              prompt_version=prompt_builder.prompt_version())
     try:
         provider = get_provider(provider_name)
-        outcome = evaluator.evaluate_conversation(conv, checklist, provider, model=model, strategy=strategy)
+        outcome = evaluator.evaluate_conversation(conv, checklist, provider, model=model, strategy=strategy,
+                                                  reused=plan.reused, reused_overview=plan.overview)
     except ProviderError as e:
         outcome = _failed_outcome(checklist, str(e))
-    return persist(session, conversation_pk, checklist_version_id, outcome,
-                   provider_name=provider_name, model=model, strategy=strategy, run_id=run_id)
+        plan = reuse_mod.ReusePlan()
+    return persist(session, conversation_pk, checklist_version_id, outcome, provider_name=provider_name,
+                   model=model, strategy=strategy, run_id=run_id, reuse=reuse, reused_from=plan.source)
 
 
 def to_api(session: Session, ev: Evaluation) -> dict:

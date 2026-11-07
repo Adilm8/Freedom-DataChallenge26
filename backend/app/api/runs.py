@@ -7,6 +7,7 @@ from ..db import get_session
 from ..models import ChecklistVersion, Conversation, EvaluationRun
 from ..providers import configured_models
 from ..services import runs as runs_svc
+from ..services.evaluations import REUSE_MODES
 from ..services.evaluator import STRATEGIES
 
 router = APIRouter(tags=["runs"])
@@ -27,6 +28,8 @@ def create_run(body: RunBody, session: Session = Depends(get_session)) -> dict:
     strategy = body.strategy or settings.eval_strategy
     if strategy not in STRATEGIES:
         raise HTTPException(400, f"неизвестная стратегия «{strategy}»: {', '.join(STRATEGIES)}")
+    if body.reuse not in REUSE_MODES:
+        raise HTTPException(400, f"неизвестный режим reuse «{body.reuse}»: {', '.join(REUSE_MODES)}")
     provider = (body.provider or settings.llm_provider).strip().lower()
     known = {m["provider"]: m["model"] for m in configured_models()}
     if provider not in known:
@@ -48,7 +51,7 @@ def create_run(body: RunBody, session: Session = Depends(get_session)) -> dict:
     if not (body.checklist_version_id or runs_svc.active_version_id(session)):
         raise HTTPException(400, "нет активной версии чек-листа")
     run_id = runs_svc.start_run(session, pks, group_id=group, checklist_version_id=body.checklist_version_id,
-                                provider=provider, model=model, strategy=strategy)
+                                provider=provider, model=model, strategy=strategy, reuse=body.reuse)
     return {"run_id": run_id}
 
 
