@@ -114,6 +114,7 @@ class Criterion(BaseModel):
     context_refs: list[str] = Field(default_factory=list)
     guards: list[Guard] = Field(default_factory=list)
     enabled: bool = True
+    export_id: str | None = None     # код в results.json организаторов (contact, discovery, …)
 
     @field_validator("key")
     @classmethod
