@@ -9,6 +9,8 @@ from . import db
 from .api import checklists as checklists_api
 from .api import conversations as conversations_api
 from .api import datasets as datasets_api
+from .api import evaluations as evaluations_api
+from .api import runs as runs_api
 from .config import settings
 from .models import Conversation
 from .services import checklists as checklists_svc
@@ -29,6 +31,8 @@ app = FastAPI(title="CQA — Conversation Quality Analytics", lifespan=lifespan)
 app.include_router(datasets_api.router, prefix="/api")
 app.include_router(conversations_api.router, prefix="/api")
 app.include_router(checklists_api.router, prefix="/api")
+app.include_router(runs_api.router, prefix="/api")
+app.include_router(evaluations_api.router, prefix="/api")
 
 
 def _model_name() -> str:
