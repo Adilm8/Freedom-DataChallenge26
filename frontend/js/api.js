@@ -174,6 +174,12 @@ export async function createChecklist(payload) {
   return request('POST', '/checklists', { body: payload, failText: 'Версия не сохранена', netText: 'Нет связи с сервером: версия не сохранена.' });
 }
 
+/** POST /checklists/check → {warnings} без сохранения (422 — ошибки). В демо — без предупреждений. */
+export async function checkChecklist(body) {
+  if (isMock()) return { warnings: [] };
+  return request('POST', '/checklists/check', { body: { body } });
+}
+
 /** POST /checklists/{id}/activate → версия. Активная версия одна на систему: по ней идут прогоны и файл сдачи. */
 export async function activateChecklist(versionId) {
   if (isMock()) {
@@ -318,7 +324,7 @@ export async function listGroups() {
   return [...counts].map(([group_id, count]) => ({ group_id, count, default: group_id === hl?.group_id }));
 }
 /** Файл выгрузки: path '/export' ({group_id, format: csv|json}) или '/export/results' ({group_id}).
- *  → {blob, filename, validationErrors} (число ошибок проверки формата из X-Validation-Errors или null). */
+ *  → {blob, filename, validationErrors, resultsOk, resultsError} (X-Validation-Errors, X-Results-Ok, X-Results-Error или null). */
 export async function downloadExport(path, params = {}) {
   if (isMock()) return (await mockStore()).exportFile(path, params);
   const url = new URL(apiBase() + path, window.location.href);
@@ -331,9 +337,9 @@ export async function downloadExport(path, params = {}) {
     throw new ApiError(`Файл не выгружен${parsed.detail ? ': ' + parsed.detail : ''} (${res.status})`, res.status, parsed);
   }
   const name = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(res.headers.get('Content-Disposition') || '')?.[1];
-  const v = res.headers.get('X-Validation-Errors');
+  const num = (k) => { const x = res.headers.get(k); return x == null || x === '' ? null : Number(x); };
   return { blob: await res.blob(), filename: name ? decodeURIComponent(name) : path.endsWith('results') ? 'results.json' : `export.${params.format || 'csv'}`,
-    validationErrors: v == null || v === '' ? null : Number(v) };
+    validationErrors: num('X-Validation-Errors'), resultsOk: num('X-Results-Ok'), resultsError: num('X-Results-Error') };
 }
 
 /** Песочница критерия: {body, criterion_key, conversation_ids, base_version_id?} → {items, cost_usd, model}. */

@@ -45,15 +45,21 @@ def seed_default(session: Session) -> ChecklistVersion | None:
     return ver
 
 
+def check_warnings(cl) -> list[str]:
+    """Предупреждения версии: общие и (для чек-листа сдачи) несовпадения с форматом организаторов."""
+    warnings = cl.warnings()
+    if any(c.export_id in results_export.ORGANIZER_CRITERIA for c in cl.enabled_criteria()):
+        # чек-лист для сдачи организаторам: сразу сказать, если файл по нему не пройдёт проверку формата
+        warnings += [f"файл сдачи: {w}" for w in results_export.format_issues(cl)]
+    return warnings
+
+
 def create_version(
     session: Session, body: dict, note: str = "", parent_id: int | None = None, activate: bool = False
 ) -> tuple[ChecklistVersion, list[str]]:
     """Возвращает (версия, предупреждения). Одинаковое тело с той же базой не плодит версию."""
     cl = validate(body)
-    warnings = cl.warnings()
-    if any(c.export_id in results_export.ORGANIZER_CRITERIA for c in cl.enabled_criteria()):
-        # чек-лист для сдачи организаторам: сразу сказать, если файл по нему не пройдёт проверку формата
-        warnings += [f"файл сдачи: {w}" for w in results_export.format_issues(cl)]
+    warnings = check_warnings(cl)
     h = body_hash(body)
     existing = session.exec(
         select(ChecklistVersion).where(

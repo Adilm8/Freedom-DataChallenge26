@@ -62,6 +62,20 @@ def create(body: CreateBody, session: Session = Depends(get_session)):
     return {**_full(v), "warnings": warnings}
 
 
+class CheckBody(BaseModel):
+    body: dict
+
+
+@router.post("/check")
+def check(b: CheckBody):
+    """Проверка черновика без сохранения: ошибки (422) или предупреждения, в том числе «файл сдачи: …»."""
+    try:
+        cl = svc.validate(b.body)
+    except svc.ChecklistInvalid as e:
+        return JSONResponse(status_code=422, content={"detail": "чек-лист не прошёл проверку", "errors": e.errors})
+    return {"warnings": svc.check_warnings(cl)}
+
+
 @router.post("/{version_id}/activate")
 def activate(version_id: int, session: Session = Depends(get_session)) -> dict:
     try:

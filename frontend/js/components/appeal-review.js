@@ -293,7 +293,7 @@ export function mount(el, params = {}) {
       return;
     }
     st.busy = true; st.error = null; renderDetail();
-    const before = { ai: a.evaluation.ai_total, final: a.evaluation.final_total };
+    const before = { ai: a.evaluation.ai_total, final: a.evaluation.final_total, answer: a.criterion?.final_answer ?? a.ai_answer_snapshot };
     try {
       const body = { action: f.action, reason: f.reason.trim() };
       if (f.action === 'change') body.answer = f.answer;
@@ -319,7 +319,9 @@ export function mount(el, params = {}) {
     const next = (st.rows || []).find((x) => x.status === 'open' && x.id !== a.id);
     return h('div', { class: 'cqa-panel cqa-apr__result', id: 'cqa-apr-result', role: 'status' },
       h('div', { class: 'cqa-apr__restitle' }, h('span', { class: 'cqa-banner__icon' }, '✓'),
-        changed ? ['Ответ изменён: ', answerBadge(r.criterion, r.appeal.ai_answer_snapshot), ' → ', answerBadge(r.criterion, r.appeal.decision_answer)] : 'Оценка AI подтверждена'),
+        // «Было» — финальный ответ до этого решения (после прошлой апелляции он может отличаться от ответа AI).
+        changed ? ['Ответ изменён: ', answerBadge(r.criterion, r.before.answer ?? r.appeal.ai_answer_snapshot), ' → ', answerBadge(r.criterion, r.appeal.decision_answer)]
+          : String(r.before.answer) !== String(r.appeal.ai_answer_snapshot) ? 'Текущий финальный ответ подтверждён' : 'Оценка AI подтверждена'),
       h('div', { class: 'cqa-apr__resgrid' },
         h('div', { class: 'cqa-apr__resbox' }, h('div', { class: 'cqa-sum__label' }, 'Итог AI · не меняется'), h('div', { class: 'cqa-apr__resnum' }, score(r.ai))),
         h('div', { class: 'cqa-apr__resbox cqa-apr__resbox--final', id: 'cqa-apr-final' }, h('div', { class: 'cqa-sum__label' }, 'Финальный итог'),

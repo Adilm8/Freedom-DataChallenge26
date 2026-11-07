@@ -5,7 +5,7 @@
 // с версией и reuse auto), история версий с отличиями, импорт и экспорт JSON.
 // Проверки — checklist-model.js (повторяют domain.py), 422 бэкенда подсвечивает поле по path.
 import { h, clear, emit, toast, fmtDate, skeletonRows, errorState, emptyState, channelBadge, langChip, score } from '../ui.js';
-import { listChecklists, getChecklist, createChecklist, activateChecklist, listConversations, getFactLabels, isMock } from '../api.js';
+import { listChecklists, getChecklist, createChecklist, activateChecklist, checkChecklist, listConversations, getFactLabels, isMock } from '../api.js';
 import { plural } from './run-dialog.js';
 import { openTrial } from './criterion-trial.js';
 import {
@@ -629,9 +629,22 @@ export function mount(el, params = {}) {
   }
 
   // ---------------------------------------------------------------- панель сохранения
+  // Предупреждения сервера по черновику (в том числе «файл сдачи: …») — до сохранения, с задержкой после правки.
+  let pre = { sig: null, warnings: [] }, preTimer = null;
+  function precheck() {
+    const sig = JSON.stringify(st.draft);
+    if (sig === pre.sig) return;
+    clearTimeout(preTimer);
+    preTimer = setTimeout(async () => {
+      try { const r = await checkChecklist(st.draft); pre = { sig, warnings: r.warnings || [] }; } catch { pre = { sig, warnings: [] }; }
+      if (alive && JSON.stringify(st.draft) === sig) renderSave();
+    }, 500);
+  }
   function renderSave() {
     clear(saveEl);
     if (st.loading || !dirty()) return;
+    precheck();
+    const fileWarn = pre.sig === JSON.stringify(st.draft) ? pre.warnings.filter((w) => w.startsWith('файл сдачи')) : [];
     const d = diffBodies(st.cur.body, st.draft);
     const v = check();
     const counts = [
@@ -646,7 +659,10 @@ export function mount(el, params = {}) {
     saveEl.append(h('div', { class: 'cqa-chk-savebar', role: 'region', 'aria-label': 'Несохранённые изменения' },
       h('div', { class: 'cqa-chk-savebar__sum' },
         h('b', null, 'Несохранённые изменения'), counts.length ? h('span', { class: 'cqa-chk-savebar__counts' }, counts.join(' · ')) : h('span', { class: 'cqa-faint' }, 'только форматирование'),
-        diffView(d, { compact: true })),
+        diffView(d, { compact: true }),
+        fileWarn.length ? h('div', { class: 'cqa-banner cqa-banner--warn cqa-chk-savebar__warn', id: 'cqa-chk-filewarn' }, h('span', { class: 'cqa-banner__icon' }, '!'),
+          h('div', null, h('div', { class: 'cqa-banner__title' }, 'Файл сдачи по этой версии не пройдёт проверку формата'),
+            h('ul', { class: 'cqa-errlist' }, fileWarn.map((w) => h('li', null, w.replace(/^файл сдачи: /, '')))))) : null),
       h('div', { class: 'cqa-chk-savebar__acts' },
         note,
         h('button', { type: 'button', class: 'cqa-btn', id: 'cqa-chk-discard', onclick: discard }, 'Отменить'),

@@ -1821,3 +1821,9 @@ button.cqa-kpi { transition: border-color .12s, box-shadow .15s, transform .15s;
   .cqa-list-table td, .cqa-list-table th { padding-left: 6px; padding-right: 6px; }
   .cqa-list-table .cqa-th-sort { white-space: normal; }
 }
+.cqa-list__partial { display: inline-flex; gap: 8px; align-items: baseline; font-size: var(--cqa-text-xs); font-weight: 700; color: var(--cqa-warn);
+  background: var(--cqa-warn-bg); border: 1px solid var(--cqa-warn-bd); border-radius: var(--cqa-r-pill); padding: 2px 8px; white-space: nowrap; }
+.cqa-heat__c--miss { background: var(--cqa-surface); box-shadow: inset 0 0 0 1.5px var(--cqa-no); }
+.cqa-runform__group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* Переключатель «Включён» отделён от кнопок строки: так по нему не попадают случайно. */
+@media (min-width: 901px) { .cqa-chk-row:not(.cqa-chk-row--head) .cqa-chk-cell--acts { border-left: 1px solid var(--cqa-border); padding-left: 10px; } }

@@ -39,6 +39,7 @@ const settings = {
   demo: query.get('demo') === '1' || store.get('demo', '0') === '1',
   theme: ['light', 'dark'].includes(query.get('theme')) ? query.get('theme') : store.get('theme', 'auto'), // auto — как в системе
 };
+if (query.has('demo')) store.set('demo', query.get('demo') === '1' ? '1' : '0'); // ?demo=1 переживает перезагрузку
 const darkMq = window.matchMedia?.('(prefers-color-scheme: dark)');
 const isDark = () => settings.theme === 'dark' || (settings.theme === 'auto' && !!darkMq?.matches);
 
