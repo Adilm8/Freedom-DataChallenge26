@@ -322,7 +322,7 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
             ? 'Ни один диалог не оценён. Причина — в карточке диалога, блок «Сырой ответ».'
             : run.failed
               ? `Оценено ${nDialogs(run.done)}, с ошибкой ${run.failed}. Ошибки видны в карточке диалога, блок «Сырой ответ».`
-              : `Все ${nDialogs(run.done)} оценены. Результаты уже обновлены.`)) : null),
+              : `${run.done === 1 ? 'Диалог оценён' : `Готово: оценено ${nDialogs(run.done)}`}. Результаты уже обновлены.`)) : null),
       h('div', { class: 'cqa-modal__foot' },
         fin ? null : h('span', { class: 'cqa-faint cqa-run__note' }, 'Окно можно свернуть: прогон идёт на сервере.'),
         !fin && !inline ? h('button', { type: 'button', class: 'cqa-btn', onclick: onMinimize }, 'Свернуть') : null,

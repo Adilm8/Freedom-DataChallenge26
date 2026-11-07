@@ -63,7 +63,7 @@ export function mount(el, params = {}) {
       for (const id of e.msg_ids || []) {
         if (!map.has(id)) map.set(id, []);
         const arr = map.get(id);
-        if (!arr.some((t) => t.key === e.key)) arr.push({ key: e.key, flag: !!e.flag, title: e.title });
+        if (!arr.some((t) => t.key === e.key)) arr.push({ key: e.key, flag: !!e.flag, bad: !!e.bad, part: !!e.part, title: e.title });
       }
     }
     return map;
@@ -96,8 +96,8 @@ export function mount(el, params = {}) {
           h('span', { class: 'cqa-msg__id' }, m.msg_id),
           (tags.get(m.msg_id) || []).length
             ? h('span', { class: 'cqa-msg__tags', 'aria-label': 'Критерии, для которых реплика — доказательство' }, tags.get(m.msg_id).map((t) =>
-              h('button', { type: 'button', class: `cqa-msg__tag cqa-tip ${t.flag ? 'cqa-msg__tag--flag' : ''}`,
-                'data-tip': `${t.key}${t.title ? ' · ' + t.title : ''}: показать критерий`, 'aria-label': `Критерий ${t.key}: показать в результате`,
+              h('button', { type: 'button', class: `cqa-msg__tag cqa-tip ${t.flag ? 'cqa-msg__tag--flag' : t.bad ? 'cqa-msg__tag--bad' : t.part ? 'cqa-msg__tag--part' : ''}`,
+                'data-tip': `${t.key}${t.title ? ' · ' + t.title : ''}${t.flag ? ' — грубая ошибка' : t.bad ? ' — не выполнен' : t.part ? ' — выполнен частично' : ''}: показать критерий`, 'aria-label': `Критерий ${t.key}: показать в результате`,
                 onclick: () => emit(root, 'cqa:criterion-click', { key: t.key, msg_id: m.msg_id }) }, t.key)))
             : null),
         textEl);

@@ -32,8 +32,8 @@ export function mount(el, params = {}) {
       h('div', null,
         h('h1', { class: 'cqa-h1' }, 'Дашборд'),
         h('div', { class: 'cqa-pagehead__sub' },
-          `Группа ${group()}`, ver ? ` · чек-лист v${ver.version} ${ver.name || ver.key}` : '',
-          ' · по последней оценке каждого диалога; финальные цифры — с решениями по апелляциям')),
+          `Группа ${group()}`, ver ? ` · чек-лист v${ver.version} «${ver.name || ver.key}»` : '',
+          ' · последняя оценка каждого диалога · с решениями по апелляциям')),
       h('div', { class: 'cqa-pagehead__actions' },
         h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', onclick: () => load({ quiet: true }) }, '↻ Обновить'),
         h('a', { class: 'cqa-btn cqa-btn--sm', href: listUrl() }, 'Все диалоги'),
@@ -90,10 +90,17 @@ export function mount(el, params = {}) {
   }
 
   function histogram(a) {
-    const bins = a.histogram || [];
-    const twin = bins.some((b) => b.ai_count !== b.count);
+    const all = a.histogram || [];
+    const twin = all.some((b) => b.ai_count !== b.count);
+    // Пустые корзины слева не рисуем: шкала начинается за одну корзину до первой непустой (финальной или AI),
+    // иначе столбцы прижаты к правому краю, а 70% панели пустые. Таблица под графиком — по всем корзинам.
+    const first = all.findIndex((b) => b.count || (twin && b.ai_count));
+    const bins = first > 0 ? all.slice(first - 1) : all;
+    const lo = bins[0]?.from ?? 0, hi = bins[bins.length - 1]?.to ?? 100;
     const max = Math.max(1, ...bins.map((b) => Math.max(b.count, twin ? b.ai_count : 0)));
-    const plot = h('div', { class: `cqa-hist ${twin ? 'cqa-hist--twin' : ''}`, role: 'group', 'aria-label': 'Распределение финальных итогов по корзинам 10 баллов' });
+    const plot = h('div', { class: `cqa-hist ${twin ? 'cqa-hist--twin' : ''} ${bins.length > 6 ? 'cqa-hist--dense' : ''}`, role: 'group',
+      style: `grid-template-columns:repeat(${Math.max(1, bins.length)}, minmax(0, 1fr))`,
+      'aria-label': `Распределение финальных итогов по корзинам 10 баллов, от ${lo} до ${hi}` });
     for (const b of bins) {
       const ids = bucketIds(b);
       const label = `Итог ${b.from}–${b.to}`;
@@ -111,12 +118,12 @@ export function mount(el, params = {}) {
     }
     const avg = a.avg_final_total;
     // Среднее — тонкая линия без подписи на графике (подпись не наезжает на столбцы), значение — в легенде.
-    if (avg != null) plot.append(h('span', { class: 'cqa-hist__mean', style: `left:${avg}%`, 'aria-hidden': 'true' }));
-    plot.append(h('span', { class: 'cqa-hist__xend', 'aria-hidden': 'true' }, '100'));
+    if (avg != null && hi > lo) plot.append(h('span', { class: 'cqa-hist__mean', style: `left:${clamp01((avg - lo) / (hi - lo)) * 100}%`, 'aria-hidden': 'true' }));
+    plot.append(h('span', { class: 'cqa-hist__xend', 'aria-hidden': 'true' }, String(hi)));
     const table = h('table', { class: 'cqa-table cqa-vtable' },
       h('thead', null, h('tr', null, h('th', null, 'Итог'), h('th', { class: 'cqa-num' }, 'Финальный'), h('th', { class: 'cqa-num' }, 'AI'))),
-      h('tbody', null, bins.map((b) => h('tr', null, h('td', null, `${b.from}–${b.to}`), h('td', { class: 'cqa-num' }, b.count), h('td', { class: 'cqa-num' }, b.ai_count)))));
-    return vpanel({ title: 'Распределение итогов', sub: 'Сколько диалогов в каждой корзине по 10 баллов. Клик по столбцу — эти диалоги.',
+      h('tbody', null, all.map((b) => h('tr', null, h('td', null, `${b.from}–${b.to}`), h('td', { class: 'cqa-num' }, b.count), h('td', { class: 'cqa-num' }, b.ai_count)))));
+    return vpanel({ title: 'Распределение итогов', sub: `Сколько диалогов в каждой корзине по 10 баллов${lo > 0 ? ` (ниже ${lo} — ни одного)` : ''}. Клик по столбцу — эти диалоги.`,
       actions: tableToggle(table) },
     legend([...(twin ? [{ label: 'Финальный (с апелляциями)', key: C1 }, { label: 'AI', key: C2 }] : []),
       ...(avg != null ? [{ label: `среднее ${fmtScore(avg)}`, key: 'var(--cqa-text)', shape: 'tick' }] : [])]),

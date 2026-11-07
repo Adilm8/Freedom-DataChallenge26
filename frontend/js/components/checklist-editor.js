@@ -617,9 +617,9 @@ export function mount(el, params = {}) {
     const d = diffBodies(st.cur.body, st.draft);
     const v = check();
     const counts = [
-      d.added.length ? `+${d.added.length} ${plural(d.added.length, 'добавлен', 'добавлено', 'добавлено')}` : null,
-      d.changed.length ? `~${d.changed.length} ${plural(d.changed.length, 'изменён', 'изменено', 'изменено')}` : null,
-      d.removed.length ? `−${d.removed.length} ${plural(d.removed.length, 'удалён', 'удалено', 'удалено')}` : null,
+      d.added.length ? `${nCrit(d.added.length)} ${plural(d.added.length, 'добавлен', 'добавлено', 'добавлено')}` : null,
+      d.changed.length ? `${nCrit(d.changed.length)} ${plural(d.changed.length, 'изменён', 'изменено', 'изменено')}` : null,
+      d.removed.length ? `${nCrit(d.removed.length)} ${plural(d.removed.length, 'удалён', 'удалено', 'удалено')}` : null,
       d.reordered ? 'порядок' : null, d.settings.length ? 'настройки' : null, d.sections.length ? 'секции' : null, d.name ? 'название' : null,
     ].filter(Boolean);
     const note = h('input', { class: 'cqa-input cqa-chk-savebar__note', id: 'cqa-chk-note', value: st.note, maxlength: 200, 'aria-label': 'Заметка к версии',

@@ -1,7 +1,7 @@
 // Панель результата: обзор, итог и секции, параметры оценки с сырыми вызовами LLM, критерии с доказательствами.
 // События наружу: cqa:evidence-click {msg_id|msg_ids, quote(s), from, to, key}, cqa:run-request {ids, preset},
 // cqa:navigate {to}. Внутрь: cqa:focus-criterion {key} на el.
-import { h, clear, emit, answerBadge, score, fmtScore, fmtMoney, fmtDate, skeletonRows, errorState, emptyState } from '../ui.js';
+import { h, clear, emit, answerBadge, answerState, score, fmtScore, fmtMoney, fmtDate, skeletonRows, errorState, emptyState } from '../ui.js';
 import { getEvaluation, getEvaluationCalls } from '../api.js';
 import { mount as mountCalls } from './llm-calls.js';
 import { openAppealForm } from './appeal-form.js';
@@ -75,6 +75,7 @@ export function mount(el, params = {}) {
   function criterion(c) {
     const flagged = c.type === 'flag' && c.final_answer === 'yes';
     const review = c.confidence === 'low' || (c.issues || []).length;
+    const state = flagged ? 'flag' : answerState(c); // полоса слева: грубая ошибка > не выполнен > частично
     const body = [];
     if (c.reasoning) body.push(h('div', { class: 'cqa-crit__why' }, c.reasoning));
     if (c.final_answer === 'na' || c.ai_answer === 'na') {
@@ -100,6 +101,8 @@ export function mount(el, params = {}) {
 
 
     const foot = [confidence(c.confidence)];
+    // «Требует проверки» — чипом в подвале (полоса слева занята результатом); низкая уверенность уже видна своим чипом.
+    if ((c.issues || []).length && c.confidence !== 'low') foot.push(h('span', { class: 'cqa-badge cqa-badge--warn cqa-tip', 'data-tip': 'Есть предупреждения проверки ответа — сверьте вручную' }, 'Требует проверки'));
     if (c.reused_from_evaluation_id) {
       foot.push(h('button', { type: 'button', class: 'cqa-chip cqa-chip--reused cqa-tip', 'data-tip': 'Критерий не менялся: ответ взят из прошлой оценки без нового вызова. Открыть ту оценку',
         onclick: () => emit(root, 'cqa:navigate', { to: `#/conversation/${ev.conversation_id}?eval=${c.reused_from_evaluation_id}` }) },
@@ -115,11 +118,11 @@ export function mount(el, params = {}) {
         dataset: { appeal: c.key }, onclick: () => appeal(c) }, c.appeal ? 'Оспорить снова' : 'Оспорить'));
     }
 
-    return h('article', { class: `cqa-panel cqa-crit ${flagged ? 'cqa-crit--flag' : review ? 'cqa-crit--review' : ''}`, id: `crit-${c.key}`, dataset: { key: c.key }, tabindex: -1 },
+    return h('article', { class: `cqa-panel cqa-crit ${state ? `cqa-crit--${state}` : ''} ${review ? 'cqa-crit--review' : ''}`, id: `crit-${c.key}`, dataset: { key: c.key, state: state || 'ok' }, tabindex: -1 },
       h('div', { class: 'cqa-crit__head' },
-        h('span', { class: `cqa-code ${flagged ? 'cqa-code--flag' : ''}` }, c.key),
+        h('span', { class: `cqa-code ${flagged ? 'cqa-code--flag' : state ? `cqa-code--${state}` : ''}` }, c.key),
         h('span', { class: 'cqa-crit__title' }, c.title),
-        c.final_answer == null ? h('span', { class: 'cqa-badge cqa-badge--muted' }, 'нет ответа') : answerBadge(c),
+        c.final_answer == null ? h('span', { class: 'cqa-badge cqa-badge--muted' }, 'нет ответа') : answerBadge(c, undefined, { words: true }),
         c.overridden ? h('span', { class: 'cqa-badge cqa-badge--accent' }, 'изменено') : null,
         pointsText(c)),
       h('div', { class: 'cqa-crit__body' }, body, appealBlock(c)),

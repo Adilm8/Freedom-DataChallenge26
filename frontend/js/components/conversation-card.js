@@ -6,7 +6,7 @@
 // баннер «что изменилось» по GET /evaluations/{id}/compare со ссылкой на экран сравнения);
 // cqa:evaluation-updated {evaluation} от панели результата (апелляция подана) — обновить итог в шапке.
 // Звонок: плеер над транскриптом; клик по реплике или доказательству переводит запись на секунду реплики (с поправкой).
-import { h, clear, emit, channelBadge, langChip, score, fmtScore, fmtDate, skeletonRows, errorState } from '../ui.js';
+import { h, clear, emit, channelBadge, langChip, score, fmtScore, fmtDate, skeletonRows, errorState, answerState } from '../ui.js';
 import { getConversation, getEvaluation, listConversations, compareEvaluations } from '../api.js';
 import { plural } from './viz.js';
 import { mount as mountTranscript } from './transcript-view.js';
@@ -27,7 +27,7 @@ export function mount(el, params = {}) {
 
   function evidenceMap(e) {
     return (e?.criteria || [])
-      .map((c) => ({ key: c.key, title: c.title, flag: c.type === 'flag' && c.final_answer === 'yes', msg_ids: (c.evidence || []).map((x) => x.msg_id) }))
+      .map((c) => ({ key: c.key, title: c.title, flag: c.type === 'flag' && c.final_answer === 'yes', bad: answerState(c) === 'no', part: answerState(c) === 'part', msg_ids: (c.evidence || []).map((x) => x.msg_id) }))
       .filter((x) => x.msg_ids.length);
   }
 
@@ -66,11 +66,11 @@ export function mount(el, params = {}) {
     if (!ev || list.length < 2) return null;
     const newest = list[0]?.id;
     return h('label', { class: 'cqa-card__evsel' },
-      h('span', { class: 'cqa-faint' }, 'Оценка'),
+      h('span', { class: 'cqa-faint cqa-card__evlabel' }, 'Оценка'),
       h('select', { class: 'cqa-select', 'aria-label': 'Какую оценку показать',
         onchange: (e) => { const id = Number(e.target.value); emit(root, 'cqa:navigate', { to: id === newest ? `#/conversation/${conv.id}` : `#/conversation/${conv.id}?eval=${id}` }); } },
       list.map((x, i) => h('option', { value: x.id, selected: x.id === ev.id },
-        `#${x.id} · ${x.model || '—'} · ${fmtDate(x.created_at)} · ${fmtScore(x.final_total)}${i === 0 ? ' · последняя' : ''}`))));
+        `#${x.id} · ${fmtScore(x.final_total)}${i === 0 ? ' · последняя' : ''} · ${fmtDate(x.created_at)} · ${x.model || '—'}`))));
   }
 
   // Итог в шапке: финальный; если решения по апелляциям его изменили — «AI → финальный» рядом.
@@ -145,17 +145,18 @@ export function mount(el, params = {}) {
       channelBadge(conv.channel), langChip(conv.language),
       totalEl(),
       (ev?.final_score || ev?.ai_score)?.critical?.length ? h('span', { class: 'cqa-badge cqa-badge--flag' }, 'Грубая ошибка') : null,
-      ev?.open_appeals ? h('span', { class: 'cqa-badge cqa-badge--accent' }, `Апелляций открыто: ${ev.open_appeals}`) : null,
-      ev?.needs_review ? h('span', { class: 'cqa-badge cqa-badge--warn' }, 'Требует проверки') : null,
+      ev?.open_appeals ? h('span', { class: 'cqa-badge cqa-badge--accent' }, ev.open_appeals === 1 ? 'Апелляция открыта' : `Открыто апелляций: ${ev.open_appeals}`) : null,
       ev && ev.status !== 'done' ? h('span', { class: 'cqa-badge cqa-badge--no' }, ev.status === 'failed' ? 'Оценка не выполнена' : 'Оценка неполная') : null,
-      old ? h('button', { type: 'button', class: 'cqa-badge cqa-badge--warn cqa-card__old', onclick: () => go(`#/conversation/${conv.id}`) }, 'не последняя оценка · к последней') : null,
+      old ? h('button', { type: 'button', class: 'cqa-badge cqa-badge--warn cqa-card__old', onclick: () => go(`#/conversation/${conv.id}`), title: 'Показана не последняя оценка этого диалога. Открыть последнюю' }, 'не последняя · к последней') : null,
       evalPicker(),
       h('button', { type: 'button', class: `cqa-btn cqa-btn--sm ${ev ? '' : 'cqa-btn--primary'}`, id: 'cqa-card-run', onclick: () => runRequest() }, ev ? '↻ Оценить повторно' : 'Оценить'),
       compareBtn(),
       h('div', { class: 'cqa-card__nav' },
-        idx >= 0 ? h('span', { class: 'cqa-faint', style: 'font-size:var(--cqa-text-xs)' }, `${idx + 1} из ${rows.length}`) : null,
-        h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', disabled: !prev, onclick: () => prev && go(`#/conversation/${prev.id}`) }, '‹ Предыдущий'),
-        h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', disabled: !next, onclick: () => next && go(`#/conversation/${next.id}`) }, 'Следующий ›')));
+        idx >= 0 ? h('span', { class: 'cqa-faint cqa-card__pos' }, `${idx + 1} из ${rows.length}`) : null,
+        h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-card__step', disabled: !prev, title: prev ? `Предыдущий: ${prev.conversation_id}` : 'Это первый диалог списка',
+          'aria-label': 'Предыдущий диалог', onclick: () => prev && go(`#/conversation/${prev.id}`) }, '‹'),
+        h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-card__step', disabled: !next, title: next ? `Следующий: ${next.conversation_id}` : 'Это последний диалог списка',
+          'aria-label': 'Следующий диалог', onclick: () => next && go(`#/conversation/${next.id}`) }, '›')));
   }
 
   function body(isCall, withAudio) {
