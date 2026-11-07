@@ -1,0 +1,845 @@
+{
+  "checklist_version": "default-v1",
+  "items": {
+    "s-ru-001": {
+      "case": "оператор не поздоровался и не представился; без бота",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "no"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 84.62,
+      "notes": ""
+    },
+    "s-ru-002": {
+      "case": "оператор представился во второй реплике; ссылка на скрытый документ (insufficient)",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "no"
+        },
+        "02": {
+          "answer": "yes"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 10,
+          "insufficient": true
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 75.0,
+      "notes": ""
+    },
+    "s-ru-003": {
+      "case": "раскрытие данных счета без идентификации клиента",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "no"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 76.47,
+      "notes": ""
+    },
+    "s-ru-004": {
+      "case": "общий вопрос без идентификации; без бота; идеальная консультация",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 100.0,
+      "notes": ""
+    },
+    "s-ru-005": {
+      "case": "только бот, оператор не подключился; клиент ушел до запроса",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "no"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": "na",
+          "insufficient": true
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 0
+        },
+        "07": {
+          "answer": "na"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 0.0,
+      "notes": ""
+    },
+    "s-ru-006": {
+      "case": "обрыв связи сразу после первой реплики оператора",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": "na",
+          "insufficient": true
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "na",
+          "insufficient": true
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 100.0,
+      "notes": ""
+    },
+    "s-ru-007": {
+      "case": "грубое оскорбление клиента оператором; оператор закрыл чат без прощания",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 0
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 0
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "yes"
+        }
+      },
+      "total": 15.38,
+      "notes": ""
+    },
+    "s-ru-008": {
+      "case": "пауза оператора > 3 мин без предупреждения; непривычное системное сообщение",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 93.08,
+      "notes": ""
+    },
+    "s-ru-009": {
+      "case": "недовольный клиент без эмпатии и реакции со стороны оператора",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 70.0,
+      "notes": ""
+    },
+    "s-ru-010": {
+      "case": "предложение платной услуги лично в обход компании (08=yes)",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 0
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 4
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "yes"
+        }
+      },
+      "total": 32.31,
+      "notes": ""
+    },
+    "s-kz-001": {
+      "case": "оператор амандаспады және өзін таныстырмады (01=no)",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "no"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 84.62,
+      "notes": ""
+    },
+    "s-kz-002": {
+      "case": "өзін екінші репликада таныстырды; ерекше жүйелік хабарлама",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "no"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "yes"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 88.24,
+      "notes": ""
+    },
+    "s-kz-003": {
+      "case": "оператор клиент тілінде жауап бермеді (қазақша клиент, орысша оператор)",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "no"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 77.69,
+      "notes": ""
+    },
+    "s-kz-004": {
+      "case": "жалпы сұрақ идентификациясыз; ботсыз оператор; мінсіз диалог",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 100.0,
+      "notes": ""
+    },
+    "s-kz-005": {
+      "case": "тек бот, оператор қосылмады; клиент сұрақ қоймай шығып кетті",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "no"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": "na",
+          "insufficient": true
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 0
+        },
+        "07": {
+          "answer": "na"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 0.0,
+      "notes": ""
+    },
+    "s-kz-006": {
+      "case": "жеке ақылы қызмет ұсыну (08=yes); оператор қоштасусыз чатты жапты (07=no)",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 0
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 4
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "yes"
+        }
+      },
+      "total": 24.62,
+      "notes": ""
+    },
+    "s-kz-007": {
+      "case": "түсініксіз жауаптан клиент қайта сұрады (06=4)",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "yes"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 15
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 4
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 82.5,
+      "notes": ""
+    },
+    "s-en-001": {
+      "case": "gross insult by operator (08=yes)",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 0
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 0
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "yes"
+        }
+      },
+      "total": 15.38,
+      "notes": ""
+    },
+    "s-en-002": {
+      "case": "language mismatch (client EN, operator greeted in RU) (01=no)",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "no"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 77.69,
+      "notes": ""
+    },
+    "s-en-003": {
+      "case": "disclosed account positions without verifying identity (03=no)",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "no"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 76.47,
+      "notes": ""
+    },
+    "s-en-004": {
+      "case": "direct operator connection; connection lost immediately (07=na, insufficient)",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": "na",
+          "insufficient": true
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "na",
+          "insufficient": true
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 100.0,
+      "notes": ""
+    },
+    "s-en-005": {
+      "case": "operator pause > 3 min without wait warning (06=7)",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 93.08,
+      "notes": ""
+    },
+    "s-en-006": {
+      "case": "confusing explanation leading client to re-ask (06=4); references external ticket (insufficient)",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "yes"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 15,
+          "insufficient": true
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 4
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 82.5,
+      "notes": ""
+    },
+    "s-en-007": {
+      "case": "unhappy customer expressing anger, operator lacks empathy (05=no)",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 70.0,
+      "notes": ""
+    },
+    "s-call-001": {
+      "case": "синтетический звонок с оговорками ASR; идеальная консультация оператора",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "yes"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 100.0,
+      "notes": ""
+    },
+    "s-call-002": {
+      "case": "синтетический звонок с удержанием и верификацией; идеальная консультация",
+      "labeled_by": "synthetic",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "yes"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 100.0,
+      "notes": ""
+    }
+  }
+}
