@@ -104,6 +104,8 @@
 .cqa-btn--primary:hover:not(:disabled) { background: var(--cqa-accent-2); border-color: var(--cqa-accent-2); }
 .cqa-btn--ghost { border-color: transparent; background: transparent; color: var(--cqa-muted); }
 .cqa-btn--sm { padding: 4px 10px; font-size: var(--cqa-text-xs); }
+.cqa-themebtn { display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; }
+.cqa-themebtn svg { display: block; }
 .cqa-btn:disabled { opacity: .5; cursor: not-allowed; }
 .cqa-input, .cqa-select {
   height: 34px; padding: 0 10px; border-radius: var(--cqa-r-sm); border: 1px solid var(--cqa-border-strong);
@@ -175,7 +177,7 @@ button.cqa-chip:hover { border-color: var(--cqa-accent); color: var(--cqa-accent
 .cqa-h3 { margin: 0; font-size: var(--cqa-text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--cqa-faint); }
 .cqa-pagehead { display: flex; align-items: flex-end; gap: var(--cqa-s-4); margin-bottom: var(--cqa-s-4); flex-wrap: wrap; }
 .cqa-pagehead__sub { color: var(--cqa-muted); font-size: var(--cqa-text-sm); margin-top: 2px; }
-.cqa-pagehead__actions { margin-left: auto; display: flex; gap: var(--cqa-s-2); align-items: center; }
+.cqa-pagehead__actions { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--cqa-s-2); align-items: center; }
 
 .cqa-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cqa-s-3); padding: var(--cqa-s-3) var(--cqa-s-4); border-bottom: 1px solid var(--cqa-border); }
 .cqa-toolbar__spacer { flex: 1; }
@@ -1098,6 +1100,10 @@ button.cqa-msg__rec:hover { border-color: var(--cqa-accent); color: var(--cqa-ac
 .cqa-export__label { font-size: var(--cqa-text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
 .cqa-export__note:empty { display: none; }
 .cqa-list__appeals { justify-content: flex-end; }
+.cqa-list__narrow { width: 1%; white-space: nowrap; }
+.cqa-list__topictext { display: block; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--cqa-muted); }
+.cqa-list__why { display: inline-flex; align-items: center; gap: 6px; font-size: var(--cqa-text-xs); color: var(--cqa-muted); white-space: nowrap; }
+.cqa-list__why::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--cqa-warn-line); flex: none; }
 
 @media (max-width: 1366px) { /* счётчики в меню: всё меню помещается в шапку на 1280 */
   .cqa-brand small { display: none; }
@@ -1264,8 +1270,26 @@ button.cqa-kpi:hover { border-color: var(--cqa-accent); box-shadow: 0 0 0 3px va
 .cqa-hist__mean { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px solid var(--cqa-text); margin-left: -1px; pointer-events: none; opacity: .45; }
 
 .cqa-crow-list { display: flex; flex-direction: column; gap: 2px; }
-.cqa-crow { display: grid; grid-template-columns: auto minmax(0, 1fr) 44px 60px 52px; align-items: center; gap: 10px; padding: 7px 6px; border-radius: var(--cqa-r-sm); }
+.cqa-crow { display: grid; grid-template-columns: auto minmax(0, 1fr) 44px 60px 84px; align-items: center; gap: 10px; padding: 7px 6px; border-radius: var(--cqa-r-sm); }
 .cqa-crow:hover, .cqa-crow:focus-visible { background: var(--cqa-surface-2); }
+.cqa-crow--worst { background: var(--cqa-no-bg); }
+.cqa-crow--worst:hover, .cqa-crow--worst:focus-visible { background: var(--cqa-no-bg); box-shadow: inset 0 0 0 1px var(--cqa-no-bd); }
+.cqa-crow__fails.cqa-btn { white-space: nowrap; }
+/* Полоса «Главное» под KPI: вывод из цифр (слабый критерий, грубые ошибки, проверка, апелляции). */
+.cqa-insights { display: flex; flex-wrap: wrap; gap: var(--cqa-s-2); align-items: stretch; }
+.cqa-insights__label { flex: 0 0 auto; align-self: center; font-size: var(--cqa-text-xs); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cqa-muted); padding-right: 4px; }
+.cqa-insight { flex: 1 1 220px; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--cqa-border); border-left: 4px solid var(--cqa-border-strong);
+  border-radius: var(--cqa-r-md); background: var(--cqa-surface); color: var(--cqa-text); font: inherit; text-align: left; }
+.cqa-insight--link { cursor: pointer; transition: border-color .12s, background .12s; }
+.cqa-insight--link:hover, .cqa-insight--link:focus-visible { background: var(--cqa-hover); }
+.cqa-insight__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.cqa-insight__text b { font-size: var(--cqa-text-md); font-weight: 600; }
+.cqa-insight__text small { font-size: var(--cqa-text-sm); color: var(--cqa-muted); }
+.cqa-insight__go { flex: 0 0 auto; font-size: var(--cqa-text-lg); line-height: 1; color: var(--cqa-accent-2); font-weight: 600; }
+.cqa-insight--bad { border-left-color: var(--cqa-no); }
+.cqa-insight--warn { border-left-color: var(--cqa-warn-line); }
+.cqa-insight--ok { border-left-color: var(--cqa-yes); }
+.cqa-insight--accent { border-left-color: var(--cqa-accent); }
 .cqa-crow__main { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 .cqa-crow__title { display: flex; gap: 8px; align-items: baseline; min-width: 0; font-size: var(--cqa-text-sm); }
 .cqa-crow__name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
@@ -1463,7 +1487,8 @@ button.cqa-kpi:hover { border-color: var(--cqa-accent); box-shadow: 0 0 0 3px va
   .cqa-hist { min-height: 160px; }
   .cqa-hist__wrap { min-height: 200px; }
   .cqa-hist--dense .cqa-hist__col:nth-child(even) .cqa-hist__x { visibility: hidden; } /* много корзин: подписи через одну */
-  .cqa-crow { grid-template-columns: auto minmax(0, 1fr) 40px 44px; grid-template-areas: "code main val fails" "code main na fails"; row-gap: 0; }
+  .cqa-crow { grid-template-columns: auto minmax(0, 1fr) 40px auto; grid-template-areas: "code main val fails" "code main na fails"; row-gap: 0; }
+  .cqa-insights__label { flex-basis: 100%; }
   .cqa-crow > .cqa-code { grid-area: code; }
   .cqa-crow__main { grid-area: main; }
   .cqa-crow__val { grid-area: val; }

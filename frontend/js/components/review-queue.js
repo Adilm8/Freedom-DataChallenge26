@@ -3,7 +3,7 @@
 // Клик → карточка диалога на нужном критерии с подсветкой доказательств (#/conversation/<id>?eval=..&focus=<код>).
 // Параметры: group, mode, reason. Наружу: cqa:navigate, cqa:location.
 import { h, clear, emit, channelBadge, langChip, skeletonRows, errorState, emptyState } from '../ui.js';
-import { getReviewQueue } from '../api.js';
+import { getReviewQueue, getFactLabels } from '../api.js';
 
 export const REASON = {
   failed: ['Оценка не получена', 'flag', 'Модель не вернула результат: баллов нет'],
@@ -17,10 +17,19 @@ const ORDER = ['failed', 'missing', 'appeal', 'guard', 'validator', 'low_confide
 const CONF = { high: 'высокая', medium: 'средняя', low: 'низкая' };
 const ANS = { yes: 'Да', no: 'Нет', na: 'N/A' };
 const ansText = (v) => (v == null ? '—' : ANS[v] || String(v));
+/** «противоречие фактам: !identity_verified, ended_abruptly» → подписи фактов из реестра бэкенда вместо ключей. */
+export function humanizeFacts(text, labels) {
+  if (!text || !labels) return text;
+  return String(text).replace(/(!?)\b([a-z][a-z0-9]*(?:_[a-z0-9]+)+|[a-z]{3,})\b/g, (m, neg, key) => {
+    const label = labels[key];
+    if (!label) return m;
+    return `«${label}» — ${neg ? "нет" : "да"}`;
+  });
+}
 
 export function mount(el, params = {}) {
   let p = { ...params };
-  const st = { items: null, reason: ORDER.includes(p.reason) ? p.reason : '', q: '', lang: '' };
+  const st = { items: null, reason: ORDER.includes(p.reason) ? p.reason : '', q: '', lang: '', labels: null };
   const root = h('div', { class: 'cqa-page cqa-rq' });
   el.append(root);
   const body = h('div');
@@ -31,8 +40,9 @@ export function mount(el, params = {}) {
     const my = ++token;
     if (!quiet) clear(body).append(skeletonRows(8));
     try {
-      const items = await getReviewQueue({ group_id: group() });
+      const [items, facts] = await Promise.all([getReviewQueue({ group_id: group() }), getFactLabels().catch(() => null)]);
       if (my !== token) return;
+      st.labels = facts?.labels || null;
       st.items = items;
       render();
     } catch (e) {
@@ -95,8 +105,9 @@ export function mount(el, params = {}) {
 
   function item(it) {
     const [label, tone] = REASON[it.reason] || [it.reason, 'muted'];
-    const extra = (it.messages || []).slice(1);
-    const issues = (it.issues || []).filter((x) => !(it.messages || []).some((m) => m.includes(x)));
+    const hf = (t) => humanizeFacts(t, st.labels);
+    const extra = (it.messages || []).slice(1).map(hf);
+    const issues = (it.issues || []).filter((x) => !(it.messages || []).some((m) => m.includes(x))).map(hf);
     const go = () => emit(root, 'cqa:navigate', { to: cardUrl(it) });
     return h('article', { class: `cqa-rq__item cqa-rq__item--${it.reason}`, role: 'listitem', tabindex: 0, dataset: { key: it.criterion_key || '', conv: it.conversation_id },
       onclick: (e) => { if (!e.target.closest('button')) go(); }, onkeydown: (e) => { if (e.key === 'Enter' && e.target === e.currentTarget) go(); } },
@@ -108,14 +119,15 @@ export function mount(el, params = {}) {
       h('div', { class: 'cqa-rq__why' },
         h('span', { class: `cqa-badge cqa-badge--${tone}` }, label),
         (it.reasons || []).filter((r) => r !== it.reason).map((r) => h('span', { class: 'cqa-badge cqa-badge--muted', title: REASON[r]?.[2] }, REASON[r]?.[0] || r)),
-        h('span', { class: 'cqa-rq__msg' }, it.message)),
+        h('span', { class: 'cqa-rq__msg' }, hf(it.message))),
       extra.length || issues.length ? h('ul', { class: 'cqa-rq__more' }, extra.map((m) => h('li', null, m)), issues.map((m) => h('li', null, m))) : null,
       it.criterion_key ? h('div', { class: 'cqa-rq__facts' },
         h('span', null, 'Ответ AI: ', h('b', null, ansText(it.ai_answer))),
         it.final_answer != null && String(it.final_answer) !== String(it.ai_answer) ? h('span', null, 'финальный: ', h('b', null, ansText(it.final_answer))) : null,
         it.confidence ? h('span', { class: it.confidence === 'low' ? 'cqa-rq__low' : '' }, `уверенность: ${CONF[it.confidence] || it.confidence}`) : null) : null),
     h('div', { class: 'cqa-rq__acts' },
-      h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-btn--primary', onclick: go }, it.criterion_key ? `К критерию ${it.criterion_key} →` : 'Открыть карточку →'),
+      // Вся строка кликабельна; кнопка — вторичная, чтобы 60 одинаковых фиолетовых кнопок не спорили с содержанием.
+      h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-rq__go', onclick: go }, it.criterion_key ? `К критерию ${it.criterion_key} →` : 'Открыть карточку →'),
       it.appeal_id && p.mode === 'reviewer'
         ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', onclick: () => emit(root, 'cqa:navigate', { to: `#/appeals?id=${it.appeal_id}` }) }, `Апелляция №${it.appeal_id}`) : null));
   }
@@ -124,7 +136,7 @@ export function mount(el, params = {}) {
     h('div', { class: 'cqa-pagehead' },
       h('div', null, h('h1', { class: 'cqa-h1' }, 'Требует проверки'),
         h('div', { class: 'cqa-pagehead__sub' }, `Группа ${group()}: где модели не хватило данных, сработали проверки или есть открытые апелляции. Важное сверху.`)),
-      h('div', { class: 'cqa-pagehead__actions' }, h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', onclick: () => load({ quiet: true }) }, '↻ Обновить'))),
+      h('div', { class: 'cqa-pagehead__actions' }, h('button', { type: 'button', class: 'cqa-btn', onclick: () => load({ quiet: true }) }, '↻ Обновить'))),
     h('div', { class: 'cqa-panel' }, body));
   const onRefresh = () => load({ quiet: true });
   el.addEventListener('cqa:refresh', onRefresh);
