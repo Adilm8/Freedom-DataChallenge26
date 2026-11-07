@@ -130,6 +130,11 @@ export function paramsFromQuery(search = location.search) {
 }
 
 /** Кольцо итога 0–100: дуга цвета шкалы (scoreClass), при показе плавно заполняется. */
+export function ringLabeled(v, size = 132, stroke = 10) {
+  // Кольцо с числом внутри (как в макете Freedom): итог крупно, «/ 100» мелко.
+  return h('div', { class: 'cqa-ringbox', style: `width:${size}px;height:${size}px`, role: 'img', 'aria-label': `Итог ${fmtScore(v)} из 100` },
+    ring(v, size, stroke), h('div', { class: 'cqa-ringbox__val' }, h('b', null, v == null ? '—' : Number(v).toFixed(2).replace(/\.00$/, '')), h('span', null, '/ 100')));
+}
 export function ring(v, size = 64, stroke = 7) {
   const NS = 'http://www.w3.org/2000/svg';
   const r = (size - stroke) / 2, len = 2 * Math.PI * r;

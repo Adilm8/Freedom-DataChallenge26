@@ -1,7 +1,7 @@
 // Панель результата: обзор, итог и секции, параметры оценки с сырыми вызовами LLM, критерии с доказательствами.
 // События наружу: cqa:evidence-click {msg_id|msg_ids, quote(s), from, to, key}, cqa:run-request {ids, preset},
 // cqa:navigate {to}. Внутрь: cqa:focus-criterion {key} на el.
-import { h, clear, emit, answerBadge, answerState, score, fmtScore, fmtMoney, fmtDate, skeletonRows, errorState, emptyState, ring } from '../ui.js';
+import { h, clear, emit, answerBadge, answerState, score, fmtScore, fmtMoney, fmtDate, skeletonRows, errorState, emptyState, ring, ringLabeled } from '../ui.js';
 import { getEvaluation, getEvaluationCalls } from '../api.js';
 import { mount as mountCalls } from './llm-calls.js';
 import { openAppealForm } from './appeal-form.js';
@@ -13,6 +13,7 @@ const CONF = {
   low: ['Низкая уверенность', 'Данных для вывода мало: ответ стоит проверить вручную'],
 };
 export const STRATEGY_LABEL = { grouped: 'по группам', single: 'один вызов', per_criterion: 'по критерию' };
+const fmtNum = (v) => (Number.isInteger(v) ? String(v) : Number(v).toFixed(2).replace(/\.?0+$/, ''));
 const AP_STATUS = { open: ['Апелляция открыта', 'warn'], confirmed: ['Оценка подтверждена', 'yes'], changed: ['Ответ изменён', 'accent'] };
 const SECTION_TITLES = { start: 'Начало и понимание запроса', safety: 'Безопасность и решение', dialog: 'Ведение и завершение диалога', critical: 'Грубые нарушения' };
 
@@ -199,30 +200,32 @@ export function mount(el, params = {}) {
     const changed = fin.total !== ai.total && fin.total != null && ai.total != null;
     // После решений по апелляциям итог AI и финальный стоят рядом, даже если ответ подтверждён.
     const both = changed || ev.criteria.some((c) => (c.appeal_history || []).some((a) => a.status !== 'open'));
-    const parts = [];
-    parts.push(h('div', { class: 'cqa-sum__top' },
-      ring(fin.total ?? ai.total, 76, 8),
-      h('div', { id: 'cqa-sum-ai' }, h('div', { class: 'cqa-sum__label' }, both ? 'Итог AI · не меняется' : 'Итог AI'),
-        h('div', { class: `cqa-sum__big ${changed ? 'cqa-muted' : ''}` }, changed ? h('span', { style: 'font-size:.6em' }, fmtScore(ai.total)) : score(ai.total), ' ', h('span', { class: 'cqa-sum__of' }, '/ 100'))),
-      both ? h('div', { class: 'cqa-sum__arrow' }, '→') : null,
-      both ? h('div', { id: 'cqa-sum-final' }, h('div', { class: 'cqa-sum__label' }, 'Финальный итог'),
-        h('div', { class: 'cqa-sum__big' }, score(fin.total), ' ', changed ? h('span', { class: 'cqa-delta' }, `${fin.total - ai.total > 0 ? '+' : ''}${(fin.total - ai.total).toFixed(2)}`)
-          : h('span', { class: 'cqa-sum__of' }, 'как у AI'))) : null,
-      h('div', { class: 'cqa-sum__aw' },
-        h('div', { class: 'cqa-sum__label' }, 'Применимый вес'),
-        h('b', null, `${fin.applicable_weight ?? 0} из 100`))));
+    const parts = [h('h3', { class: 'cqa-sum__title' }, 'Оценка качества')];
+    // Слева — кольцо с финальным итогом, справа — баллы по каждому критерию (как в макете Freedom).
+    const rows = ev.criteria.filter((c) => c.final_answer != null || c.ai_answer != null).map((c) => {
+      const flag = c.type === 'flag';
+      const na = c.final_answer === 'na';
+      const max = Number(c.weight), pts = Number(c.final_points);
+      const full = !flag && !na && Number.isFinite(pts) && pts >= max;
+      const zero = !flag && !na && Number.isFinite(pts) && pts <= 0;
+      const kind = flag ? (c.final_answer === 'yes' ? 'bad' : 'ok') : na ? 'na' : full ? 'ok' : zero ? 'bad' : 'part';
+      const mark = { ok: '✓', bad: '✕', part: '−', na: '–' }[kind];
+      return h('button', { type: 'button', class: `cqa-sumrow cqa-sumrow--${kind}`, title: 'Открыть критерий',
+        onclick: () => { const el = root.querySelector(`#crit-${CSS.escape(c.key)}`); el?.scrollIntoView({ block: 'start', behavior: 'smooth' }); el?.focus({ preventScroll: true }); } },
+        h('span', { class: 'cqa-sumrow__mark', 'aria-hidden': 'true' }, mark),
+        h('span', { class: 'cqa-sumrow__title' }, c.title),
+        h('span', { class: 'cqa-sumrow__pts' }, flag ? (c.final_answer === 'yes' ? 'нарушение' : 'нет') : na ? 'N/A'
+          : [h('b', null, fmtNum(pts)), ` / ${fmtNum(max)}`]));
+    });
+    parts.push(h('div', { class: 'cqa-sum__grid' },
+      h('div', { class: 'cqa-sum__score' }, ringLabeled(fin.total ?? ai.total),
+        h('div', { class: 'cqa-sum__note', id: both ? 'cqa-sum-final' : 'cqa-sum-ai' },
+          both ? [h('span', null, `AI: ${fmtScore(ai.total)}`), changed ? h('span', { class: 'cqa-delta' }, `${fin.total - ai.total > 0 ? '+' : ''}${(fin.total - ai.total).toFixed(2)} после апелляций`) : h('span', null, 'апелляции итог не изменили')]
+            : h('span', null, 'оценка AI'),
+          h('span', null, `применимый вес ${fin.applicable_weight ?? 0} из 100`))),
+      h('div', { class: 'cqa-sumrows' }, rows)));
     const ov = overview(true);
     if (ov) parts.push(ov);
-
-    const secs = (fin.sections || []).filter((s) => s.applicable_weight);
-    if (secs.length) {
-      parts.push(h('div', { class: 'cqa-secbars' }, secs.map((s) => {
-        const cls = s.pct >= 85 ? '' : s.pct >= 60 ? 'cqa-bar__fill--mid' : 'cqa-bar__fill--bad';
-        return h('div', null,
-          h('div', { class: 'cqa-secbar__row' }, h('span', null, s.title), h('b', null, `${s.points} / ${s.applicable_weight}`)),
-          h('div', { class: 'cqa-bar', role: 'img', 'aria-label': `${s.title}: ${s.pct}%` }, h('div', { class: `cqa-bar__fill ${cls}`, style: `width:${s.pct}%` })));
-      })));
-    }
     parts.push(whyLowered());
     return h('div', { class: 'cqa-panel cqa-sum' }, parts);
   }
@@ -246,12 +249,10 @@ export function mount(el, params = {}) {
             h('div', { class: 'cqa-why__head' }, h('span', { class: 'cqa-code' }, c.key), h('b', null, c.title), h('span', { class: 'cqa-why__lost' }, label)),
             c.reasoning ? h('div', { class: 'cqa-why__text' }, firstSentence(c.reasoning)) : null),
           h('div', { class: 'cqa-why__acts' },
-            c.evidence?.length || c.checked_range ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-btn--primary', onclick: () => showInTranscript(c) }, 'Перейти к фрагменту') : null,
-            canAppeal ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', onclick: () => appeal(c) }, 'Оспорить оценку') : null,
-            h('button', { type: 'button', class: 'cqa-linkbtn', onclick: () => { const el = root.querySelector(`#crit-${CSS.escape(c.key)}`); el?.scrollIntoView({ block: 'start', behavior: 'smooth' }); el?.focus({ preventScroll: true }); } }, 'подробнее')));
+            c.evidence?.length || c.checked_range ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', onclick: () => showInTranscript(c) }, 'Перейти к фрагменту') : null,
+            canAppeal ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', onclick: () => appeal(c) }, 'Оспорить оценку') : null));
       })));
   }
-  const fmtNum = (v) => (Number.isInteger(v) ? String(v) : Number(v).toFixed(2).replace(/\.?0+$/, ''));
 
   function metaPanel() {
     const pr = ev.params || {};

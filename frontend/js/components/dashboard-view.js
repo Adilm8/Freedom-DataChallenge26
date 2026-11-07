@@ -3,7 +3,7 @@
 // Данные — GET /analytics и GET /conversations той же версии (итоги по диалогам для корзин гистограммы).
 // Клик по цифре или полосе → cqa:navigate в список диалогов с фильтром (#/conversations?lang=…, ?ids=…&label=…).
 // Наружу: cqa:navigate {to}, cqa:run-request {ids: [], group, rows}, cqa:import-request {group} (пустая группа). Внутрь: cqa:refresh на el — перечитать.
-import { h, clear, emit, errorState, emptyState, fmtScore, scoreClass, LANG, channelLabel, ring } from '../ui.js';
+import { h, clear, emit, errorState, emptyState, fmtScore, scoreClass, LANG, channelLabel, ring, ringLabeled } from '../ui.js';
 import { getAnalytics, listConversations } from '../api.js';
 import { createTip, fmtPct, fmtPct100, plural, tableToggle, vpanel, legend, clamp01 } from './viz.js';
 
@@ -65,8 +65,7 @@ export function mount(el, params = {}) {
     rs.total = rs.yes + rs.no + rs.unclear;
     return h('div', { class: 'cqa-kpis' },
       tile({ hero: true, label: 'Средний итог', aria: `Средний финальный итог ${fmtScore(a.avg_final_total)} из 100`,
-        value: h('span', { class: 'cqa-kpi__herowrap' }, ring(a.avg_final_total, 72, 8),
-          h('span', { class: `cqa-kpi__hero ${scoreClass(a.avg_final_total)}` }, fmtScore(a.avg_final_total), h('small', null, ' / 100'))),
+        value: h('span', { class: 'cqa-kpi__herowrap' }, ringLabeled(a.avg_final_total, 104, 9)),
         sub: [h('span', null, `AI: ${fmtScore(a.avg_ai_total)}`),
           delta ? h('span', { class: 'cqa-kpi__delta' }, `${delta > 0 ? '+' : ''}${delta.toFixed(2)} после апелляций`) : h('span', { class: 'cqa-faint' }, 'апелляции итог не меняли')] }),
       tile({ label: 'Оценено диалогов', value: [String(a.count), h('small', null, ` из ${a.conversations}`)],
