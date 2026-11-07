@@ -128,3 +128,20 @@ export function toast(root, text) {
 export function paramsFromQuery(search = location.search) {
   return Object.fromEntries(new URLSearchParams(search));
 }
+
+/** Кольцо итога 0–100: дуга цвета шкалы (scoreClass), при показе плавно заполняется. */
+export function ring(v, size = 64, stroke = 7) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const r = (size - stroke) / 2, len = 2 * Math.PI * r;
+  const pct = v == null ? 0 : Math.max(0, Math.min(100, Number(v))) / 100;
+  const svg = document.createElementNS(NS, 'svg');
+  const set = (el, a) => { for (const [k, val] of Object.entries(a)) el.setAttribute(k, val); return el; };
+  set(svg, { viewBox: `0 0 ${size} ${size}`, width: size, height: size, class: `cqa-ring ${scoreClass(v)}`, 'aria-hidden': 'true' });
+  const c = { cx: size / 2, cy: size / 2, r, fill: 'none', 'stroke-width': stroke };
+  svg.append(set(document.createElementNS(NS, 'circle'), { ...c, class: 'cqa-ring__track' }));
+  const arc = set(document.createElementNS(NS, 'circle'), { ...c, class: 'cqa-ring__arc', 'stroke-linecap': 'round',
+    'stroke-dasharray': len, 'stroke-dashoffset': len, transform: `rotate(-90 ${size / 2} ${size / 2})` });
+  svg.append(arc);
+  requestAnimationFrame(() => requestAnimationFrame(() => arc.setAttribute('stroke-dashoffset', String(len * (1 - pct)))));
+  return svg;
+}

@@ -1,7 +1,7 @@
 // Панель результата: обзор, итог и секции, параметры оценки с сырыми вызовами LLM, критерии с доказательствами.
 // События наружу: cqa:evidence-click {msg_id|msg_ids, quote(s), from, to, key}, cqa:run-request {ids, preset},
 // cqa:navigate {to}. Внутрь: cqa:focus-criterion {key} на el.
-import { h, clear, emit, answerBadge, answerState, score, fmtScore, fmtMoney, fmtDate, skeletonRows, errorState, emptyState } from '../ui.js';
+import { h, clear, emit, answerBadge, answerState, score, fmtScore, fmtMoney, fmtDate, skeletonRows, errorState, emptyState, ring } from '../ui.js';
 import { getEvaluation, getEvaluationCalls } from '../api.js';
 import { mount as mountCalls } from './llm-calls.js';
 import { openAppealForm } from './appeal-form.js';
@@ -201,6 +201,7 @@ export function mount(el, params = {}) {
     const both = changed || ev.criteria.some((c) => (c.appeal_history || []).some((a) => a.status !== 'open'));
     const parts = [];
     parts.push(h('div', { class: 'cqa-sum__top' },
+      ring(fin.total ?? ai.total, 76, 8),
       h('div', { id: 'cqa-sum-ai' }, h('div', { class: 'cqa-sum__label' }, both ? 'Итог AI · не меняется' : 'Итог AI'),
         h('div', { class: `cqa-sum__big ${changed ? 'cqa-muted' : ''}` }, changed ? h('span', { style: 'font-size:.6em' }, fmtScore(ai.total)) : score(ai.total), ' ', h('span', { class: 'cqa-sum__of' }, '/ 100'))),
       both ? h('div', { class: 'cqa-sum__arrow' }, '→') : null,

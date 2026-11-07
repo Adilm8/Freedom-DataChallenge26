@@ -9,12 +9,26 @@ from sqlmodel import Session, select
 from ..db import get_session
 from ..models import Conversation, Evaluation
 from ..services import latest as latest_svc
-from ..services import manual
+from ..config import settings
+from ..domain import NormalizedConversation
+from ..services import manual, pii
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 
 APPEAL_FILTERS = ("open", "any", "none")
 MAX_OFFSET_FIX_SEC = 3600
+
+
+def _strip(score: dict | None) -> list[dict]:
+    """Полоска критериев для списка: код, финальный ответ, доля балла (None — N/A, флаг или нет ответа)."""
+    out = []
+    for key, c in ((score or {}).get("criteria") or {}).items():
+        if not isinstance(c, dict):
+            continue
+        pts, w = c.get("points"), c.get("weight")
+        pct = round(100 * pts / w) if pts is not None and w else None
+        out.append({"key": key, "answer": c.get("answer"), "pct": pct})
+    return out
 
 
 def _latest(ev: Evaluation | None, appeals: tuple[int, int] = (0, 0)) -> dict | None:
@@ -24,6 +38,7 @@ def _latest(ev: Evaluation | None, appeals: tuple[int, int] = (0, 0)) -> dict | 
         "evaluation_id": ev.id, "ai_total": ev.ai_total, "final_total": ev.final_total,
         "critical": ev.critical, "needs_review": ev.needs_review, "status": ev.status,
         "open_appeals": appeals[0], "appeals": appeals[1],
+        "criteria": _strip(ev.final_score),
     }
 
 
@@ -99,6 +114,7 @@ def detail(session: Session, c: Conversation) -> dict:
         "segments": n.get("segments", []),
         "events": n.get("events", []),
         "warnings": n.get("warnings", []),
+        "privacy": _privacy(n),
         "evaluations": [
             {"id": e.id, "model": e.model, "checklist_version_id": e.checklist_version_id, "status": e.status,
              "ai_total": e.ai_total, "final_total": e.final_total, "created_at": e.created_at.isoformat()}
@@ -130,6 +146,21 @@ def create_conversation(body: NewConversation, session: Session = Depends(get_se
     except manual.ManualConflict as e:
         raise HTTPException(409, str(e))
     return detail(session, c)
+
+
+def _privacy(n: dict) -> dict:
+    """Что скрыто перед отправкой в модель (services/pii.py): сводка и текст реплик в том виде, как их видит модель."""
+    if not settings.pii_masking or not n.get("messages"):
+        return {"enabled": settings.pii_masking, "masked_total": 0, "unique_values": 0, "by_kind": [], "spans": [],
+                "masked_messages": {}}
+    try:
+        conv = NormalizedConversation.model_validate(n)
+    except Exception:  # noqa: BLE001 — старые записи без полной нормализации: без сводки
+        return {"enabled": True, "masked_total": 0, "unique_values": 0, "by_kind": [], "spans": [], "masked_messages": {}}
+    masked, spans = pii.mask_conversation(conv)
+    changed = {sp.msg_id for sp in spans}
+    return {"enabled": True, **pii.summary(spans),
+            "masked_messages": {m.msg_id: m.text for m in masked.messages if m.msg_id in changed}}
 
 
 @router.get("/{pk}")

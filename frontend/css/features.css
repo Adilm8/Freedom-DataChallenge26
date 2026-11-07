@@ -1,0 +1,87 @@
+/* Доп. функции: маскирование персональных данных, песочница критерия, коучинг-отчёт.
+   Только переменные из cqa.css, чтобы тёмная тема работала без отдельных правил. */
+
+/* --- персональные данные (privacy-panel.js) --- */
+.cqa-privacy { margin-bottom: var(--cqa-s-3); }
+.cqa-privacy__line { display: flex; gap: var(--cqa-s-2); align-items: baseline; flex-wrap: wrap;
+  padding: var(--cqa-s-2) var(--cqa-s-3); font-size: var(--cqa-text-sm); }
+.cqa-privacy__icon { flex: none; }
+.cqa-privacy__tag { background: var(--cqa-accent-soft); color: var(--cqa-accent-2); border: 1px solid var(--cqa-accent-bd);
+  border-radius: var(--cqa-r-sm); padding: 0 4px; font-family: var(--cqa-mono); font-size: var(--cqa-text-xs); }
+.cqa-privacy__text { white-space: pre-wrap; word-break: break-word; }
+.cqa-privacy .cqa-facts__row { grid-template-columns: 52px minmax(0, 1fr); }
+.cqa-privacy .cqa-facts__val.cqa-privacy__text { display: block; line-height: 1.7; }
+
+/* --- песочница критерия (criterion-trial.js) --- */
+.cqa-modal__box.cqa-trial { width: min(860px, 100%); }
+.cqa-trial__sub { margin-top: 2px; }
+.cqa-trial__note { margin-bottom: var(--cqa-s-3); }
+.cqa-trial__pickhead { display: flex; gap: var(--cqa-s-3); align-items: center; margin-bottom: var(--cqa-s-2); }
+.cqa-trial__pickhead .cqa-input { flex: 1; min-width: 0; }
+.cqa-trial__list { max-height: 220px; overflow: auto; border: 1px solid var(--cqa-border); border-radius: var(--cqa-r-md); padding: 4px; }
+.cqa-trial__opt { display: flex; align-items: center; gap: var(--cqa-s-2); padding: 6px 8px; border-radius: var(--cqa-r-sm); cursor: pointer; font-size: var(--cqa-text-sm); }
+.cqa-trial__opt:hover { background: var(--cqa-surface-2); }
+.cqa-trial__opt--on { background: var(--cqa-accent-soft); }
+.cqa-trial__was { margin-left: auto; }
+.cqa-trial__busy { display: flex; align-items: center; gap: var(--cqa-s-2); margin-top: var(--cqa-s-3); color: var(--cqa-muted); }
+.cqa-spinner { width: 16px; height: 16px; border: 2px solid var(--cqa-accent-bd); border-top-color: var(--cqa-accent); border-radius: 50%; animation: cqa-spin .8s linear infinite; }
+@keyframes cqa-spin { to { transform: rotate(360deg); } }
+.cqa-trial__sum { display: flex; gap: var(--cqa-s-3); align-items: baseline; flex-wrap: wrap; margin: var(--cqa-s-4) 0 var(--cqa-s-2); }
+.cqa-trial__results { display: grid; gap: var(--cqa-s-2); }
+.cqa-trial__res { padding: var(--cqa-s-3); }
+.cqa-trial__res--changed { border-color: var(--cqa-warn-bd); background: var(--cqa-warn-soft); }
+.cqa-trial__reshead { display: flex; gap: var(--cqa-s-2); align-items: center; flex-wrap: wrap; }
+.cqa-trial__ans { display: inline-flex; gap: 6px; align-items: center; margin-left: auto; }
+.cqa-trial__why { margin: var(--cqa-s-2) 0 0; font-size: var(--cqa-text-sm); }
+.cqa-trial__ev { margin: var(--cqa-s-2) 0 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: var(--cqa-text-sm); }
+.cqa-trial__meta { margin-top: var(--cqa-s-2); font-size: var(--cqa-text-xs); }
+@media (max-width: 640px) { .cqa-trial__ans { margin-left: 0; } }
+/* кнопка «Проверить» в строке критерия: колонка действий шире */
+.cqa-chk-row { grid-template-columns: 22px 52px minmax(0, 1fr) 104px 52px 40px 44px 262px; }
+.cqa-chk-list--tech .cqa-chk-row { grid-template-columns: 22px 52px minmax(0, 1fr) 104px 52px 40px 112px 60px 44px 262px; }
+@media (max-width: 1100px) {
+  .cqa-chk-row { grid-template-columns: 22px 48px minmax(0, 1fr) 96px 48px 36px 40px 256px; }
+  .cqa-chk-list--tech .cqa-chk-row { grid-template-columns: 22px 48px minmax(0, 1fr) 96px 48px 36px 100px 52px 40px 256px; }
+}
+@media (max-width: 900px) { .cqa-chk-row, .cqa-chk-list--tech .cqa-chk-row { grid-template-columns: none; } }
+
+/* --- коучинг-отчёт (coaching-report.js) --- */
+.cqa-coach { max-width: 920px; margin: 0 auto; }
+.cqa-coach__bar { display: flex; justify-content: space-between; align-items: center; gap: var(--cqa-s-2); margin-bottom: var(--cqa-s-3); }
+.cqa-coach__sheet { padding: var(--cqa-s-5) var(--cqa-s-6); }
+.cqa-coach__head { display: flex; justify-content: space-between; gap: var(--cqa-s-4); align-items: flex-start; border-bottom: 1px solid var(--cqa-border); padding-bottom: var(--cqa-s-4); }
+.cqa-coach__kicker { text-transform: uppercase; letter-spacing: .06em; font-size: var(--cqa-text-xs); color: var(--cqa-accent); font-weight: 600; }
+.cqa-coach__title { font-size: var(--cqa-text-xl); margin: 4px 0 8px; font-family: var(--cqa-mono); }
+.cqa-coach__title .cqa-faint { font-family: var(--cqa-font); font-size: var(--cqa-text-lg); font-weight: 500; }
+.cqa-coach__meta { display: flex; gap: var(--cqa-s-2); flex-wrap: wrap; align-items: center; font-size: var(--cqa-text-sm); }
+.cqa-coach__score { text-align: right; flex: none; }
+.cqa-coach__ok { color: var(--cqa-yes); font-weight: 600; font-size: var(--cqa-text-sm); }
+.cqa-coach__summary { margin: var(--cqa-s-4) 0 0; color: var(--cqa-muted); }
+.cqa-coach__sec { margin-top: var(--cqa-s-5); }
+.cqa-coach__sec .cqa-h3 { margin: 0 0 var(--cqa-s-3); }
+.cqa-coach__sec--flag { border: 1px solid var(--cqa-flag-bd); background: var(--cqa-flag-bg); border-radius: var(--cqa-r-md); padding: var(--cqa-s-3) var(--cqa-s-4); }
+.cqa-coach__list { margin: 0; padding-left: 1.3em; display: grid; gap: var(--cqa-s-4); }
+.cqa-coach__item p { margin: 6px 0 0; }
+.cqa-coach__ihead { display: flex; gap: var(--cqa-s-2); align-items: center; flex-wrap: wrap; }
+.cqa-coach__lost { margin-left: auto; font-weight: 700; color: var(--cqa-no); font-variant-numeric: tabular-nums; }
+.cqa-coach__quotes { display: grid; gap: 6px; margin-top: 8px; }
+.cqa-coach__quote { margin: 0; padding: 6px 12px; border-left: 3px solid var(--cqa-border-strong); background: var(--cqa-surface-2); border-radius: 0 var(--cqa-r-sm) var(--cqa-r-sm) 0; font-size: var(--cqa-text-sm); }
+.cqa-coach__who { display: block; font-size: var(--cqa-text-xs); color: var(--cqa-faint); }
+.cqa-coach__advice { background: var(--cqa-yes-soft); border: 1px solid var(--cqa-yes-bd); border-radius: var(--cqa-r-sm); padding: 6px 10px; font-size: var(--cqa-text-sm); }
+.cqa-coach__good { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: var(--cqa-text-sm); }
+.cqa-coach__tick { color: var(--cqa-yes); font-weight: 700; margin-right: 6px; }
+.cqa-coach__na { margin-top: var(--cqa-s-4); font-size: var(--cqa-text-sm); }
+.cqa-coach__foot { margin-top: var(--cqa-s-5); padding-top: var(--cqa-s-3); border-top: 1px solid var(--cqa-border); font-size: var(--cqa-text-xs); }
+@media (max-width: 640px) {
+  .cqa-coach__sheet { padding: var(--cqa-s-4); }
+  .cqa-coach__head { flex-direction: column; }
+  .cqa-coach__score { text-align: left; }
+  .cqa-coach__lost { margin-left: 0; }
+}
+@media print {
+  .cqa-header, .cqa-noprint, .cqa-toast, .cqa-runchip { display: none !important; }
+  body, .cqa-shell, .cqa-main { background: #fff !important; }
+  .cqa-coach { max-width: none; }
+  .cqa-coach__sheet { box-shadow: none; border: 0; padding: 0; }
+  .cqa-coach__item, .cqa-coach__quote { break-inside: avoid; }
+}

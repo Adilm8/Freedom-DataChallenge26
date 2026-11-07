@@ -15,6 +15,7 @@ from string import Template
 
 from ..config import ROOT
 from ..domain import ChecklistSettings, Criterion, NormalizedConversation
+from . import pii
 
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
 DATA_DIR = ROOT / "data"
@@ -178,6 +179,10 @@ def build(
         system += "\n\n" + _template("channel_voice.md")
 
     header = f"Диалог {conv.conversation_id}. Канал: {conv.channel}. Язык клиента по данным: {conv.language}."
+    if pii.has_placeholders(conv):
+        header += ("\nМетки вида [CARD_1], [PHONE_1], [IIN_1], [NUMBER_1], [CODE_1], [EMAIL_1], [IBAN_1] — персональные "
+                   "данные, скрытые системой перед отправкой. В диалоге на их месте было настоящее значение: считай, "
+                   "что эти данные были названы; одинаковая метка — одно и то же значение.")
     criteria_block = "\n\n".join(render_criterion(c, section_titles.get(c.section, c.section), voice=conv.is_voice)
                                  for c in criteria)
 

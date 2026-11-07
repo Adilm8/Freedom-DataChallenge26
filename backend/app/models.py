@@ -157,3 +157,19 @@ class Appeal(SQLModel, table=True):
     decision_reason: Optional[str] = None
     created_at: datetime = Field(default_factory=utcnow)
     decided_at: Optional[datetime] = None
+
+
+class CriterionTrial(SQLModel, table=True):
+    """Проверка критерия на диалогах до сохранения версии («песочница», services/trial.py).
+    Оценки диалогов не меняет; вызовы модели сохраняются здесь целиком, как у обычной оценки."""
+    __tablename__ = "criterion_trial"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    conversation_pk: int = Field(foreign_key="conversation.id", index=True)
+    base_version_id: Optional[int] = None
+    criterion: dict = J({})
+    provider: str = ""
+    model: str = ""
+    result: dict = J({})
+    calls: list = J([])
+    cost_usd: float = 0.0
+    created_at: datetime = Field(default_factory=utcnow)

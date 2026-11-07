@@ -117,8 +117,8 @@ export function mount(el, params = {}) {
       h('thead', null, h('tr', null,
         h('th', { style: 'width:36px' }, h('input', { type: 'checkbox', class: 'cqa-check', checked: allOn, 'aria-label': 'Выбрать все',
           onchange: (e) => { list.forEach((r) => (e.target.checked ? st.selected.add(r.id) : st.selected.delete(r.id))); renderTable(); } })),
-        h('th', null, 'Диалог'), h('th', { class: 'cqa-num' }, sortBtn), h('th', { class: 'cqa-list__narrow' }, 'Язык'), h('th', { class: 'cqa-list__narrow' }, 'Канал'),
-        h('th', { class: 'cqa-list__topic' }, 'Тема'), h('th', null, 'Метки'), h('th', { class: 'cqa-num' }, 'Апелляции'))),
+        h('th', null, 'Диалог'), h('th', { class: 'cqa-num' }, sortBtn), h('th', { class: 'cqa-list__heat', title: 'Критерии 01–08 по финальной оценке' }, 'Критерии'), h('th', { class: 'cqa-list__narrow' }, 'Язык'), h('th', { class: 'cqa-list__narrow' }, 'Канал'),
+        h('th', { class: 'cqa-list__topic' }, 'Тема'), h('th', { class: 'cqa-list__tags' }, 'Метки'), h('th', { class: 'cqa-num cqa-list__ap' }, 'Апелляции'))),
       h('tbody', null, list.map((r) => {
         const l = r.latest;
         const tr = h('tr', { tabindex: 0, 'aria-selected': st.selected.has(r.id) ? 'true' : 'false',
@@ -132,14 +132,31 @@ export function mount(el, params = {}) {
               score(l.ai_total, l.ai_total === l.final_total ? '' : 'cqa-faint'),
               l.ai_total !== l.final_total ? [h('span', { class: 'cqa-faint' }, '→'), score(l.final_total)] : null)
             : h('span', { class: 'cqa-badge cqa-badge--muted' }, 'Не оценён')),
+          h('td', { class: 'cqa-list__heat' }, heat(l)),
           h('td', { class: 'cqa-list__narrow' }, langChip(r.language)), h('td', { class: 'cqa-list__narrow' }, channelBadge(r.channel)),
           h('td', { class: 'cqa-list__topic' }, topics.get(r.id) ? h('span', { class: 'cqa-list__topictext', title: topics.get(r.id) }, topics.get(r.id)) : h('span', { class: 'cqa-faint' }, '—')),
-          h('td', null, h('div', { class: 'cqa-tags' },
+          h('td', { class: 'cqa-list__tags' }, h('div', { class: 'cqa-tags' },
             l?.critical ? h('span', { class: 'cqa-badge cqa-badge--flag' }, 'Грубая ошибка') : null,
             l?.needs_review ? reviewWhy(r.id) : null)),
-          h('td', { class: 'cqa-num' }, appealCell(l)));
+          h('td', { class: 'cqa-num cqa-list__ap' }, appealCell(l)));
         return tr;
       })));
+  }
+
+  // Тепловая полоска: клетка на критерий (зелёный — выполнен, янтарь — частично, красный — нет, серый — N/A; 08 — флаг).
+  function heat(l) {
+    const cs = l?.criteria;
+    if (!cs?.length) return h('span', { class: 'cqa-faint' }, '—');
+    return h('span', { class: 'cqa-heat', role: 'img', 'aria-label': cs.map((c) => `${c.key}: ${heatText(c)}`).join(', ') },
+      cs.map((c) => h('span', { class: `cqa-heat__c cqa-heat__c--${heatKind(c)}`, title: `${c.key} · ${heatText(c)}` })));
+  }
+  function heatKind(c) {
+    if (c.pct == null) return c.answer === 'yes' ? 'flag' : c.answer === 'no' ? 'clear' : 'na';
+    return c.pct >= 100 ? 'yes' : c.pct <= 0 ? 'no' : 'part';
+  }
+  function heatText(c) {
+    if (c.pct == null) return c.answer === 'yes' ? 'грубая ошибка' : c.answer === 'no' ? 'нарушений нет' : 'N/A';
+    return c.pct >= 100 ? 'выполнен' : c.pct <= 0 ? 'не выполнен' : `частично, ${c.pct}%`;
   }
 
   function reviewWhy(id) {
