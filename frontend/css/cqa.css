@@ -854,6 +854,13 @@ button.cqa-card__old { cursor: pointer; }
 .cqa-ap__play:active:not(:disabled) { transform: scale(.95); }
 .cqa-ap__play:disabled { background: var(--cqa-na-bg); color: var(--cqa-faint); box-shadow: none; cursor: not-allowed; }
 .cqa-ap--buffering .cqa-ap__play { animation: cqa-blink 1s ease infinite; }
+.cqa-ap__ctrl { flex: none; display: flex; align-items: center; gap: 4px; }
+.cqa-ap__skip {
+  width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--cqa-border-strong); background: var(--cqa-surface);
+  color: var(--cqa-accent); font: 600 12px/1 var(--cqa-mono); cursor: pointer; font-variant-numeric: tabular-nums;
+}
+.cqa-ap__skip:hover:not(:disabled) { background: var(--cqa-accent-soft); border-color: var(--cqa-accent-bd); }
+.cqa-ap__skip:disabled { color: var(--cqa-faint); cursor: not-allowed; }
 .cqa-ap__mid { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .cqa-ap__top { display: flex; align-items: baseline; gap: 8px; min-width: 0; font-size: var(--cqa-text-xs); }
 .cqa-ap__title { font-weight: 700; font-size: var(--cqa-text-sm); white-space: nowrap; }
