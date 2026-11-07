@@ -4,12 +4,12 @@
 
 ## Авторство
 
-- Все коммиты от `Adilm8 <187170484+Adilm8@users.noreply.github.com>` (автор и коммиттер).
+- Все коммиты от `Adilm8 <adtsco00@gmail.com>` (автор и коммиттер).
 - Никаких трейлеров `Co-Authored-By`, `Claude-Session` и строк «Generated with ...» в коммитах и описаниях PR. Упоминаний ассистента там тоже нет.
 - Перед первым коммитом в новой среде:
   ```bash
   git config user.name Adilm8
-  git config user.email 187170484+Adilm8@users.noreply.github.com
+  git config user.email adtsco00@gmail.com
   ```
 
 ## Ветки
