@@ -188,6 +188,7 @@ class ChecklistSettings(BaseModel):
     rounding: int = 2
     critical_policy: Literal["flag", "zero_total"] = "flag"
     first_response_threshold_sec: int = 180
+    long_gap_threshold_sec: int = 120
     advice: bool = True
     overview: bool = True
     quote_threshold: dict[str, float] = Field(default_factory=lambda: {"chat": 0.85, "voice": 0.75})

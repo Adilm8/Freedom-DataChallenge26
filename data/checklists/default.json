@@ -6,6 +6,7 @@
     "rounding": 2,
     "critical_policy": "flag",
     "first_response_threshold_sec": 180,
+    "long_gap_threshold_sec": 120,
     "advice": true,
     "overview": true,
     "quote_threshold": {"chat": 0.85, "voice": 0.75}
