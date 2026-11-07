@@ -257,7 +257,7 @@ button.cqa-chip:hover { border-color: var(--cqa-accent); color: var(--cqa-accent
 .cqa-tr__foldbtn:hover, .cqa-tr__foldbtn:focus-visible { background: var(--cqa-hover); }
 .cqa-tr__foldicon { flex: none; width: 12px; color: var(--cqa-muted); }
 .cqa-tr__foldmain { flex: 1; min-width: 0; font-size: var(--cqa-text-sm); }
-.cqa-tr__foldprev { display: block; margin-top: 1px; color: var(--cqa-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cqa-tr__foldprev { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; overflow-wrap: anywhere; margin-top: 1px; color: var(--cqa-muted); }
 .cqa-tr__fold--open .cqa-tr__foldprev { display: none; }
 .cqa-tr__foldtags { display: flex; gap: 4px; flex: none; }
 .cqa-tr__foldtags .cqa-msg__tag { cursor: inherit; }
