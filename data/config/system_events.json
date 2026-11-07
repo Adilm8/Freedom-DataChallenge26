@@ -1,0 +1,19 @@
+{
+  "_comment": "Тип системного события → фразы (без учёта регистра и знаков препинания, ищется вхождение). Можно дополнять без правки кода.",
+  "escalation": ["Эскалация на оператора", "Чат операторға жіберілді", "Chat transferred to an agent", "Клиент переведен от агента на представителя службы поддержки", "Переключение на оператора", "Transferred to an agent", "Transferred to a live agent", "Операторға қосылу"],
+  "agent_joined": ["Агент присоединился к разговору с клиентом", "Оператор подключился", "Agent joined the conversation", "Агент қосылды", "Оператор қосылды"],
+  "identity_verified": ["Личность клиента подтверждена", "Клиенттің жеке басы расталды", "Customer identity verified", "Identity verified", "Клиент идентифицирован", "Идентификация пройдена"],
+  "operator_closed": ["Оператор закрыл чат", "Оператор чатты жапты", "Agent closed the chat", "Operator closed the chat", "Чат закрыт оператором"],
+  "connection_lost": ["Соединение с клиентом прервано", "Клиентпен байланыс үзілді", "Connection to customer lost", "Connection lost", "Связь с клиентом потеряна"],
+  "client_left": ["Клиент покинул чат", "Клиент чаттан шықты", "Customer left the chat", "Client left the chat"],
+  "client_ended": ["Клиент завершил разговор", "Клиент сөйлесуді аяқтады", "Customer ended the call", "Customer hung up"],
+  "hold_start": ["Клиент находится на удержании", "Клиент на удержании", "Customer is on hold", "Клиент күтуде"],
+  "hold_end": ["Клиент больше не находится на удержании", "Клиент снят с удержания", "Customer is no longer on hold", "Customer is off hold"],
+  "consult_initiated": ["Инициирована консультация с агентом", "Consultation with an agent initiated"],
+  "consult_start": ["Началась консультация с агентом", "Consultation with an agent started"],
+  "consult_end": ["Агент вышел из разговора", "Консультация с агентом завершена", "Agent left the conversation", "Consultation ended"],
+  "recording_started": ["Запись и транскрибирование запущены", "Жазу және транскрипция басталды", "Recording and transcription started"],
+  "recording_paused": ["Запись и транскрибирование приостановлены", "Жазу және транскрипция тоқтатылды", "Recording and transcription paused"],
+  "recording_resumed": ["Запись и транскрибирование возобновлены", "Жазу және транскрипция жалғастырылды", "Recording and transcription resumed"],
+  "language_changed": ["dialog and transcription languages have been updated", "The dialog language changed", "Язык диалога изменён"]
+}
