@@ -147,6 +147,8 @@ export function mount(el, params = {}) {
       totalEl(),
       (ev?.final_score || ev?.ai_score)?.critical?.length ? h('span', { class: 'cqa-badge cqa-badge--flag' }, 'Грубая ошибка') : null,
       ev?.open_appeals ? h('span', { class: 'cqa-badge cqa-badge--accent' }, ev.open_appeals === 1 ? 'Апелляция открыта' : `Открыто апелляций: ${ev.open_appeals}`) : null,
+      ev?.provider === 'file' ? h('span', { class: 'cqa-badge cqa-badge--muted', id: 'cqa-card-fromfile',
+        title: `Оценка модели ${ev.model || ''} из прогона DEV, загружена из ${ev.params?.source || 'results.json'}. Новых вызовов модели не было; баллы пересчитаны по чек-листу.` }, 'Из файла результатов') : null,
       ev && ev.status !== 'done' ? h('span', { class: 'cqa-badge cqa-badge--no' }, ev.status === 'failed' ? 'Оценка не выполнена' : 'Оценка неполная') : null,
       old ? h('button', { type: 'button', class: 'cqa-badge cqa-badge--warn cqa-card__old', onclick: () => go(`#/conversation/${conv.id}`), title: 'Показана не последняя оценка этого диалога. Открыть последнюю' }, 'не последняя · к последней') : null,
       evalPicker(),

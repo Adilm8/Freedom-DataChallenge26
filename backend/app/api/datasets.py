@@ -6,7 +6,7 @@ from sqlmodel import Session
 
 from ..config import settings
 from ..db import get_session
-from ..services import ingest
+from ..services import ingest, results_import
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
 
@@ -56,4 +56,29 @@ async def upload_dataset(file: UploadFile = File(...), session: Session = Depend
     try:
         return ingest.import_payload(session, payload, "upload")
     except ingest.IngestError as e:
+        raise HTTPException(400, str(e))
+
+
+class ResultsBody(BaseModel):
+    target: str = "dev"          # results/<target>/results.json в репозитории
+    group_id: str | None = None  # по умолчанию: dev → DEV, иначе группа из .env
+    replace: bool = False        # True — загрузить и для диалогов, у которых уже есть оценка
+
+
+@router.post("/load-results")
+def load_results(body: ResultsBody, session: Session = Depends(get_session)) -> dict:
+    """Готовый файл сдачи → оценки в БД, без вызовов модели (services/results_import.py)."""
+    from ..main import ROOT
+
+    if body.target not in ("dev", "prod"):
+        raise HTTPException(400, "target: dev или prod")
+    path = results_import.results_path(ROOT, body.target)
+    if not path.exists():
+        raise HTTPException(404, f"нет файла results/{body.target}/results.json")
+    group = (body.group_id or "").strip() or results_import.AUTOLOAD.get(body.target) or settings.dataset_group_id
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        return results_import.import_results(session, doc, group, replace=body.replace,
+                                             source=f"results/{body.target}/results.json")
+    except (ValueError, results_import.ResultsImportError) as e:
         raise HTTPException(400, str(e))
