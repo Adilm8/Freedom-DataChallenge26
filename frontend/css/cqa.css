@@ -1795,3 +1795,22 @@ button.cqa-chip.cqa-cmp-chip--uniq { border-color: var(--cqa-accent); color: var
 .cqa-heat__c--flag { background: var(--cqa-flag); box-shadow: 0 0 0 2px var(--cqa-flag-bg); margin-left: 4px; }
 tr:hover .cqa-heat__c { transform: scaleY(1.08); }
 @media (prefers-reduced-motion: reduce) { .cqa-tour__spot, .cqa-tour__card, .cqa-pal, .cqa-pal__box { transition: none; animation: none; } }
+
+/* ---------- Кольца итога и движение ---------- */
+.cqa-ring { flex: none; display: block; }
+.cqa-ring__track { stroke: var(--cqa-border); }
+.cqa-ring__arc { stroke: currentColor; transition: stroke-dashoffset 1s cubic-bezier(.2, .8, .2, 1); }
+.cqa-ring.cqa-score--good { color: #22a05a; }
+.cqa-ring.cqa-score--mid { color: var(--cqa-warn-line); }
+.cqa-ring.cqa-score--bad { color: #e0483b; }
+.cqa-kpi__herowrap { display: inline-flex; align-items: center; gap: 14px; }
+.cqa-sum__top > .cqa-ring { align-self: center; }
+
+.cqa-route { animation: cqa-route-in .22s ease both; }
+@keyframes cqa-route-in { from { opacity: 0; transform: translateY(4px); } }
+.cqa-header { background: color-mix(in srgb, var(--cqa-surface) 86%, transparent); backdrop-filter: saturate(1.4) blur(10px); }
+button.cqa-kpi:hover { transform: translateY(-1px); box-shadow: var(--cqa-shadow-md); }
+button.cqa-kpi { transition: border-color .12s, box-shadow .15s, transform .15s; }
+.cqa-list-table tbody tr { transition: background .12s; }
+.cqa-list-table tbody tr:focus-visible { outline: none; box-shadow: inset 3px 0 0 var(--cqa-accent); background: var(--cqa-accent-soft); }
+@media (prefers-reduced-motion: reduce) { .cqa-route { animation: none; } .cqa-ring__arc { transition: none; } button.cqa-kpi:hover { transform: none; } }
