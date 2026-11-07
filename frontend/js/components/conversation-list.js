@@ -1,6 +1,6 @@
 // Таблица диалогов: фильтры, сортировка по итогу, выбор строк и запуск оценки, экспорт (FR-EXP-01), импорт набора, новый диалог.
 // Параметры: group, appeal ('open' | 'any' | 'none' — фильтр апелляций по последней оценке).
-import { h, clear, emit, channelBadge, langChip, score, skeletonRows, errorState, emptyState, toast } from '../ui.js';
+import { h, clear, emit, channelBadge, langChip, score, skeletonRows, errorState, emptyState, toast, fmtScore } from '../ui.js';
 import { listConversations, downloadExport, getAnalytics, getReviewQueue } from '../api.js';
 
 const APPEAL_FILTER = [['', 'Апелляции: все'], ['open', 'Есть открытые'], ['any', 'Были апелляции'], ['none', 'Без апелляций']];
@@ -72,6 +72,10 @@ export function mount(el, params = {}) {
       h('span', { class: 'cqa-toolbar__spacer' }),
       (st.q || st.lang || st.channel || st.flag || st.review || st.appeal || st.ids)
         ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--ghost cqa-btn--sm', onclick: reset }, 'Сбросить фильтры') : null,
+      incomplete().length ? h('button', { type: 'button', class: 'cqa-btn', id: 'cqa-list-rerun',
+        title: 'Оценить ещё раз только неполные и упавшие оценки; готовые ответы критериев берутся из прошлой оценки',
+        onclick: () => emit(root, 'cqa:run-request', { ids: incomplete().map((r) => r.id), group: p.group || 'DEV', rows, preset: { reuse: 'auto' },
+          title: 'Дооценить неполные' }) }, `Дооценить неполные (${incomplete().length})`) : null,
       h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-list-run', onclick: runRequest,
         title: st.selected.size ? 'Оценить выбранные диалоги' : 'Ничего не выбрано: оценить всю группу' },
       st.selected.size ? `Оценить (${st.selected.size})` : `Оценить группу (${rows.length})`));
@@ -106,6 +110,8 @@ export function mount(el, params = {}) {
     const g = new URLSearchParams(qs).get('group');
     emit(root, 'cqa:location', { to: '#/conversations' + (g ? `?group=${encodeURIComponent(g)}` : '') });
   }
+  // Неполная (часть критериев без ответа) или упавшая последняя оценка.
+  function incomplete() { return rows.filter((r) => r.latest && (r.latest.status === 'partial' || r.latest.status === 'failed')); }
   function runRequest() { emit(root, 'cqa:run-request', { ids: [...st.selected], group: p.group || 'DEV', rows }); }
 
   function table(list) {
@@ -127,7 +133,11 @@ export function mount(el, params = {}) {
           h('td', null, h('input', { type: 'checkbox', class: 'cqa-check', checked: st.selected.has(r.id), 'aria-label': `Выбрать ${r.conversation_id}`,
             onchange: (e) => { e.target.checked ? st.selected.add(r.id) : st.selected.delete(r.id); renderTable(); } })),
           h('td', null, h('span', { class: 'cqa-row-id' }, r.conversation_id)),
-          h('td', { class: 'cqa-num' }, l
+          h('td', { class: 'cqa-num' }, l && (l.status === 'partial' || l.status === 'failed')
+            ? h('span', { class: 'cqa-list__partial', title: l.status === 'failed' ? 'Оценка не выполнена: причина в карточке, блок «Сырой ответ»'
+              : `Неполная оценка: без ответа ${(l.criteria || []).filter((c) => c.answer == null).length || 'часть'} крит. Итог не окончательный` },
+              l.status === 'failed' ? 'ошибка' : 'неполная', l.final_total != null ? h('span', { class: 'cqa-faint' }, fmtScore(l.final_total)) : null)
+            : l
             ? h('span', { style: 'display:inline-flex;gap:10px;align-items:baseline' },
               score(l.ai_total, l.ai_total === l.final_total ? '' : 'cqa-faint'),
               l.ai_total !== l.final_total ? [h('span', { class: 'cqa-faint' }, '→'), score(l.final_total)] : null)
@@ -151,10 +161,12 @@ export function mount(el, params = {}) {
       cs.map((c) => h('span', { class: `cqa-heat__c cqa-heat__c--${heatKind(c)}`, title: `${c.key} · ${heatText(c)}` })));
   }
   function heatKind(c) {
+    if (c.answer == null) return 'miss';
     if (c.pct == null) return c.answer === 'yes' ? 'flag' : c.answer === 'no' ? 'clear' : 'na';
     return c.pct >= 100 ? 'yes' : c.pct <= 0 ? 'no' : 'part';
   }
   function heatText(c) {
+    if (c.answer == null) return 'нет ответа модели';
     if (c.pct == null) return c.answer === 'yes' ? 'грубая ошибка' : c.answer === 'no' ? 'нарушений нет' : 'N/A';
     return c.pct >= 100 ? 'выполнен' : c.pct <= 0 ? 'не выполнен' : `частично, ${c.pct}%`;
   }
@@ -180,14 +192,17 @@ export function mount(el, params = {}) {
     const label = btn.textContent;
     btn.disabled = true; btn.textContent = 'Готовим…';
     try {
-      const { blob, filename, validationErrors } = await downloadExport(path, { group_id: p.group || 'DEV', ...params });
+      const { blob, filename, validationErrors, resultsOk, resultsError } = await downloadExport(path, { group_id: p.group || 'DEV', ...params });
       const url = URL.createObjectURL(blob);
       const a = h('a', { href: url, download: filename, hidden: true });
       root.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
       if (validationErrors != null) {
-        exportNote.className = `cqa-export__note cqa-badge ${validationErrors ? 'cqa-badge--no' : 'cqa-badge--yes'}`;
-        exportNote.textContent = validationErrors ? `${filename}: ошибок проверки формата — ${validationErrors}` : `${filename}: формат проверен, ошибок нет`;
+        // Формат может быть верным, а записи — со статусом error (нет оценки): это тоже не зелёный итог.
+        const recs = resultsOk != null ? ` · записей ok ${resultsOk} / error ${resultsError ?? 0}` : '';
+        const bad = validationErrors || resultsError;
+        exportNote.className = `cqa-export__note cqa-badge ${bad ? 'cqa-badge--no' : 'cqa-badge--yes'}`;
+        exportNote.textContent = validationErrors ? `${filename}: ошибок проверки формата — ${validationErrors}${recs}` : `${filename}: формат проверен${recs}`;
         exportNote.title = validationErrors ? 'Подробности: python scripts/export_results.py --check <файл>' : '';
       }
       toast(root, `Файл ${filename} скачан.`);

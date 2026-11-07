@@ -6,7 +6,7 @@
 // Модель и провайдер — из GET /meta/models; версии чек-листа — GET /checklists (по умолчанию активная);
 // оценка стоимости — POST /runs/estimate (без LLM); запуск — POST /runs; прогресс — GET /runs/{id} раз в секунду.
 import { h, clear, fmtMoney, toast, skeletonRows, errorState } from '../ui.js';
-import { getMetaModels, listChecklists, activateChecklist, estimateRun, createRun, getRun } from '../api.js';
+import { getMetaModels, listChecklists, activateChecklist, estimateRun, createRun, getRun, listGroups, listConversations } from '../api.js';
 
 const PROVIDER = { openrouter: 'OpenRouter', gemini: 'Gemini', ollama: 'Ollama (локально)', mock: 'Демо' };
 const STRATEGY = {
@@ -43,7 +43,8 @@ const clock = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return `${
 /** Рисует форму запуска и прогресс внутри box. Возвращает {destroy, minimize?}. */
 function runPanel(box, opts, { onClose, onMinimize, inline }) {
   const ids = (opts.ids || []).map(Number).filter((x) => !isNaN(x));
-  const rows = opts.rows || null;
+  let rows = opts.rows || null;
+  let groups = null; // [{group_id, count}] — выбор группы прямо в окне, чтобы не оценить по ошибке не тот набор
   const st = {
     scope: ids.length ? 'selected' : 'group',
     provider: null, model: '', strategy: opts.preset?.strategy || null,
@@ -68,7 +69,8 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
   async function loadMeta() {
     clear(box).append(skeletonRows(5));
     try {
-      const [meta, versions] = await Promise.all([getMetaModels(), listChecklists().catch(() => null)]);
+      const [meta, versions, gs] = await Promise.all([getMetaModels(), listChecklists().catch(() => null), listGroups().catch(() => null)]);
+      groups = gs;
       st.meta = meta;
       if (!alive) return;
       st.versions = versions;
@@ -98,6 +100,12 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
     return h('div', { class: 'cqa-field' }, h('div', { class: 'cqa-field__label' }, label), control, hint ? h('div', { class: 'cqa-field__hint' }, hint) : null);
   }
 
+  async function switchGroup(g) {
+    opts.group = g;
+    rows = await listConversations({ group_id: g }).catch(() => null);
+    if (alive) renderForm();
+  }
+
   function renderForm() {
     clear(box);
     const meta = st.meta;
@@ -113,6 +121,10 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
           ['group', `Вся группа ${opts.group || ''}${rows ? ` (${nDialogs(rows.length)})` : ''}`]].map(([v, t]) =>
           h('label', { class: 'cqa-radio' }, h('input', { type: 'radio', name: 'cqa-run-scope', value: v, checked: st.scope === v,
             onchange: () => { st.scope = v; renderForm(); } }), t))))
+      : st.scope === 'group' && !opts.lockScope && groups?.length > 1
+        ? field('Что оценить', h('div', { class: 'cqa-runform__group' }, 'Вся группа',
+          h('select', { class: 'cqa-select', id: 'cqa-run-group', 'aria-label': 'Группа для оценки', onchange: (e) => switchGroup(e.target.value) },
+            groups.map((g) => h('option', { value: g.group_id, selected: g.group_id === opts.group }, `${g.group_id} · ${nDialogs(g.count)}`)))))
       : field('Что оценить', h('div', { class: 'cqa-field__static' },
         st.scope === 'group' ? `Вся группа ${opts.group || ''}${rows ? ` · ${nDialogs(rows.length)}` : ''}` : ids.length === 1 && opts.label ? `Диалог ${opts.label}` : nDialogs(ids.length)));
     if (opts.onPick) scope.append(h('button', { type: 'button', class: 'cqa-linkbtn cqa-runform__pick', id: 'cqa-run-pick',
@@ -341,9 +353,9 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
           : null,
         fin ? h('div', { class: `cqa-banner ${run.failed ? 'cqa-banner--warn' : 'cqa-banner--info'}` }, h('span', { class: 'cqa-banner__icon' }, run.failed ? '!' : '✓'),
           h('div', null, run.status === 'failed'
-            ? 'Ни один диалог не оценён. Причина — в карточке диалога, блок «Сырой ответ».'
+            ? 'Ни один диалог не оценён полностью. Причина — в карточке диалога, блок «Сырой ответ». Дооценить только их: «Дооценить неполные» в списке диалогов (готовые ответы берутся из прошлой оценки).'
             : run.failed
-              ? `Оценено ${nDialogs(run.done)}, с ошибкой ${run.failed}. Ошибки видны в карточке диалога, блок «Сырой ответ».`
+              ? `Оценено ${nDialogs(run.done)}, с ошибкой ${run.failed}. Ошибки видны в карточке диалога, блок «Сырой ответ». Дооценить только их: «Дооценить неполные» в списке диалогов (готовые ответы берутся из прошлой оценки).`
               : `${run.done === 1 ? 'Диалог оценён' : `Готово: оценено ${nDialogs(run.done)}`}. Результаты уже обновлены.`)) : null),
       h('div', { class: 'cqa-modal__foot' },
         fin ? null : h('span', { class: 'cqa-faint cqa-run__note' }, 'Окно можно свернуть: прогон идёт на сервере.'),
