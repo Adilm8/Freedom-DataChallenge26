@@ -204,6 +204,31 @@ export async function decideAppeal(id, body) {
   return { appeal: clone(a), evaluation: clone(ev) };
 }
 
+/** Второе мнение ИИ в демо-режиме: модели нет, ответ детерминированный и помечен как демо.
+ *  Чётный номер апелляции — расходится с AI (другой разрешённый ответ), нечётный — совпадает. */
+export async function secondOpinion(id) {
+  const all = await appealsAll();
+  const row = all.find((a) => a.id === Number(id));
+  if (!row) throw notFound('апелляция не найдена');
+  if (row.status !== 'open') throw conflict(`апелляция №${row.id} уже рассмотрена: второе мнение — только для открытой`);
+  const c = row.criterion || {};
+  const ai = row.ai_answer_snapshot ?? c.ai_answer;
+  const others = (c.allowed_answers || []).filter((v) => String(v) !== String(ai));
+  const answer = row.id % 2 === 0 && others.length ? others[0] : ai;
+  const ev = (row.fragment || []).find((m) => m.speaker === 'operator') || (row.fragment || [])[0];
+  const op = {
+    id: row.id * 10 + 1, appeal_id: row.id, evaluation_id: row.evaluation_id, criterion_key: row.criterion_key,
+    provider: 'mock', model: 'демо, без вызова модели', status: 'done', error: null, answer,
+    reasoning: 'Демо-ответ: в режиме ?mock=1 модель не вызывается. В рабочем режиме здесь — независимое обоснование модели по этому критерию: она видит только диалог и чек-лист, без ответа AI и комментария аналитика.',
+    confidence: 'medium', na_reason: answer === 'na' ? 'демо: повода для критерия нет' : null, checked_range: null, issues: [],
+    evidence: ev ? [{ msg_id: ev.msg_id, quote: String(ev.text || '').slice(0, 60), quote_ok: true }] : [],
+    ai_answer: ai, agrees: String(answer) === String(ai), cost_usd: 0, tokens: [0, 0], latency_ms: 0, created_at: now(),
+  };
+  await new Promise((r) => setTimeout(r, 600));
+  row.second_opinion = op;
+  return clone(op);
+}
+
 // ---------- Очередь «требует проверки»: фикстура + апелляции этой вкладки ----------
 export async function reviewQueue(params = {}) {
   const items = (await fx('review-queue')).filter((x) => !params.group_id || x.group_id === params.group_id);
@@ -348,6 +373,37 @@ export async function compare(aId, bId) {
   const ta = a.ai_score?.total, tb = b.ai_score?.total;
   return clone({ a: cmpSide(a), b: cmpSide(b), criteria, changed, common, total_delta: ta != null && tb != null ? Math.round((ta - tb) * 100) / 100 : null,
     same_config: !diff.length, config_diff: diff });
+}
+
+// ---------- Черновик критерия с ИИ (как services/criterion_draft.py, без модели) ----------
+// Поля собираются из описания по шаблону: одинаково при каждом вызове. Код, секцию и вес задаёт человек.
+export async function draftCriterion({ description, type = 'binary' } = {}) {
+  const what = String(description ?? '').trim().replace(/\s+/g, ' ').replace(/[.!?]+$/, '');
+  if (!what) throw new ApiError('Черновик не получен: опишите, что проверять (400)', 400, { detail: 'опишите, что проверять' });
+  if (!['binary', 'scale', 'flag'].includes(type)) throw new ApiError(`Черновик не получен: неизвестный тип «${type}» (400)`, 400, { detail: 'неизвестный тип' });
+  const short = what.split(' ').slice(0, 5).join(' ');
+  const c = {
+    key: null, export_id: null, section: null, weight: null, group: null, context_refs: [], guards: [], enabled: true, type,
+    title: short.charAt(0).toUpperCase() + short.slice(1), definition: `Проверяется, что ${what}.`,
+    yes_when: null, no_when: null, scale: null, na_allowed: false, na_when: null,
+    guidance: 'Демо-черновик без модели: найди реплики оператора, где требование выполнено или пропущено, и сошлись на них.',
+    voice_guidance: 'В звонке требование может прозвучать своими словами: засчитывай по смыслу, а не по точной формулировке.',
+  };
+  if (type === 'scale') {
+    c.scale = [
+      { value: 10, label: `Полностью: ${what}, без пропусков.` },
+      { value: 5, label: 'Частично: требование выполнено не до конца или с опозданием.' },
+      { value: 0, label: 'Требование не выполнено, хотя повод был.' },
+    ];
+  } else if (type === 'flag') {
+    c.yes_when = `Нарушение есть: ${what}.`;
+    c.no_when = 'Нарушения нет.';
+  } else {
+    c.yes_when = `Оператор выполнил требование: ${what}.`;
+    c.no_when = 'Повод был, но оператор этого не сделал или сделал неверно.';
+  }
+  if (type !== 'flag') { c.na_allowed = true; c.na_when = 'В диалоге не было повода для этого требования.'; }
+  return { criterion: c, provider: 'mock', model: 'demo/criterion-draft', cost_usd: 0, tokens: { in: 0, out: 0 }, latency_ms: 0, attempts: 1, calls: [], mock: true };
 }
 
 // ---------- Импорт набора (как services/ingest.py, упрощённо) ----------

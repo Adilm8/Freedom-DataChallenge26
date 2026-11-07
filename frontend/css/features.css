@@ -85,3 +85,17 @@
   .cqa-coach__sheet { box-shadow: none; border: 0; padding: 0; }
   .cqa-coach__item, .cqa-coach__quote { break-inside: avoid; }
 }
+
+/* Второе мнение ИИ в карточке апелляции (appeal-review.js) */
+.cqa-apr__opask { display: flex; align-items: center; gap: var(--cqa-s-2); flex-wrap: wrap; }
+.cqa-apr__opbox { display: grid; gap: 8px; padding: var(--cqa-s-3); border: 1px solid var(--cqa-border); border-radius: var(--cqa-r-md); background: var(--cqa-surface-2); min-width: 0; }
+.cqa-apr__opbox--diff { border-color: var(--cqa-warn-bd); background: var(--cqa-warn-soft); }
+.cqa-apr__opmeta { font-size: var(--cqa-text-xs); }
+
+/* --- черновик критерия с ИИ (checklist-editor.js) --- */
+.cqa-ce-ai { margin-bottom: var(--cqa-s-3); }
+.cqa-ce-ai__bar { display: flex; gap: var(--cqa-s-2); justify-content: flex-end; }
+.cqa-ce-ai__panel { display: grid; gap: var(--cqa-s-2); margin-top: var(--cqa-s-2); padding: var(--cqa-s-3);
+  border: 1px solid var(--cqa-border); border-radius: var(--cqa-r-sm); background: var(--cqa-surface-2); }
+.cqa-ce-ai__row { display: flex; gap: var(--cqa-s-2); align-items: center; flex-wrap: wrap; justify-content: space-between; }
+.cqa-ce-ai__note { margin-bottom: var(--cqa-s-2); }

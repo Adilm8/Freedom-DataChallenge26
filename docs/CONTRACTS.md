@@ -1,6 +1,6 @@
 # CONTRACTS
 
-> Версия: **0.5.1** · Обновлено: 2026-11-07 · Владелец: Claude
+> Версия: **0.5.4** · Обновлено: 2026-11-07 · Владелец: Claude
 > Контракт — это то, на что опираются параллельно фронт, бэк, eval и подагенты. Меняем только с записью в «Журнал версий» внизу. Несовместимое изменение → поднять минорную версию и предупредить в `PROGRESS.md`.
 > Связано: `architecture/evaluation-pipeline.md`, `architecture/data-model.md`, `spec/requirements.md`.
 
@@ -161,6 +161,7 @@
 | `GET /checklists/{version_id}` | — | `{id, key, version, ..., body}` |
 | `POST /checklists` | `{body, note, parent_id?, activate?: bool}` | версия; 422 с `[{path, message}]`, если невалидно |
 | `POST /checklists/{version_id}/activate` | — | версия |
+| `POST /checklists/draft-criterion` | `{description, type: "binary" \| "scale" \| "flag", language?, provider?, model?}` (описание ≤ 2000 символов; `language` по умолчанию — `output_language` активного чек-листа) | `{criterion, provider, model, cost_usd, tokens: {in, out}, latency_ms, attempts, calls: [{attempt, provider, model, finish_reason, tokens_in, tokens_out, cost_usd, latency_ms, request, response_raw}]}`; `criterion` — поля §1, текст пишет модель, `key`, `section`, `weight`, `export_id`, `group` — `null` (их задаёт человек). Ничего не сохраняет; строгая схема, один ретрай (обрезка по длине — с удвоенным `max_tokens`); образцы стиля — 1–2 критерия активного чек-листа. 400 — пустое описание, неизвестный тип или провайдер; 502 — `{detail, calls}`: провайдер недоступен или черновик не прошёл проверку после ретрая |
 | `POST /runs` | `{conversation_ids? \| group_id, checklist_version_id?, provider?, model?, strategy?, reuse?: "auto" \| "none"}` | `{run_id}` (202); `reuse: auto` — инкрементальная переоценка (FR-CHK-10), «Оценить повторно» = те же параметры и `reuse: none` |
 | `POST /runs/estimate` | то же тело, что у `POST /runs` | `{dialogs, dialogs_with_calls, calls, tokens_in, tokens_out, cost_usd \| null, seconds, cost_source: history \| pricing \| unknown}`; LLM не вызывается (FR-UX-03) |
 | `GET /meta/facts` | — | `{labels: {имя факта: подпись}}` |
@@ -171,6 +172,7 @@
 | `POST /appeals` | `{evaluation_id, criterion_key, comment}` (комментарий обязателен) | `Appeal` (201); 404 — нет оценки или критерия; 409 — по критерию уже есть открытая; 422 с `errors` |
 | `GET /appeals` | `?status=open\|confirmed\|changed\|closed&group_id&evaluation_id&conversation_id` (id диалога в БД); без `status` — все | `[AppealRow]`, новые сверху |
 | `POST /appeals/{id}/decision` | `{action: "confirm" \| "change", answer?, reason}` (причина обязательна; `answer` — из `allowed_answers` критерия и не равен текущему) | `{appeal, evaluation}` с пересчитанным `final_score`; 409 — апелляция уже рассмотрена; 422 с `errors` |
+| `POST /appeals/{id}/second-opinion` | `{provider?, model?}` (тело необязательно; по умолчанию активный провайдер, как у `/checklists/trial`) | `SecondOpinion`. Слепая перепроверка спорного критерия: тот же конвейер (`strategy: single`, промпт из версии чек-листа оценки, факты, проверка цитат с одним ретраем, маскирование); модель не видит ответ AI и комментарий аналитика. Оценка и апелляция не меняются, результат и вызовы LLM — в `appeal_second_opinion`. 404 — нет апелляции; 409 — апелляция рассмотрена; 400 — провайдер/модель; 502 — модель не ответила |
 | `GET /export` | `?group_id&checklist_version_id&format=csv\|json` (по умолчанию группа из `.env`, активная версия, csv) | файл (`Content-Disposition: attachment`), §5 |
 | `GET /analytics` | `?group_id&checklist_version_id` (по умолчанию группа из `.env` и активная версия) | `Analytics` (FR-ANL-01…03) |
 | `GET /quality/runs` | — | список прогонов `eval/runs/*.json` (или `CQA_EVAL_RUNS_DIR`): `{id, created_at, provider, model, strategy, split, complete, metrics-сводка}`; битый файл — строка с ошибкой (FR-OPS-05) |
@@ -221,7 +223,10 @@ AppealRow        = Appeal + {conversation: {id, conversation_id, group_id, chann
                     criterion: {key, title, type, weight, scale_max, scale, allowed_answers, ai_answer, ai_points, final_answer, final_points,
                                 overridden, reasoning, confidence, na_reason, advice, evidence, checked_range, issues} | null,
                     fragment: [{msg_id, idx, speaker, text, timestamp, t_sec, audio_offset_sec, internal, event,
-                                is_evidence, quotes: [str], gap_before}]}
+                                is_evidence, quotes: [str], gap_before}],
+                    second_opinion: SecondOpinion | null}   # последнее удавшееся
+SecondOpinion    = {id, appeal_id, evaluation_id, criterion_key, provider, model, status: "done" | "failed", error, answer, reasoning, confidence,
+                    evidence, na_reason, checked_range, issues, ai_answer, agrees: bool, cost_usd, tokens: [in, out], latency_ms, created_at}
 Appeal           = {id, evaluation_id, criterion_key, comment, status: "open" | "confirmed" | "changed", ai_answer_snapshot,
                     decision_answer, decision_reason, created_at, decided_at}   # ответы — как в API: "yes" | "no" | "na" | int
 ```
@@ -264,6 +269,10 @@ CSV, UTF-8 с BOM, `;` как разделитель, запятая в дроб
 Формат — `data/gold/README.md`. Разбиение dev/holdout — `data/gold/split.json`: `{"dev": [...], "holdout": [...]}`.
 
 ## Журнал версий
+
+- 0.5.4 — 2026-11-07 — `POST /checklists/draft-criterion`: черновик критерия с ИИ для конструктора.
+
+- 0.5.3 — 2026-11-07 — «Второе мнение ИИ»: `POST /appeals/{id}/second-opinion`, `second_opinion` в `AppealRow`, таблица `appeal_second_opinion`.
 
 - 0.5.2 — 2026-11-07 — заголовки `X-Results-Ok`/`X-Results-Error` у файла сдачи, `partial` считается ошибкой прогона, закрытие прерванных прогонов при старте, предупреждения о формате сдачи при сохранении версии.
 

@@ -4,8 +4,8 @@
 // Решение (режим «Проверяющий»): подтвердить оценку AI или изменить ответ из разрешённых; причина обязательна.
 // Итог пересчитывает бэкенд (scoring.py); AI-оценка не меняется — после решения видно «AI → финальный».
 // Параметры: group, mode ('analyst' | 'reviewer'), status, id. Наружу: cqa:navigate, cqa:location, cqa:mode, cqa:counts-changed.
-import { h, clear, emit, answerBadge, score, fmtScore, fmtDate, channelBadge, langChip, ROLE, EVENT_LABEL, skeletonRows, errorState, emptyState } from '../ui.js';
-import { listAppeals, decideAppeal } from '../api.js';
+import { h, clear, emit, answerBadge, score, fmtScore, fmtDate, fmtMoney, channelBadge, langChip, ROLE, EVENT_LABEL, skeletonRows, errorState, emptyState } from '../ui.js';
+import { listAppeals, decideAppeal, secondOpinion } from '../api.js';
 import { findQuote } from './transcript-view.js';
 
 const STATUS = {
@@ -45,6 +45,7 @@ export function mount(el, params = {}) {
     filter: FILTERS.some(([f]) => f === p.status) ? p.status : 'open',
     scope: 'group', rows: null, selected: p.id ? Number(p.id) : null,
     form: { action: 'change', answer: null, reason: '' }, busy: false, error: null, result: null,
+    opinion: { busy: false, error: null },
   };
   const root = h('div', { class: 'cqa-page cqa-apr' });
   el.append(root);
@@ -132,7 +133,7 @@ export function mount(el, params = {}) {
   }
 
   function select(id) {
-    if (st.selected !== id) { st.selected = id; st.form = { action: 'change', answer: null, reason: '' }; st.error = null; st.result = null; }
+    if (st.selected !== id) { st.selected = id; st.form = { action: 'change', answer: null, reason: '' }; st.error = null; st.result = null; st.opinion = { busy: false, error: null }; }
     syncUrl();
     listEl.querySelectorAll('.cqa-apr__item').forEach((b) => (Number(b.dataset.id) === id ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current')));
     renderDetail();
@@ -168,6 +169,7 @@ export function mount(el, params = {}) {
           h('span', { class: 'cqa-apr__totals' }, h('span', { class: 'cqa-faint' }, 'Итог AI'), score(a.evaluation.ai_total),
             h('span', { class: 'cqa-faint' }, '· финальный'), score(a.evaluation.final_total))),
         c ? disputed(a, c) : h('div', { class: 'cqa-banner cqa-banner--warn' }, h('span', { class: 'cqa-banner__icon' }, '!'), h('div', null, 'Критерия нет в версии чек-листа этой оценки.')),
+        c ? opinionSec(a, c) : null,
         h('section', { class: 'cqa-apr__sec' },
           h('h3', { class: 'cqa-h3' }, 'Комментарий аналитика'),
           h('blockquote', { class: 'cqa-apr__comment' }, a.comment)),
@@ -196,6 +198,59 @@ export function mount(el, params = {}) {
         h('span', { class: 'cqa-ev__quote' }, e.quote || '—')))) : null,
       (c.issues || []).length ? h('div', { class: 'cqa-warnbox' }, h('b', null, 'Предупреждения проверки'), h('ul', null, c.issues.map((i) => h('li', null, i)))) : null,
       c.advice ? h('div', { class: 'cqa-advice' }, h('b', null, 'Рекомендация оператору'), c.advice) : null);
+  }
+
+  // Второе мнение ИИ: слепая перепроверка спорного критерия одним вызовом модели (POST /appeals/{id}/second-opinion).
+  // Модель видит только диалог и критерий — без ответа AI и комментария аналитика. Оценка не меняется.
+  function opinionSec(a, c) {
+    const op = a.second_opinion;
+    const o = st.opinion;
+    const canAsk = reviewer && a.status === 'open';
+    if (!op && !canAsk) return null;
+    const evs = op?.evidence || [];
+    const inFrag = new Set((a.fragment || []).map((m) => m.msg_id));
+    const cardUrl = `#/conversation/${a.conversation.id}?eval=${a.evaluation_id}&focus=${encodeURIComponent(a.criterion_key)}`;
+    return h('section', { class: 'cqa-apr__sec cqa-apr__opinion', id: 'cqa-apr-opinion', 'aria-busy': o.busy ? 'true' : null },
+      h('div', { class: 'cqa-apr__sechead' }, h('h3', { class: 'cqa-h3' }, 'Второе мнение ИИ'),
+        h('span', { class: 'cqa-faint' }, 'модель заново оценивает критерий, не видя ответа AI и комментария аналитика')),
+      canAsk ? h('div', { class: 'cqa-apr__opask' },
+        h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm', id: 'cqa-apr-opinion-btn', disabled: o.busy, onclick: () => askOpinion(a) },
+          o.busy ? 'Модель оценивает…' : op ? 'Запросить ещё раз' : 'Второе мнение ИИ'),
+        o.busy ? h('span', { class: 'cqa-spinner', 'aria-hidden': 'true' }) : null,
+        h('span', { class: 'cqa-faint' }, 'Один вызов модели, оценка AI не меняется')) : null,
+      o.error ? h('div', { class: 'cqa-banner cqa-banner--warn', role: 'alert' }, h('span', { class: 'cqa-banner__icon' }, '!'), h('div', null, o.error.message || String(o.error))) : null,
+      op ? h('div', { class: `cqa-apr__opbox ${op.agrees ? '' : 'cqa-apr__opbox--diff'}`, id: 'cqa-apr-opinion-result' },
+        h('div', { class: 'cqa-apr__answers' },
+          h('span', { class: 'cqa-faint' }, 'Второе мнение'), answerBadge(c, op.answer),
+          h('span', { class: 'cqa-faint' }, '· AI'), answerBadge(c, op.ai_answer),
+          h('span', { class: `cqa-badge ${op.agrees ? 'cqa-badge--yes' : 'cqa-badge--warn'}`, id: 'cqa-apr-opinion-verdict' }, op.agrees ? 'совпадает с AI' : 'расходится с AI'),
+          op.confidence ? h('span', { class: `cqa-badge ${op.confidence === 'low' ? 'cqa-badge--warn' : 'cqa-badge--muted'}` }, `уверенность: ${CONF[op.confidence] || op.confidence}`) : null),
+        op.reasoning ? h('div', { class: 'cqa-apr__why' }, h('b', null, 'Обоснование: '), op.reasoning) : null,
+        op.na_reason ? h('div', { class: 'cqa-nareason' }, h('b', null, 'Почему N/A: '), op.na_reason) : null,
+        evs.length ? h('div', { class: 'cqa-ev' }, evs.map((e) => h('div', { class: `cqa-ev__row ${e.quote_ok === false ? 'cqa-ev__row--bad' : ''}` },
+          h('button', { type: 'button', class: 'cqa-chip', title: inFrag.has(e.msg_id) ? 'Показать во фрагменте' : 'Реплики нет во фрагменте: открыть карточку диалога',
+            onclick: () => (inFrag.has(e.msg_id) ? flash(e.msg_id) : emit(root, 'cqa:navigate', { to: cardUrl })) }, e.msg_id),
+          e.quote_ok === false ? h('span', { class: 'cqa-badge cqa-badge--warn' }, 'цитата не найдена') : null,
+          h('span', { class: 'cqa-ev__quote' }, e.quote || '—')))) : null,
+        (op.issues || []).length ? h('div', { class: 'cqa-warnbox' }, h('b', null, 'Предупреждения проверки'), h('ul', null, op.issues.map((i) => h('li', null, i)))) : null,
+        h('div', { class: 'cqa-faint cqa-apr__opmeta' },
+          `${op.model || '—'} · ${fmtMoney(op.cost_usd)}${op.latency_ms ? ` · ${(op.latency_ms / 1000).toFixed(1)} с` : ''} · ${fmtDate(op.created_at)}. Подсказка для решения, а не решение: оценка AI и итог не меняются.`))
+        : null);
+  }
+
+  async function askOpinion(a) {
+    st.opinion = { busy: true, error: null };
+    renderDetail();
+    try {
+      const op = await secondOpinion(a.id);
+      const row = (st.rows || []).find((x) => x.id === a.id);
+      if (row) row.second_opinion = op;
+      st.opinion = { busy: false, error: null };
+    } catch (e) {
+      st.opinion = { busy: false, error: e };
+      if (e.status === 409) await load({ quiet: true });
+    }
+    if (st.selected === a.id) renderDetail();
   }
 
   function fragmentSec(a) {
