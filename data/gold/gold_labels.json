@@ -1,0 +1,834 @@
+{
+  "checklist_version": "default-v1",
+  "items": {
+    "p1-ru-002": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "yes"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 100.0,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T14:43:41+00:00"
+    },
+    "p1-ru-009": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "yes"
+        },
+        "03": {
+          "answer": "no"
+        },
+        "04": {
+          "answer": 5
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 4
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "yes"
+        }
+      },
+      "total": 41.0,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T15:24:34+00:00"
+    },
+    "p1-ru-022": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 0
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "yes"
+        }
+      },
+      "total": 31.54,
+      "notes": "Ответ не на тот запрос, оператор пытается обмануть клиента",
+      "uncertain": [],
+      "changed": [
+        "06"
+      ],
+      "reviewed_at": "2026-11-07T15:30:11+00:00"
+    },
+    "p1-ru-025": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "yes"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": "na"
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "na"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 100.0,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T15:36:37+00:00"
+    },
+    "p1-kz-008": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "no"
+        },
+        "02": {
+          "answer": "no"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 56.88,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T15:38:05+00:00"
+    },
+    "p1-kz-015": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "no"
+        },
+        "04": {
+          "answer": 5
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "yes"
+        }
+      },
+      "total": 35.88,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T15:42:23+00:00"
+    },
+    "p1-en-014": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "no"
+        },
+        "04": {
+          "answer": 5
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "yes"
+        }
+      },
+      "total": 30.0,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T15:50:45+00:00"
+    },
+    "p4-ru-001": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 15
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "na"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 91.67,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T16:13:27+00:00"
+    },
+    "p4-ru-002": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "yes"
+        },
+        "04": {
+          "answer": 15
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 88.24,
+      "notes": "",
+      "uncertain": [],
+      "changed": [
+        "01"
+      ],
+      "reviewed_at": "2026-11-07T16:26:18+00:00"
+    },
+    "p1-ru-001": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 92.31,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T16:30:23+00:00"
+    },
+    "p1-ru-003": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "no"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 5
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 4
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 45.0,
+      "notes": "",
+      "uncertain": [],
+      "changed": [
+        "02",
+        "04"
+      ],
+      "reviewed_at": "2026-11-07T16:36:10+00:00"
+    },
+    "p1-ru-018": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "no"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 0
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 4
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 20.0,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T16:38:29+00:00"
+    },
+    "p1-ru-023": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "yes"
+        }
+      },
+      "total": 92.31,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T16:40:52+00:00"
+    },
+    "p1-ru-028": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 92.31,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T16:42:10+00:00"
+    },
+    "p1-ru-029": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "no"
+        },
+        "06": {
+          "answer": 4
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "yes"
+        }
+      },
+      "total": 55.38,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T16:42:57+00:00"
+    },
+    "p1-kz-003": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "yes"
+        },
+        "03": {
+          "answer": "yes"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 100.0,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T16:45:24+00:00"
+    },
+    "p1-kz-005": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 15
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 77.69,
+      "notes": "",
+      "uncertain": [],
+      "changed": [
+        "04",
+        "06"
+      ],
+      "reviewed_at": "2026-11-07T16:49:57+00:00"
+    },
+    "p1-kz-011": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "na"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 100.0,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T16:51:29+00:00"
+    },
+    "p1-kz-013": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "yes"
+        }
+      },
+      "total": 92.31,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T16:52:04+00:00"
+    },
+    "p1-en-015": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "no"
+        },
+        "02": {
+          "answer": "no"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 15
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 7
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 50.63,
+      "notes": "",
+      "uncertain": [],
+      "changed": [
+        "04",
+        "06"
+      ],
+      "reviewed_at": "2026-11-07T16:54:38+00:00"
+    },
+    "p1-en-003": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 92.31,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T16:55:37+00:00"
+    },
+    "p1-en-006": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "yes"
+        },
+        "03": {
+          "answer": "yes"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "yes"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 100.0,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T16:57:06+00:00"
+    },
+    "p1-en-007": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 10
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 4
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "no"
+        }
+      },
+      "total": 63.08,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T16:59:55+00:00"
+    },
+    "p1-en-013": {
+      "labeled_by": "Lida",
+      "criteria": {
+        "01": {
+          "answer": "yes"
+        },
+        "02": {
+          "answer": "na"
+        },
+        "03": {
+          "answer": "na"
+        },
+        "04": {
+          "answer": 20
+        },
+        "05": {
+          "answer": "yes"
+        },
+        "06": {
+          "answer": 10
+        },
+        "07": {
+          "answer": "no"
+        },
+        "08": {
+          "answer": "yes"
+        }
+      },
+      "total": 92.31,
+      "notes": "",
+      "uncertain": [],
+      "changed": [],
+      "reviewed_at": "2026-11-07T17:00:21+00:00"
+    }
+  }
+}
