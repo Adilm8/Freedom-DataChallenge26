@@ -152,6 +152,8 @@ export function mount(el, params = {}) {
       evalPicker(),
       h('button', { type: 'button', class: `cqa-btn cqa-btn--sm ${ev ? '' : 'cqa-btn--primary'}`, id: 'cqa-card-run', onclick: () => runRequest() }, ev ? '↻ Оценить повторно' : 'Оценить'),
       compareBtn(),
+      ev && ev.status !== 'failed' ? h('a', { class: 'cqa-btn cqa-btn--sm', id: 'cqa-card-coach', href: `#/coaching?id=${conv.id}&eval=${ev.id}`,
+        title: 'Разбор для оператора: зоны роста, реплики и подсказки; печать в PDF' }, 'Отчёт оператору') : null,
       h('div', { class: 'cqa-card__nav' },
         idx >= 0 ? h('span', { class: 'cqa-faint cqa-card__pos' }, `${idx + 1} из ${rows.length}`) : null,
         h('button', { type: 'button', class: 'cqa-btn cqa-btn--sm cqa-card__step', disabled: !prev, title: prev ? `Предыдущий: ${prev.conversation_id}` : 'Это первый диалог списка',
