@@ -1,4 +1,5 @@
 // Оболочка: шапка, переключатели, hash-роутинг. Экраны монтируются как самостоятельные компоненты.
+import { icon } from './icons.js';
 import { h, clear, emptyState } from './ui.js';
 import { getHealth, isMock, listGroups, listAppeals, getReviewQueue } from './api.js';
 import { openRunDialog } from './components/run-dialog.js';
@@ -55,20 +56,7 @@ function parseHash() {
   return { name: seg[0] || 'dashboard', arg: seg[1], q };
 }
 
-// Иконки меню: тонкие линейные SVG одного стиля (как в корпоративных системах), без эмодзи.
-const NAV_ICON = {
-  dashboard: ['M4 20V10', 'M10 20V4', 'M16 20v-7', 'M22 20H2'],
-  conversations: ['M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z'],
-  review: ['M12 3l9 16H3z', 'M12 10v4', 'M12 17h.01'],
-  appeals: ['M12 3v18', 'M5 7h14', 'M5 7l-3 7a3.5 3.5 0 0 0 6 0z', 'M19 7l-3 7a3.5 3.5 0 0 0 6 0z', 'M8 21h8'],
-  checklist: ['M9 6h11', 'M9 12h11', 'M9 18h11', 'M4 5.5l1 1 2-2', 'M4 11.5l1 1 2-2', 'M4 17.5l1 1 2-2'],
-};
-function navIcon(id) {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  for (const [k, v] of Object.entries({ viewBox: '0 0 24 24', width: '18', height: '18', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true', class: 'cqa-nav__icon' })) svg.setAttribute(k, v);
-  for (const d of NAV_ICON[id] || []) { const el = document.createElementNS('http://www.w3.org/2000/svg', 'path'); el.setAttribute('d', d); svg.append(el); }
-  return svg;
-}
+function navIcon(id) { return icon(id, 20, 'cqa-nav__icon'); }
 
 // Оболочка: слева — фирменное меню (логотип, разделы, группа данных, роль), сверху — поиск и служебные переключатели.
 function buildHeader() {
@@ -88,7 +76,7 @@ function buildHeader() {
   const themeBtn = h('button', { type: 'button', class: 'cqa-btn cqa-btn--ghost cqa-btn--sm cqa-themebtn', id: 'cqa-theme',
     onclick: () => { settings.theme = isDark() ? 'light' : 'dark'; store.set('theme', settings.theme); syncHeader(); } });
   const searchBtn = h('button', { type: 'button', class: 'cqa-search-btn', title: 'Поиск диалога, раздела или действия', onclick: () => openPalette() },
-    h('span', { class: 'cqa-search-btn__ico', 'aria-hidden': 'true' }, '⌕'), h('span', { class: 'cqa-search-btn__text' }, 'Поиск диалога, раздела или действия'),
+    h('span', { class: 'cqa-search-btn__ico' }, icon('search', 16)), h('span', { class: 'cqa-search-btn__text' }, 'Поиск диалога, раздела или действия'),
     h('kbd', null, /Mac|iPhone|iPad/.test(navigator.platform || '') ? '⌘K' : 'Ctrl K'));
   healthEl = h('span', { class: 'cqa-health' }, h('span', { class: 'cqa-health__dot' }), h('span', { class: 'cqa-health__text' }, 'проверка…'));
   const side = h('aside', { class: 'cqa-side', 'aria-label': 'Навигация' },
@@ -103,18 +91,7 @@ function buildHeader() {
   return { side, top };
 }
 
-// Иконки темы — inline SVG (юникод ☾/☀ в разных шрифтах обрезается и прыгает по базовой линии).
-const SVG_NS = 'http://www.w3.org/2000/svg';
-function themeIcon(dark) {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  for (const [k, v] of Object.entries({ viewBox: '0 0 24 24', width: '18', height: '18', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' })) svg.setAttribute(k, v);
-  const add = (tag, attrs) => { const el = document.createElementNS(SVG_NS, tag); for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v); svg.append(el); };
-  if (dark) { // солнце: переключить на светлую
-    add('circle', { cx: '12', cy: '12', r: '4' });
-    for (const d of ['M12 2v2', 'M12 20v2', 'M4.93 4.93l1.41 1.41', 'M17.66 17.66l1.41 1.41', 'M2 12h2', 'M20 12h2', 'M6.34 17.66l-1.41 1.41', 'M19.07 4.93l-1.41 1.41']) add('path', { d });
-  } else add('path', { d: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z' }); // луна
-  return svg;
-}
+const themeIcon = (dark) => icon(dark ? 'sun' : 'moon', 20);
 // Эталон размечаем только для DEV; в режиме «Демо» пункт скрыт (это рабочий инструмент команды, а не экран для жюри).
 
 function syncHeader() {

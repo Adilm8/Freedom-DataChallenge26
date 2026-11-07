@@ -155,3 +155,87 @@
 @media (max-width: 1280px) {
   .cqa-root .cqa-list-table .cqa-list__topic { display: none; }
 }
+
+/* ===== Корпоративный слой в духе Microsoft Fluent 2 / Dynamics 365 (целевая платформа веб-ресурсов) =====
+   Шрифт Golos Text (ParaType, open source, кириллица и казахский), иконки Fluent UI System Icons.
+   Панели без рамок — тонкая тень «elevation 2», заголовки обычным регистром, без моноширинного «кода» в интерфейсе. */
+@font-face { font-family: "Golos Text"; font-style: normal; font-weight: 400 900; font-display: swap; src: url(../fonts/golos-cyrillic-ext.woff2) format("woff2"); unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F; }
+@font-face { font-family: "Golos Text"; font-style: normal; font-weight: 400 900; font-display: swap; src: url(../fonts/golos-cyrillic.woff2) format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Golos Text"; font-style: normal; font-weight: 400 900; font-display: swap; src: url(../fonts/golos-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Golos Text"; font-style: normal; font-weight: 400 900; font-display: swap; src: url(../fonts/golos-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+.cqa-root {
+  --cqa-font: "Golos Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --cqa-mono: "Golos Text", "Segoe UI", system-ui, sans-serif;
+  --fl-shadow-2: 0 0 2px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .14);
+  --fl-shadow-4: 0 0 2px rgba(0, 0, 0, .12), 0 2px 4px rgba(0, 0, 0, .14);
+  --cqa-bg: #f5f5f5;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0;
+}
+.cqa-root[data-theme="dark"] { --cqa-bg: #141414; --fl-shadow-2: 0 0 2px rgba(0,0,0,.5), 0 1px 2px rgba(0,0,0,.6); --fl-shadow-4: 0 0 2px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.6); }
+.cqa-root .cqa-timecode, .cqa-root .cqa-msg__time, .cqa-root time { font-variant-numeric: tabular-nums; }
+
+/* Панели и плитки: без рамки, мягкая тень, радиус 4px. */
+.cqa-root .cqa-panel, .cqa-root .cqa-kpi, .cqa-root .cqa-res, .cqa-root .cqa-timeline, .cqa-root .cqa-facts {
+  border-color: transparent; box-shadow: var(--fl-shadow-2); border-radius: 4px;
+}
+.cqa-root button.cqa-kpi:hover { border-color: transparent; box-shadow: var(--fl-shadow-4); }
+
+/* Заголовки секций: обычный регистр, без разрядки — как в Dynamics и SAP Fiori. */
+.cqa-root .cqa-h3, .cqa-root .cqa-sum__label, .cqa-root .cqa-facts__gtitle, .cqa-root .cqa-apl__label, .cqa-root .cqa-export__label,
+.cqa-root .cqa-insights__label, .cqa-root .cqa-cmp__sidelabel, .cqa-root .cqa-cmp-verdict__lbl, .cqa-root .cqa-pal__sect,
+.cqa-root .cqa-help__grid h3, .cqa-root .cqa-tour__step, .cqa-root .cqa-advice b, .cqa-root .cqa-warnbox b, .cqa-root .cqa-side__label {
+  text-transform: none; letter-spacing: 0;
+}
+.cqa-root .cqa-h3 { font-size: var(--cqa-text-md); font-weight: 600; color: var(--cqa-text); }
+.cqa-root .cqa-apl__label, .cqa-root .cqa-side__label { font-size: 12px; font-weight: 500; }
+/* Шапки таблиц: обычный регистр, полужирный, серый фон убран. */
+.cqa-root .cqa-table th { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 600; color: var(--cqa-muted); background: transparent; }
+.cqa-root .cqa-msg__role { text-transform: none; letter-spacing: 0; font-weight: 600; }
+
+/* Номера критериев — спокойная цифра, а не «бейдж-код». */
+.cqa-root .cqa-code { background: transparent; color: var(--cqa-faint); font-weight: 600; min-width: 1.6em; padding: 0; }
+.cqa-root .cqa-code--flag { background: var(--cqa-flag); color: #fff; padding: 0 .35em; }
+.cqa-root .cqa-code--no { background: transparent; color: var(--cqa-no); }
+.cqa-root .cqa-code--part { background: transparent; color: var(--cqa-warn); }
+.cqa-root .cqa-row-id { font-weight: 600; }
+
+/* Сводка KPI: одна панель с разделителями вместо шести отдельных карточек. */
+.cqa-root .cqa-kpis { gap: 0; background: var(--cqa-surface); box-shadow: var(--fl-shadow-2); border-radius: 4px; }
+.cqa-root .cqa-kpis > .cqa-kpi { box-shadow: none; border-radius: 0; border: 0; border-left: 1px solid var(--cqa-border); background: transparent; }
+.cqa-root .cqa-kpis > .cqa-kpi:first-child { border-left: 0; }
+.cqa-root .cqa-kpis > .cqa-kpi--flag .cqa-kpi__value { color: var(--cqa-no); }
+.cqa-root .cqa-kpis > button.cqa-kpi:hover { background: var(--cqa-hover); box-shadow: none; }
+.cqa-root .cqa-kpi__label { font-size: 13px; font-weight: 500; }
+
+/* «Главное»: строка-список в одной панели, без цветных полос. */
+.cqa-root .cqa-insights { gap: 0; background: var(--cqa-surface); box-shadow: var(--fl-shadow-2); border-radius: 4px; padding: 0; }
+.cqa-root .cqa-insights__label { padding: 0 16px; font-size: 13px; font-weight: 600; color: var(--cqa-text); }
+.cqa-root .cqa-insight { border: 0; border-left: 1px solid var(--cqa-border); border-radius: 0; background: transparent; padding: 12px 16px; }
+.cqa-root .cqa-insight__text b { font-size: var(--cqa-text-sm); font-weight: 600; }
+.cqa-root .cqa-insight--bad .cqa-insight__text b { color: var(--cqa-no); }
+
+/* Блоки «Почему снижена оценка»: тонкая полоса слева вместо цветной рамки. */
+.cqa-root .cqa-why__item { border: 0; border-left: 3px solid var(--cqa-warn-line); border-radius: 0; box-shadow: none; background: var(--cqa-surface-2); }
+.cqa-root .cqa-why__item--flag { border-left-color: var(--cqa-flag); }
+
+/* Реплики расшифровки: лента без карточек — разделитель между репликами, роль цветной меткой. */
+.cqa-root .cqa-msg { border: 0; border-left: 3px solid transparent; border-radius: 0; border-bottom: 1px solid var(--cqa-border); box-shadow: none; }
+.cqa-root .cqa-msg--operator { border-left-color: var(--fb-green-500); }
+.cqa-root .cqa-msg--system { border-style: solid; border-left-color: transparent; }
+.cqa-root .cqa-msg--bot { background: transparent; }
+
+/* Кнопки: 32px, радиус 4px, без жирности. */
+.cqa-root .cqa-btn { border-radius: 4px; font-weight: 600; }
+.cqa-root .cqa-badge { border-radius: 3px; font-weight: 500; }
+
+/* Иконки Fluent в меню и шапке. */
+.cqa-root .cqa-ico, .cqa-root .cqa-nav__icon { flex: 0 0 auto; display: block; }
+.cqa-root .cqa-search-btn__ico { display: inline-flex; color: var(--cqa-faint); }
+.cqa-root .cqa-pal__icon { display: inline-flex; }
+.cqa-root .cqa-chk-row--head, .cqa-root .cqa-qcmp__group th, .cqa-root .cqa-cmp-cfg__mark, .cqa-root .cqa-coach__kicker { text-transform: none; letter-spacing: 0; }
+/* Действия в строках таблиц — текстовые кнопки, рамка появляется при наведении (как командная строка Dynamics). */
+.cqa-root .cqa-chk-cell--acts .cqa-btn { border-color: transparent; background: transparent; color: var(--fb-green-800); }
+.cqa-root .cqa-chk-cell--acts .cqa-btn:hover { background: var(--cqa-hover); border-color: var(--cqa-border); }
+.cqa-root[data-theme="dark"] .cqa-chk-cell--acts .cqa-btn { color: var(--fb-green-500); }
