@@ -1,0 +1,86 @@
+{
+  "conversation_id": "p1-en-008",
+  "drafted_by": "claude-session",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "yes",
+      "reasoning": "«Hi, I'm Sofia» — приветствие на английском и имя.",
+      "evidence": [
+        "m10"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "na",
+      "reasoning": "Клиент уже сообщил, что тикер есть и приложение открыто; оператор ответил без переспросов.",
+      "evidence": [
+        "m4",
+        "m9",
+        "m10"
+      ],
+      "confidence": "high"
+    },
+    "03": {
+      "answer": "na",
+      "reasoning": "Вопросы о поиске бумаги и настройке приказа; данные счёта не раскрывались.",
+      "evidence": [
+        "m0",
+        "m15"
+      ],
+      "confidence": "high"
+    },
+    "04": {
+      "answer": 15,
+      "reasoning": "Поиск по тикеру, оформление приказа и отключение Use Margin объяснены верно; на вопрос, меняет ли настройка уже открытую позицию, ответ уклончивый («It doesn't answer what's happening with an existing position») без следующего шага.",
+      "evidence": [
+        "m10",
+        "m12",
+        "m15",
+        "m16",
+        "m17"
+      ],
+      "confidence": "medium"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Вежливо; недовольства не было.",
+      "evidence": [
+        "m17",
+        "m19"
+      ],
+      "confidence": "high"
+    },
+    "06": {
+      "answer": 10,
+      "reasoning": "Ответы ясные, клиент не переспрашивал; первый ответ через 1 мин.",
+      "evidence": [
+        "m10",
+        "m12",
+        "m15"
+      ],
+      "confidence": "medium"
+    },
+    "07": {
+      "answer": "no",
+      "reasoning": "«Of course. Have a good day!» — прощание без итога и предложения помощи → «Нет».",
+      "evidence": [
+        "m18",
+        "m19"
+      ],
+      "confidence": "high"
+    },
+    "08": {
+      "answer": "no",
+      "reasoning": "Нарушений нет.",
+      "evidence": [
+        "m15",
+        "m19"
+      ],
+      "confidence": "high"
+    }
+  },
+  "total": 84.62,
+  "critical": false,
+  "notes": "Как p1-ru-020 (04 = 15 за ответ об открытой позиции). 06: 10 или 7 — формулировка m17 неловкая, но клиент не переспросил."
+}

@@ -1,0 +1,79 @@
+{
+  "conversation_id": "p1-en-009",
+  "drafted_by": "claude-session",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "yes",
+      "reasoning": "«Hi, I'm Leo» — приветствие на английском и имя.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "na",
+      "reasoning": "Клиент сразу назвал опцию Use Margin и что ордер ещё не отправлен; уточнять было нечего.",
+      "evidence": [
+        "m0",
+        "m4",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "03": {
+      "answer": "na",
+      "reasoning": "Вопрос о настройке ордера; данные счёта не раскрывались.",
+      "evidence": [
+        "m0",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "04": {
+      "answer": 20,
+      "reasoning": "Верный путь: Order Settings → снять Use Margin до отправки; клиент: «Found it».",
+      "evidence": [
+        "m9",
+        "m10"
+      ],
+      "confidence": "high"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Вежливо; недовольства клиент не выражал.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "06": {
+      "answer": 10,
+      "reasoning": "Один ясный ответ, первый ответ через 57 с после эскалации.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "07": {
+      "answer": "na",
+      "reasoning": "Через 18 с после «Found it. Thank you.» связь с клиентом прервалась (m11) — у оператора не было возможности завершить.",
+      "evidence": [
+        "m10",
+        "m11"
+      ],
+      "confidence": "medium"
+    },
+    "08": {
+      "answer": "no",
+      "reasoning": "Нарушений нет.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    }
+  },
+  "total": 100.0,
+  "critical": false,
+  "notes": "Пара к p1-ru-020 / p1-kz-010. 07: N/A по аналогии с p1-kz-011 (обрыв связи вскоре после ответа клиента)."
+}
