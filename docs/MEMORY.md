@@ -17,7 +17,7 @@
 - Облачные сессии — среда `Freedom-DataChallenge26` (открыты `openrouter.ai` и хост API организаторов). Default-среда эти хосты блокирует. Для Gemini нужно добавить `generativelanguage.googleapis.com`.
 - URL API организаторов содержит подпись `sig` = секрет. Он есть внутри PDF-гайда, поэтому гайд в git не класть.
 - Снапшот DEV: `data/raw/DEV.json`; читаемая версия — `data/raw/DEV_readable.md` (и копия в папке проекта `Freedom Datathon/research/`).
-- Локальная папка проекта на Macbook Лиды — `Freedom Datathon/` (там же клон репо `Freedom-DataChallenge26/`).
+- Ноутбук Лиды — Windows (имя устройства «macbook»). Команды для него — PowerShell. Локальная папка проекта — `Freedom Datathon\` (папка `Freedom-DataChallenge26\` там пока не git-клон).
 
 ## Наблюдения о данных (подробно — `docs/research/01-data-overview.md`)
 - Во всех 60 чатах сначала бот AIM, затем эскалация на оператора; оценивается только оператор.
