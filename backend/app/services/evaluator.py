@@ -14,7 +14,8 @@ from dataclasses import dataclass, field
 
 from ..domain import Checklist, Criterion, NormalizedConversation, ScoreResult
 from ..providers import LLMResult
-from . import guards, judge, prompt_builder, scoring
+from ..config import settings as app_settings
+from . import guards, judge, pii, prompt_builder, scoring
 from .validator import CriterionOutput, Issue
 
 STRATEGIES = ("single", "grouped", "per_criterion")
@@ -94,9 +95,30 @@ class EvalOutcome:
 
 def prepare(conv: NormalizedConversation, checklist: Checklist) -> tuple[tuple[dict, str, dict], str]:
     """Факты и отпечаток контекста до вызовов: нужны плану переиспользования (services/reuse.py)."""
+    conv, _ = _mask(conv)
     f = _facts(conv, checklist)
     sections = {s.id: s.title for s in checklist.sections}
     return f, prompt_builder.context_digest(conv, f[1], checklist.settings, sections)
+
+
+def _mask(conv: NormalizedConversation) -> tuple[NormalizedConversation, list[pii.Span]]:
+    """Модель видит диалог с метками вместо персональных данных (PII_MASKING, по умолчанию включено)."""
+    return pii.mask_conversation(conv) if app_settings.pii_masking else (conv, [])
+
+
+def _unmask_quotes(results: dict[str, CriterionOutput], original: NormalizedConversation,
+                   spans: list[pii.Span]) -> None:
+    """Цитаты в карточке — по исходному тексту, чтобы подсветка реплики работала."""
+    values: dict[str, str] = {}
+    for sp in spans:
+        m = original.message(sp.msg_id)
+        if m and sp.placeholder not in values:
+            values[sp.placeholder] = m.text[sp.start:sp.end]
+    for r in results.values():
+        for ev in r.evidence:
+            q = ev.get("quote")
+            if q and pii.PLACEHOLDER_RE.search(q):
+                ev["quote"] = pii.PLACEHOLDER_RE.sub(lambda mm: values.get(mm.group(0), mm.group(0)), q)
 
 
 def _facts(conv: NormalizedConversation, checklist: Checklist):
@@ -129,6 +151,8 @@ def evaluate_conversation(
     остальные критерии идут в вызовы по стратегии; страховки и баллы считаются по всем."""
     criteria = criteria if criteria is not None else checklist.enabled_criteria()
     reused = dict(reused or {})
+    original = conv
+    conv, masked_spans = _mask(conv)
     facts_json, facts_block, booleans = facts_override or _facts(conv, checklist)
     sections = {s.id: s.title for s in checklist.sections}
     pv = prompt_builder.prompt_version()
@@ -162,6 +186,8 @@ def evaluate_conversation(
         if out.error and not out.calls:
             calls.append(CallRecord(keys, None, 1, out.error))
 
+    if masked_spans:
+        _unmask_quotes(results, original, masked_spans)
     issues.extend(guards.apply(results, booleans, criteria))
     answers = {k: r.answer for k, r in results.items() if r.answer is not None}
     score = scoring.compute(checklist, answers)
