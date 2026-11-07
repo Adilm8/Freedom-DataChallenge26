@@ -1,0 +1,84 @@
+{
+  "conversation_id": "p1-en-004",
+  "drafted_by": "claude-session",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "yes",
+      "reasoning": "«Hi, I'm Alex» — приветствие на английском и имя.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "na",
+      "reasoning": "Клиент сразу назвал, что нужен брокерский отчёт за прошлый год, бот назвал раздел; уточнять было нечего.",
+      "evidence": [
+        "m0",
+        "m3",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "03": {
+      "answer": "na",
+      "reasoning": "Вопрос о том, как скачать отчёт; данные счёта оператор не раскрывал.",
+      "evidence": [
+        "m0",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "04": {
+      "answer": 20,
+      "reasoning": "Путь «Reports and Documents → Broker Report → даты за год» и подтверждение, что затем скачать; клиент: «That worked».",
+      "evidence": [
+        "m9",
+        "m11",
+        "m12"
+      ],
+      "confidence": "high"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Вежливо; недовольства не было.",
+      "evidence": [
+        "m9",
+        "m13"
+      ],
+      "confidence": "high"
+    },
+    "06": {
+      "answer": 10,
+      "reasoning": "Ответы ясные; вопрос «Do I download it after I set the dates?» — естественное уточнение шага, а не переспрос из-за неясной формулировки.",
+      "evidence": [
+        "m9",
+        "m10",
+        "m11"
+      ],
+      "confidence": "medium"
+    },
+    "07": {
+      "answer": "no",
+      "reasoning": "«You're welcome. Have a good day!» — только прощание, без итога и предложения помощи.",
+      "evidence": [
+        "m12",
+        "m13"
+      ],
+      "confidence": "high"
+    },
+    "08": {
+      "answer": "no",
+      "reasoning": "Нарушений нет.",
+      "evidence": [
+        "m9",
+        "m13"
+      ],
+      "confidence": "high"
+    }
+  },
+  "total": 92.31,
+  "critical": false,
+  "notes": "06: 10 или 7 — в первой инструкции не было шага «скачайте», клиент уточнил (как p1-ru-027). 07 — строгое прочтение."
+}

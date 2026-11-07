@@ -1,0 +1,82 @@
+{
+  "conversation_id": "p1-en-001",
+  "drafted_by": "claude-session",
+  "checklist": "default-v1",
+  "criteria": {
+    "01": {
+      "answer": "yes",
+      "reasoning": "«Hi, I'm Maya from support» — приветствие на английском и имя.",
+      "evidence": [
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "02": {
+      "answer": "na",
+      "reasoning": "Бот уже выяснил, что логин был у закрытого счёта (m3–m4); уточнять было нечего.",
+      "evidence": [
+        "m3",
+        "m4",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "03": {
+      "answer": "na",
+      "reasoning": "Вопрос о регистрации нового счёта; данные клиента не раскрывались.",
+      "evidence": [
+        "m0",
+        "m9"
+      ],
+      "confidence": "high"
+    },
+    "04": {
+      "answer": 20,
+      "reasoning": "«A login stays on record after the account is closed. Use a different login» — объяснена причина и дан следующий шаг; клиент понял. Правильность по справке не проверить.",
+      "evidence": [
+        "m9",
+        "m10"
+      ],
+      "confidence": "medium"
+    },
+    "05": {
+      "answer": "yes",
+      "reasoning": "Вежливо; недовольства не было.",
+      "evidence": [
+        "m9",
+        "m11"
+      ],
+      "confidence": "high"
+    },
+    "06": {
+      "answer": 10,
+      "reasoning": "Ответ ясный, клиент не переспрашивал.",
+      "evidence": [
+        "m9",
+        "m10"
+      ],
+      "confidence": "high"
+    },
+    "07": {
+      "answer": "no",
+      "reasoning": "«You're welcome. Take care!» — только прощание, без итога и предложения помощи.",
+      "evidence": [
+        "m10",
+        "m11"
+      ],
+      "confidence": "high"
+    },
+    "08": {
+      "answer": "no",
+      "reasoning": "Нарушений нет.",
+      "evidence": [
+        "m9",
+        "m11"
+      ],
+      "confidence": "high"
+    }
+  },
+  "total": 92.31,
+  "critical": false,
+  "notes": "Похож на p1-kz-007. 04: 20 или 15 (не предложены альтернативы, например восстановить старый счёт). 07 — строгое прочтение."
+}
