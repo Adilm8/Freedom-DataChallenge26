@@ -5,6 +5,10 @@
 апелляции и экспорт работали на них как на своих. Баллы пересчитывает `scoring` по активному
 чек-листу (как и у оценок из конвейера), файл даёт только ответы, обоснования и номера реплик.
 
+Факты системы (тайминги, приветствие, события) считает код и здесь — так же, как в конвейере. Обзор диалога
+(тема, краткое содержание, решён ли вопрос) в формат сдачи не входит; если рядом лежит
+`data/results_extras/<target>_overview.json` (обзоры из прогона той же моделью), он подставляется.
+
 Такие оценки помечены `provider = "file"` и `prompt_version = "results.json"`: в карточке видно, что это
 загруженный результат, а не новый вызов модели. Вызовов LLM у них нет, стоимость 0.
 """
@@ -15,10 +19,15 @@ from datetime import datetime, timezone
 
 from sqlmodel import Session, select
 
-from ..domain import Checklist, Criterion
+import json
+import logging
+
+from ..domain import Checklist, Criterion, NormalizedConversation
 from ..models import ChecklistVersion, Conversation, CriterionResult, Evaluation, EvaluationRun
 from . import scoring
 from .checklists import get_active
+
+log = logging.getLogger(__name__)
 
 PROVIDER = "file"
 PROMPT_VERSION = "results.json"
@@ -54,8 +63,37 @@ def _evidence(conv: Conversation, turns) -> list[dict]:
     return out
 
 
+def _code_facts(conv: Conversation, cl: Checklist) -> dict:
+    """Факты, которые конвейер считает кодом до вызова модели; без них карточка показывала бы «Факты: 0»."""
+    from .evaluator import _facts
+
+    try:
+        return _facts(NormalizedConversation.model_validate(conv.normalized), cl)[0]
+    except Exception as e:  # noqa: BLE001 — факты вспомогательные, импорт оценок важнее
+        log.warning("факты для %s не посчитаны: %s", conv.conversation_id, type(e).__name__)
+        return {}
+
+
+def overview_path(root, target: str):
+    return root / "data" / "results_extras" / f"{target}_overview.json"
+
+
+def load_overviews(root, target: str) -> dict:
+    """`{conversation_id: {summary, topic, resolved}}` из файла рядом с репозиторием; нет файла — пусто."""
+    path = overview_path(root, target)
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        ov = data.get("overviews") or {}
+        return {str(k): v for k, v in ov.items() if isinstance(v, dict)}
+    except (OSError, ValueError, AttributeError) as e:
+        log.warning("обзоры %s не прочитаны: %s", path.name, e)
+        return {}
+
+
 def import_results(session: Session, doc: dict, group_id: str, *, checklist_version_id: int | None = None,
-                   replace: bool = False, source: str = "results.json") -> dict:
+                   replace: bool = False, source: str = "results.json", overviews: dict | None = None) -> dict:
     """Пишет оценки из файла сдачи. Диалоги, у которых уже есть полная оценка по этой версии чек-листа,
     пропускаются (если не `replace`): повторный запуск ничего не дублирует."""
     if not isinstance(doc, dict) or not isinstance(doc.get("results"), list):
@@ -118,7 +156,8 @@ def import_results(session: Session, doc: dict, group_id: str, *, checklist_vers
         ev = Evaluation(
             conversation_pk=conv.id, checklist_version_id=ver.id, run_id=run.id, provider=PROVIDER, model=model,
             strategy="import", prompt_version=PROMPT_VERSION, status="partial" if missing else "done",
-            params={"source": source}, ai_score=dump, final_score=dump, ai_total=score.total,
+            params={"source": source}, facts=_code_facts(conv, cl),
+            overview=(overviews or {}).get(conv.conversation_id), ai_score=dump, final_score=dump, ai_total=score.total,
             final_total=score.total, critical=bool(score.critical), needs_review=False,
         )
         session.add(ev)
@@ -151,8 +190,6 @@ def autoload(session: Session, root) -> list[dict]:
     """При старте сервера: если в репозитории есть `results/dev/results.json`, а у диалогов DEV нет оценок
     по активному чек-листу, — загрузить их из файла. Нет набора в БД, но есть снапшот `data/raw/DEV.json` —
     сначала импортировать его. Ничего не вызывает у модели; повторный старт ничего не дублирует."""
-    import json
-
     from . import ingest
 
     out = []
@@ -165,5 +202,6 @@ def autoload(session: Session, root) -> list[dict]:
         if not has_convs and raw.exists():
             ingest.import_payload(session, json.loads(raw.read_text(encoding="utf-8-sig")), "file", group_id=group)
         doc = json.loads(path.read_text(encoding="utf-8"))
-        out.append(import_results(session, doc, group, source=f"results/{target}/results.json"))
+        out.append(import_results(session, doc, group, source=f"results/{target}/results.json",
+                                  overviews=load_overviews(root, target)))
     return out

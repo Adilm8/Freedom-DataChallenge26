@@ -79,6 +79,7 @@ def load_results(body: ResultsBody, session: Session = Depends(get_session)) -> 
     try:
         doc = json.loads(path.read_text(encoding="utf-8"))
         return results_import.import_results(session, doc, group, replace=body.replace,
-                                             source=f"results/{body.target}/results.json")
+                                             source=f"results/{body.target}/results.json",
+                                             overviews=results_import.load_overviews(ROOT, body.target))
     except (ValueError, results_import.ResultsImportError) as e:
         raise HTTPException(400, str(e))

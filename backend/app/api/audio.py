@@ -22,8 +22,11 @@
 """
 from __future__ import annotations
 
+import asyncio
+import ipaddress
 import logging
 import re
+import socket
 import html as html_lib
 from collections import OrderedDict
 from pathlib import Path
@@ -48,9 +51,29 @@ CACHE_CONTROL = "private, max-age=600"
 _RANGE_RE = re.compile(r"^\s*bytes\s*=\s*(\d*)\s*-\s*(\d*)\s*(?:,.*)?$", re.I)
 
 
+def _public_ip(ip: str) -> bool:
+    a = ipaddress.ip_address(ip.split("%")[0])
+    return a.is_global and not a.is_multicast
+
+
+async def guard_request(request: httpx.Request) -> None:
+    """Защита от SSRF: ссылка на запись приходит из данных (файл набора тоже), поэтому сервер ходит только
+    по http(s) на публичные адреса. Проверяется каждый запрос, включая редиректы и ссылку со страницы плеера."""
+    url = request.url
+    if url.scheme not in ("http", "https") or not url.host:
+        raise httpx.RequestError("недопустимая схема ссылки на запись", request=request)
+    try:
+        infos = await asyncio.get_running_loop().getaddrinfo(url.host, url.port or 443, type=socket.SOCK_STREAM)
+    except (socket.gaierror, UnicodeError) as e:
+        raise httpx.ConnectError(f"адрес источника записи не найден ({type(e).__name__})", request=request) from None
+    if not infos or not all(_public_ip(i[4][0]) for i in infos):
+        raise httpx.RequestError("ссылка на запись ведёт во внутреннюю сеть", request=request)
+
+
 def make_client() -> httpx.AsyncClient:
     """Клиент к источнику записи. Тесты подменяют эту функцию (httpx.MockTransport)."""
-    return httpx.AsyncClient(timeout=httpx.Timeout(60.0, connect=10.0), follow_redirects=True, max_redirects=5)
+    return httpx.AsyncClient(timeout=httpx.Timeout(60.0, connect=10.0), follow_redirects=True, max_redirects=5,
+                             event_hooks={"request": [guard_request]})
 
 
 class _Cache:
