@@ -12,7 +12,7 @@
 
 ## Ждёт Лиду
 - Ключи: в `.env` на ноутбуке есть; в облачной среде `Freedom-DataChallenge26` — network secrets для openrouter.ai и generativelanguage.googleapis.com (Bearer). Ключи, засвеченные в чате, Лиде нужно заменить.
-- Ответы на вопросы в конце `docs/research/01-data-overview.md`.
+
 
 ## Сломано / ограничения
 - В Default-среде закрыты `openrouter.ai`, API организаторов и Gemini. Gemini (`generativelanguage.googleapis.com`) ещё не добавлен и в среду `Freedom-DataChallenge26`.
