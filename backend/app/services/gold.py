@@ -1,4 +1,4 @@
-"""Gold-разметка DEV: черновики Claude, вторая разметка, проверка и сохранение (FR-GOLD-01…05).
+"""Gold-разметка DEV: черновики, вторая разметка, проверка и сохранение (FR-GOLD-01…05).
 
 Файлы лежат в `data/gold/` (каталог переопределяется через `GOLD_DIR` в тестах):
 `selection.json`, `split.json`, `drafts/<id>.json`, `second_opinion/<id>.json`, `gold_labels.json`.
