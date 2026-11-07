@@ -17,7 +17,8 @@ const AP_STATUS = { open: ['Апелляция открыта', 'warn'], confirm
 const SECTION_TITLES = { start: 'Начало и понимание запроса', safety: 'Безопасность и решение', dialog: 'Ведение и завершение диалога', critical: 'Грубые нарушения' };
 
 function confidence(level) {
-  if (!level) return null;
+  // Высокая уверенность — норма, её не подписываем: шум на каждом критерии. Видны только средняя и низкая.
+  if (!level || level === 'high') return null;
   const [text, tip] = CONF[level] || [level, ''];
   if (level === 'low') {
     return h('span', { class: 'cqa-badge cqa-badge--warn cqa-conf-low cqa-tip', 'data-tip': tip }, h('span', { class: 'cqa-conf-low__mark', 'aria-hidden': 'true' }, '!'), text);

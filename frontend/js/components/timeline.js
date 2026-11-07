@@ -157,6 +157,7 @@ export function mount(el, params = {}) {
   let p = { ...params };
   let model = null;
   let playingId = null;
+  let legendOpen = false; // легенда — под «?», чтобы панель не выглядела отладчиком
   const root = h('section', { class: 'cqa-panel cqa-tl', 'aria-label': 'Ход диалога' });
   el.append(root);
   const tip = createTip(root);
@@ -200,10 +201,13 @@ export function mount(el, params = {}) {
     const width = Math.max(200, root.clientWidth - 32);
     lastW = root.clientWidth;
 
+    const help = h('button', { type: 'button', class: 'cqa-tl__help', 'aria-expanded': String(legendOpen), 'aria-controls': 'cqa-tl-legend', title: 'Обозначения',
+      'aria-label': 'Обозначения', onclick: () => { legendOpen = !legendOpen; help.setAttribute('aria-expanded', String(legendOpen)); root.querySelector('.cqa-tl__legend').hidden = !legendOpen; } }, '?');
     root.append(h('div', { class: 'cqa-tl__head' },
       h('h3', { class: 'cqa-h3' }, 'Ход диалога'),
       h('span', { class: 'cqa-tl__sum' }, summary(m)),
-      m.byOrder ? h('span', { class: 'cqa-badge cqa-badge--muted', title: 'У реплик нет времени: шкала построена по порядку реплик' }, 'по порядку реплик') : null));
+      m.byOrder ? h('span', { class: 'cqa-badge cqa-badge--muted', title: 'У реплик нет времени: шкала построена по порядку реплик' }, 'по порядку реплик') : null,
+      help));
 
     const plot = h('div', { class: 'cqa-tl__plot' });
     // Метки событий (над полосой)
@@ -265,14 +269,24 @@ export function mount(el, params = {}) {
       ...m.pins.filter((pn) => pn.kind !== 'event').map((pn) => ({ t: pn.t, x: pn.x, cls: pn.kind, icon: pn.icon, text: pn.short ? `${pn.label.split(' через')[0]} · ${pn.short.replace('ответ ', '')}` : pn.label, go: { msg_ids: [pn.msg_id] } })),
       ...m.bands.filter((b) => b.overlay).map((b) => ({ t: b.from, x: b.x0, cls: b.type, icon: '◫', text: `${BAND[b.type][0]}${b.sec != null ? ` ${dur(b.sec)}` : ''}`, go: { msg_ids: b.msg_ids, from: b.from_id, to: b.to_id } })),
     ].sort((a, b) => a.x - b.x);
-    if (items.length) {
-      root.append(h('ol', { class: 'cqa-tl__list', 'aria-label': 'Ключевые события по времени' }, items.map((it) =>
-        h('li', null, h('button', { type: 'button', class: `cqa-tl__item cqa-tl__item--${it.cls}`, onclick: () => jump(it.go) },
-          h('span', { class: 'cqa-tl__itime' }, m.byOrder ? (it.go.msg_ids[0] || '') : clock(it.t)), h('span', { class: 'cqa-tl__iicon', 'aria-hidden': 'true' }, it.icon), it.text)))));
+    // Одинаковые события (например, пять слов-подсказок подряд) — одним пунктом «×5», переход к первому.
+    const grouped = [];
+    for (const it of items) {
+      const same = grouped.find((g) => g.cls === it.cls && g.text === it.text);
+      if (same) same.n += 1; else grouped.push({ ...it, n: 1 });
+    }
+    if (grouped.length) {
+      // Список дублирует метки над полосой (нужен для клавиатуры и чтения без наведения) — свёрнут.
+      root.append(h('details', { class: 'cqa-tl__events' },
+        h('summary', null, `События списком: ${grouped.length}`),
+        h('ol', { class: 'cqa-tl__list', 'aria-label': 'Ключевые события по времени' }, grouped.map((it) =>
+          h('li', null, h('button', { type: 'button', class: `cqa-tl__item cqa-tl__item--${it.cls}`, onclick: () => jump(it.go) },
+            h('span', { class: 'cqa-tl__itime' }, m.byOrder ? (it.go.msg_ids[0] || '') : clock(it.t)), h('span', { class: 'cqa-tl__iicon', 'aria-hidden': 'true' }, it.icon), it.text,
+            it.n > 1 ? h('b', { class: 'cqa-tl__icount' }, `×${it.n}`) : null))))));
     }
     // Легенда — только то, что есть на полосе
     const present = [...new Set(m.bands.map((b) => b.type))];
-    root.append(h('div', { class: 'cqa-tl__legend', 'aria-label': 'Обозначения' },
+    root.append(h('div', { class: 'cqa-tl__legend', id: 'cqa-tl-legend', 'aria-label': 'Обозначения', hidden: !legendOpen },
       present.map((t) => h('span', { class: 'cqa-tl__lg' }, h('span', { class: `cqa-tl__sw ${BAND[t][1]}` }), BAND[t][0])),
       m.evidence.length ? h('span', { class: 'cqa-tl__lg' }, h('span', { class: 'cqa-tl__sw cqa-tl__sw--ev' }), 'доказательство критерия') : null,
       m.evidence.some((e) => e.bad || e.flag) ? h('span', { class: 'cqa-tl__lg' }, h('span', { class: 'cqa-tl__sw cqa-tl__sw--evbad' }), 'критерий не выполнен') : null,
