@@ -11,7 +11,7 @@
 - 2026-11-07 — черновик исследования данных: `docs/research/01-data-overview.md`.
 
 ## Ждёт Лиду
-- Ключи `OPENROUTER_API_KEY`, `GEMINI_API_KEY` в `.env`. Облако: Network secrets среды `Freedom-DataChallenge26`.
+- Ключи: в `.env` на ноутбуке есть; в облачной среде `Freedom-DataChallenge26` — network secrets для openrouter.ai и generativelanguage.googleapis.com (Bearer). Ключи, засвеченные в чате, Лиде нужно заменить.
 - Ответы на вопросы в конце `docs/research/01-data-overview.md`.
 
 ## Сломано / ограничения
