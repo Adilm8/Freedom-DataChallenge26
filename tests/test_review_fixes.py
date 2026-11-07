@@ -124,8 +124,9 @@ def test_audio_never_serves_html(client, monkeypatch):
     use_upstream(monkeypatch, lambda req: httpx.Response(200, content=b"<script>alert(1)</script>",
                                                          headers={"Content-Type": "text/html"}))
     r = client.get(f"/api/conversations/{call}/audio")
-    assert r.headers["content-type"] == "application/octet-stream"
-    assert r.headers["x-content-type-options"] == "nosniff" and "sandbox" in r.headers["content-security-policy"]
+    # Страница без ссылки на аудио не отдаётся как есть: 502 с JSON-ошибкой.
+    assert r.status_code == 502 and "alert" not in r.text
+    assert r.headers["content-type"].startswith("application/json")
 
 
 def test_audio_empty_file_and_invalid_url(client, monkeypatch):

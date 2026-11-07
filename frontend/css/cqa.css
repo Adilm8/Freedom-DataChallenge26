@@ -862,6 +862,27 @@ button.cqa-card__old { cursor: pointer; }
 .cqa-ap__fixchip { flex: none; font-family: var(--cqa-mono); color: var(--cqa-warn); background: var(--cqa-warn-bg); border-color: var(--cqa-warn-bd); }
 .cqa-ap__time { margin-left: auto; flex: none; font-family: var(--cqa-mono); font-variant-numeric: tabular-nums; color: var(--cqa-text); font-weight: 600; }
 .cqa-ap__scale { position: relative; padding-top: 10px; }
+/* Волна по дорожкам говорящих (waveform.js) */
+.cqa-ap__wave {
+  --lanes: 2; --cqa-ap-region: rgba(224, 160, 48, .16);
+  position: relative; height: calc(var(--lanes) * 28px); margin: 8px 0 2px; cursor: pointer; touch-action: none;
+  border-radius: var(--cqa-r-sm); background: var(--cqa-surface-2); user-select: none;
+}
+.cqa-ap__canvas { position: absolute; inset: 0; display: block; }
+.cqa-ap__lanes { position: absolute; inset: 0; display: grid; grid-template-rows: repeat(var(--lanes), 1fr); pointer-events: none; }
+.cqa-ap__lane {
+  align-self: start; justify-self: start; margin: 3px 0 0 4px; padding: 0 5px; border-radius: 3px; line-height: 15px;
+  font-size: 11px; font-weight: 600; background: color-mix(in srgb, var(--cqa-surface) 82%, transparent);
+}
+.cqa-ap__lane--client { color: var(--cqa-role-client); }
+.cqa-ap__lane--operator { color: var(--cqa-role-operator); }
+.cqa-ap__lane--bot { color: var(--cqa-muted); }
+.cqa-ap__hover {
+  position: absolute; top: 2px; transform: translateX(-50%); padding: 1px 6px; border-radius: 4px; white-space: nowrap;
+  background: var(--cqa-text); color: var(--cqa-surface); font: 600 11px/16px var(--cqa-mono); pointer-events: none; z-index: 2;
+}
+.cqa-ap[data-state="error"] .cqa-ap__wave { cursor: not-allowed; }
+@media (max-width: 640px) { .cqa-ap__wave { height: calc(var(--lanes) * 24px); } }
 .cqa-ap__marks { position: absolute; left: 0; right: 0; top: 0; height: 10px; }
 .cqa-ap__ev {
   position: absolute; top: 1px; width: 9px; height: 9px; margin-left: -4.5px; padding: 0; border: 2px solid var(--cqa-surface); border-radius: 50%;
@@ -937,10 +958,10 @@ button.cqa-msg__rec:hover { border-color: var(--cqa-accent); color: var(--cqa-ac
 .cqa-tr--seek .cqa-msg { cursor: pointer; }
 .cqa-tr--seek .cqa-msg:hover { border-color: #c9c2f8; }
 .cqa-msg--offrec { opacity: .65; }
-.cqa-msg--playing { box-shadow: 0 0 0 2px #b7dcc1; border-color: #b9b0f6; }
-.cqa-msg--playing:not(.cqa-msg--internal):not(.cqa-msg--hl) { background: #f6f4ff; }
+.cqa-msg--playing { box-shadow: 0 0 0 2px var(--cqa-warn-bd); border-color: var(--cqa-warn-line); }
+.cqa-msg--playing:not(.cqa-msg--internal):not(.cqa-msg--hl) { background: var(--cqa-warn-bg); }
 .cqa-msg--playing .cqa-msg__rec { background: var(--cqa-accent); border-color: var(--cqa-accent); color: #fff; }
-.cqa-msg--playing.cqa-msg--hl { box-shadow: 0 0 0 3px #f6d57a66, 0 0 0 5px #b7dcc1; }
+.cqa-msg--playing.cqa-msg--hl { box-shadow: 0 0 0 3px #f6d57a66, 0 0 0 5px var(--cqa-warn-line); }
 
 @media (max-width: 900px) {
   .cqa-card__col--call { display: block; overflow: visible; }
@@ -1214,8 +1235,9 @@ button.cqa-msg__rec:hover { border-color: var(--cqa-accent); color: var(--cqa-ac
 .cqa-root[data-theme="dark"] .cqa-msg--range { background: var(--cqa-range-bg); border-color: #2b5a38; }
 .cqa-root[data-theme="dark"] .cqa-msg--hl { background: var(--cqa-mark-bg) !important; border-color: var(--cqa-mark-bd); border-left-color: var(--cqa-mark-bd); box-shadow: 0 0 0 3px #9c7a1e55; }
 .cqa-root[data-theme="dark"] .cqa-mark { background: #8a6d12; color: #fff; box-shadow: none; }
-.cqa-root[data-theme="dark"] .cqa-msg--playing:not(.cqa-msg--internal):not(.cqa-msg--hl) { background: #16281d; }
-.cqa-root[data-theme="dark"] .cqa-msg--playing { box-shadow: 0 0 0 2px #2f6b41; border-color: #3b7a4e; }
+.cqa-root[data-theme="dark"] .cqa-msg--playing:not(.cqa-msg--internal):not(.cqa-msg--hl) { background: #2a2414; }
+.cqa-root[data-theme="dark"] .cqa-msg--playing { box-shadow: 0 0 0 2px #5f4818; border-color: #d99a1c; }
+.cqa-root[data-theme="dark"] .cqa-ap__wave { --cqa-ap-region: rgba(217, 154, 28, .18); }
 .cqa-root[data-theme="dark"] .cqa-tr--seek .cqa-msg:hover { border-color: #2f6b41; }
 .cqa-root[data-theme="dark"] .cqa-banner--flag { color: #ffc9c4; }
 .cqa-root[data-theme="dark"] .cqa-banner--warn { color: #f6d9a4; }

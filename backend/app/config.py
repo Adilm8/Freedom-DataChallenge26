@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     pii_masking: bool = True
 
     # Сдача результатов (docs/task/results-format.md)
+    # Локальные записи звонков (не в git): <audio_dir>/<conversation_id>.mp3 и т. п. Прокси записи кладёт сюда скачанное.
+    audio_dir: Path = ROOT / "data" / "audio"
+
     team_name: str = TEAM_NAME  # пустой TEAM_NAME в .env (так было в старом шаблоне) не стирает название
     model_mode: str = "external_api"  # local | external_api | hybrid
 

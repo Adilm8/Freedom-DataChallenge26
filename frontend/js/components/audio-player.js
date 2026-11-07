@@ -1,5 +1,6 @@
 // Плеер записи звонка (FR-CARD-04): <audio> и своя панель — воспроизведение, шкала с удержаниями, консультациями,
 // паузами записи и метками доказательств, скорость, ручная поправка смещения (localStorage по диалогу).
+// Над шкалой — волна записи по дорожкам говорящих (waveform.js): клик и протяжка по ней перематывают, рамка — звучащая реплика.
 // Параметры: conversation (ConversationDetail) или id; evidence [{key, title, flag, msg_ids}] — метки на шкале.
 // Внутрь (события на el): cqa:seek {msg_id, play} | {sec, play} — перейти к реплике или к секунде записи.
 // Наружу (с корня, всплывают): cqa:audio-time {msg_id, t, playing, follow} — сменилась звучащая реплика;
@@ -7,10 +8,14 @@
 // Секунда реплики в записи = audio_offset_sec (бэкенд уже учёл начало записи и паузы) + поправка.
 import { h, clear, emit, ROLE, skeletonRows, errorState } from '../ui.js';
 import { getConversation, audioSource, probeAudio } from '../api.js';
+import { createWave, loadPeaks } from './waveform.js';
 
 const RATES = [1, 1.25, 1.5, 2];
 const SEG_LABEL = { hold: 'Удержание', consult: 'Консультация с коллегой', recording_paused: 'Пауза записи' };
 const FIX_LIMIT = 3600;
+const SPEAKERS = new Set(['client', 'operator', 'bot']);
+const OWN_MAX = 90; // дольше реплика на волне не тянется: дальше, скорее всего, удержание или тишина
+const OWN_TAIL = 6;
 
 function readStore(k) { try { return localStorage.getItem(k); } catch { return null; } }
 function writeStore(k, v) { try { localStorage.setItem(k, String(v)); } catch { /* хранилище недоступно */ } }
@@ -45,7 +50,8 @@ export function mount(el, params = {}) {
   let fix = 0, rate = 1, follow = true;
   let state = 'loading'; // none | loading | ready | error
   let raf = 0, pending = null, dragT = null, curId = undefined, selected = null;
-  let timeline = [], byId = new Map(), byIdx = new Map();
+  let timeline = [], owners = [], byId = new Map(), byIdx = new Map();
+  let wave = null;
   let ui = {};
   let pulseTimer = null;
   let seen = null, inView = true, touched = false; // мини-панель, когда плеер ушёл из поля зрения (телефон)
@@ -56,8 +62,27 @@ export function mount(el, params = {}) {
     byId = new Map(msgs.map((m) => [m.msg_id, m]));
     byIdx = new Map(msgs.map((m, i) => [m.idx ?? i, m]));
     timeline = msgs.filter((m) => m.audio_offset_sec != null)
-      .map((m, i) => ({ id: m.msg_id, off: m.audio_offset_sec, i }))
+      .map((m, i) => ({ id: m.msg_id, off: m.audio_offset_sec, i, sp: m.speaker }))
       .sort((a, b) => a.off - b.off || a.i - b.i);
+    owners = timeline.filter((x) => SPEAKERS.has(x.sp));
+  }
+  // Кто говорит в секунду t: реплика длится до начала следующей (не дольше OWN_MAX).
+  function ownerAt(t) {
+    let k = -1;
+    for (let i = 0; i < owners.length; i++) { if (owners[i].off + fix <= t) k = i; else break; }
+    if (k < 0) return null;
+    const end = k + 1 < owners.length ? owners[k + 1].off + fix : owners[k].off + fix + OWN_TAIL;
+    return t < Math.min(end, owners[k].off + fix + OWN_MAX) ? owners[k] : null;
+  }
+  // Рамка на волне: звучащая реплика, а до воспроизведения — выбранная (клик по реплике или доказательству).
+  function regionOf() {
+    const id = curId || selected;
+    const m = id ? byId.get(id) : null;
+    if (!m || m.audio_offset_sec == null || !touched) return null;
+    const a = m.audio_offset_sec;
+    const next = owners.find((x) => x.off > a);
+    const b = next ? next.off : a + OWN_TAIL;
+    return [a + fix, Math.min(b, a + OWN_MAX) + fix];
   }
   const lastOff = () => (timeline.length ? timeline[timeline.length - 1].off : 0);
   function dur() {
@@ -133,6 +158,8 @@ export function mount(el, params = {}) {
     ui.mini = h('div', { class: 'cqa-ap__mini', hidden: true, role: 'region', 'aria-label': 'Запись звонка' },
       ui.miniPlay,
       h('button', { type: 'button', class: 'cqa-ap__minigo', title: 'К плееру', onclick: () => ui.main.scrollIntoView({ behavior: 'smooth', block: 'center' }) }, ui.miniText));
+    ui.hover = h('div', { class: 'cqa-ap__hover', hidden: true });
+    ui.waveBox = h('div', { class: 'cqa-ap__wave', title: 'Волна записи: нажмите или протяните, чтобы перемотать' }, ui.hover);
     ui.main = h('div', { class: 'cqa-ap__main' },
         ui.play,
         h('div', { class: 'cqa-ap__mid' },
@@ -140,7 +167,7 @@ export function mount(el, params = {}) {
             h('span', { class: 'cqa-ap__title' }, 'Запись звонка'), ui.now, ui.fixChip, ui.time),
           h('div', { class: 'cqa-ap__scale' }, ui.marks, ui.track)),
         ui.rates);
-    root.append(audio, ui.main,
+    root.append(audio, ui.main, ui.waveBox,
       h('div', { class: 'cqa-ap__sub' },
         ui.legend,
         // Ручная поправка смещения нужна редко — под раскрывашкой (сдвиг виден чипом рядом со временем).
@@ -158,7 +185,10 @@ export function mount(el, params = {}) {
       seen = new IntersectionObserver(([e]) => { inView = e.isIntersecting; syncMini(); });
       seen.observe(ui.main);
     }
+    wave = createWave(ui.waveBox, { dur, pos, speakerAt: (t) => ownerAt(t)?.sp || null, region: regionOf });
+    wave.setLanes(new Set(owners.map((x) => x.sp)));
     bindTrack();
+    bindWave();
     setState('loading');
     setFix(fix, { persist: false, reseek: false });
     syncRate();
@@ -174,6 +204,8 @@ export function mount(el, params = {}) {
       if (!src) { fail('у звонка нет адреса записи'); return; }
       if (!src.mock) { ui.open.href = src.url; ui.open.hidden = false; }
       audio.src = src.url;
+      loadPeaks(src.url).then((r) => { if (my === token) wave?.setPeaks(r.peaks); })
+        .catch(() => { if (my === token && ui.waveBox) ui.waveBox.dataset.nopeaks = '1'; });
     } catch (e) {
       if (my === token) fail(e?.message || 'не удалось подготовить запись');
     }
@@ -226,6 +258,7 @@ export function mount(el, params = {}) {
     clear(ui.legend).append(...['hold', 'consult', 'recording_paused', 'evidence'].filter((k) => present.has(k))
       .map((k) => h('span', { class: 'cqa-ap__lg' }, h('i', { class: `cqa-ap__sw cqa-ap__sw--${L[k][0]}` }), L[k][1])));
     ui.legend.hidden = !present.size;
+    wave?.draw();
   }
 
   function showNow() {
@@ -248,6 +281,7 @@ export function mount(el, params = {}) {
     ui.track.setAttribute('aria-valuenow', t.toFixed(1));
     ui.track.setAttribute('aria-valuetext', `${fmtClock(t)} из ${fmtClock(d)}`);
     const id = currentAt(t);
+    if (id !== curId || force || !audio?.paused || dragT != null) wave?.draw();
     if (id !== curId || force) {
       curId = id;
       showNow();
@@ -442,6 +476,42 @@ export function mount(el, params = {}) {
     });
   }
 
+  // Волна: нажать — перемотать, протянуть — скраб; при наведении — секунда и кто говорит.
+  function bindWave() {
+    const box = ui.waveBox;
+    const hover = (e) => {
+      const t = wave.timeAt(e.clientX);
+      const o = ownerAt(t);
+      const r = box.getBoundingClientRect();
+      ui.hover.hidden = false;
+      ui.hover.style.left = `${Math.min(r.width - 4, Math.max(4, e.clientX - r.left))}px`;
+      ui.hover.textContent = `${fmtClock(t)}${o ? ` · ${ROLE[o.sp] || o.sp}` : ''}`;
+    };
+    box.addEventListener('pointerdown', (e) => {
+      if (state === 'error' || e.button > 0) return;
+      box.setPointerCapture?.(e.pointerId);
+      dragT = wave.timeAt(e.clientX);
+      root.classList.add('cqa-ap--drag');
+      sync();
+    });
+    box.addEventListener('pointermove', (e) => {
+      hover(e);
+      if (dragT != null) { dragT = wave.timeAt(e.clientX); sync(); }
+    });
+    box.addEventListener('pointerleave', () => { if (dragT == null) ui.hover.hidden = true; });
+    const end = () => {
+      if (dragT == null) return;
+      const t = dragT;
+      dragT = null;
+      root.classList.remove('cqa-ap--drag');
+      selected = ownerAt(t)?.id || selected;
+      syncAnchor();
+      seekTo(t);
+    };
+    box.addEventListener('pointerup', end);
+    box.addEventListener('pointercancel', end);
+  }
+
   // ---------- жизненный цикл ----------
   function teardown() {
     token++;
@@ -449,6 +519,8 @@ export function mount(el, params = {}) {
     seen = null; inView = true; touched = false;
     cancelAnimationFrame(raf);
     clearTimeout(pulseTimer);
+    wave?.destroy();
+    wave = null;
     if (audio) {
       for (const [ev, fn] of Object.entries(mediaHandlers)) audio.removeEventListener(ev, fn);
       audio.pause();
