@@ -10,16 +10,16 @@ const NAV = [
   ['appeals', 'Апелляции'], ['checklist', 'Чек-лист'], ['quality', 'Качество'],
 ];
 const ROUTES = {
+  dashboard: { nav: 'dashboard', load: () => import('./components/dashboard-view.js') },
+  quality: { nav: 'quality', load: () => import('./components/quality-view.js') },
   conversations: { nav: 'conversations', load: () => import('./components/conversation-list.js') },
   conversation: { nav: 'conversations', load: () => import('./components/conversation-card.js'), full: true },
   gold: { nav: 'gold', load: () => import('./components/gold-review.js'), full: true },
   checklist: { nav: 'checklist', load: () => import('./components/checklist-editor.js') },
 };
 const PLACEHOLDERS = {
-  dashboard: ['Дашборд', 'Средний итог, распределение, выполнение по критериям и грубые ошибки. Экран появится на этапе аналитики.'],
   review: ['Требует проверки', 'Очередь критериев с низкой уверенностью и предупреждениями валидатора.'],
   appeals: ['Апелляции', 'Очередь проверяющего: спорные оценки, фрагмент диалога и форма решения.'],
-  quality: ['Качество', 'Согласие с эталоном и сравнение моделей и стратегий.'],
   compare: ['Сравнение', 'Два результата одного диалога рядом.'],
 };
 
@@ -33,7 +33,10 @@ const settings = {
   group: store.get('group', 'DEV'),
   mode: store.get('mode', 'analyst'),
   demo: query.get('demo') === '1' || store.get('demo', '0') === '1',
+  theme: ['light', 'dark'].includes(query.get('theme')) ? query.get('theme') : store.get('theme', 'auto'), // auto — как в системе
 };
+const darkMq = window.matchMedia?.('(prefers-color-scheme: dark)');
+const isDark = () => settings.theme === 'dark' || (settings.theme === 'auto' && !!darkMq?.matches);
 
 let current = null; // { name, instance, el }
 let healthEl;
@@ -43,7 +46,7 @@ function parseHash() {
   const [path, qs] = raw.split('?');
   const seg = path.split('/').filter(Boolean);
   const q = Object.fromEntries(new URLSearchParams(qs || ''));
-  return { name: seg[0] || 'conversations', arg: seg[1], q };
+  return { name: seg[0] || 'dashboard', arg: seg[1], q };
 }
 
 function buildHeader() {
@@ -58,14 +61,19 @@ function buildHeader() {
         onclick: () => { settings.mode = id; store.set('mode', id); syncHeader(); route(); } }, label)));
   const demo = h('label', { class: 'cqa-toggle', title: 'Крупнее шрифт и бейджи для проектора' },
     h('input', { type: 'checkbox', checked: settings.demo, onchange: (e) => { settings.demo = e.target.checked; store.set('demo', settings.demo ? '1' : '0'); syncHeader(); } }), 'Демо');
+  const themeBtn = h('button', { type: 'button', class: 'cqa-btn cqa-btn--ghost cqa-btn--sm cqa-themebtn', id: 'cqa-theme',
+    onclick: () => { settings.theme = isDark() ? 'light' : 'dark'; store.set('theme', settings.theme); syncHeader(); } });
   healthEl = h('span', { class: 'cqa-health' }, h('span', { class: 'cqa-health__dot' }), h('span', { class: 'cqa-health__text' }, 'проверка…'));
   return h('header', { class: 'cqa-header' },
-    h('a', { class: 'cqa-brand', href: '#/conversations' }, h('span', { class: 'cqa-brand__mark' }, 'C'), 'CQA', h('small', null, '· Freedom Broker')),
-    nav, h('div', { class: 'cqa-header__tools' }, healthEl, groupSel, modeSeg, demo));
+    h('a', { class: 'cqa-brand', href: '#/dashboard' }, h('span', { class: 'cqa-brand__mark' }, 'C'), 'CQA', h('small', null, '· Freedom Broker')),
+    nav, h('div', { class: 'cqa-header__tools' }, healthEl, groupSel, modeSeg, demo, themeBtn));
 }
 
 function syncHeader() {
   appEl.classList.toggle('cqa-demo', settings.demo);
+  appEl.dataset.theme = isDark() ? 'dark' : 'light';
+  const tb = appEl.querySelector('#cqa-theme');
+  if (tb) { tb.textContent = isDark() ? '☀' : '☾'; tb.title = isDark() ? 'Светлая тема' : 'Тёмная тема'; tb.setAttribute('aria-label', tb.title); }
   const goldLink = appEl.querySelector('.cqa-nav__link[data-nav="gold"]'); // gold размечаем только для DEV
   if (goldLink) goldLink.hidden = settings.group !== 'DEV';
   appEl.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === settings.mode)));
@@ -131,7 +139,8 @@ function init() {
   for (const t of ['cqa:navigate', 'cqa:location', 'cqa:run-request', 'cqa:import-request']) appEl.addEventListener(t, onAppEvent);
   syncHeader();
   window.addEventListener('hashchange', route);
-  if (!location.hash) location.replace('#/conversations' + (query.has('group') ? `?group=${query.get('group')}` : ''));
+  darkMq?.addEventListener?.('change', syncHeader);
+  if (!location.hash) location.replace('#/dashboard' + (query.has('group') ? `?group=${query.get('group')}` : ''));
   route();
   checkHealth();
 }
