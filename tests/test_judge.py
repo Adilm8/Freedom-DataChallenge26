@@ -146,3 +146,14 @@ def test_judge_survives_garbage():
     msgs, schema = prompt_builder.build(CHAT, "", A_GROUP, CL.settings, SECTIONS)
     out = judge.run(p, msgs, schema, A_GROUP, CHAT, CL.settings)
     assert out.results == {} and any(i.code == "V1" for i in out.issues)
+
+
+def test_judge_retry_does_not_lose_criteria_from_first_answer():
+    bad = good_output()
+    bad["results"]["01"]["evidence"] = [{"msg_id": "m3", "quote": "выдуманная цитата из воздуха"}]
+    fixed = good_output()
+    del fixed["results"]["05"]                       # повтор исправил 01, но потерял 05
+    p = FakeProvider([bad, fixed])
+    msgs, schema = prompt_builder.build(CHAT, "", A_GROUP, CL.settings, SECTIONS)
+    out = judge.run(p, msgs, schema, A_GROUP, CHAT, CL.settings)
+    assert out.results["01"].evidence[0]["quote_ok"] and out.results["05"].answer == "yes"

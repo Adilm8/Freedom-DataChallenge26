@@ -10,8 +10,15 @@ from ..providers import ProviderError, get_provider
 from . import evaluator, prompt_builder
 from . import reuse as reuse_mod
 
-PARAMS = {"temperature": 0, "seed": 7}
 REUSE_MODES = ("none", "auto")
+
+
+def _actual_params(outcome: evaluator.EvalOutcome, reuse: str) -> dict:
+    """Что реально ушло в модель (провайдер мог убрать temperature/seed), а не что мы хотели."""
+    req = next((c.result.request for c in outcome.calls if c.result and c.result.request), None)
+    if req is None:
+        return {"temperature": None, "seed": None, "reuse": reuse}
+    return {"temperature": req.get("temperature"), "seed": req.get("seed"), "reuse": reuse}
 
 
 def _ans_str(a) -> str:
@@ -52,7 +59,7 @@ def persist(
         status=outcome.status,
         facts=outcome.facts or {},
         overview=outcome.overview,
-        params={**PARAMS, "reuse": reuse},
+        params=_actual_params(outcome, reuse),
         ai_score=score,
         final_score=score,
         ai_total=outcome.score.total,
@@ -101,6 +108,15 @@ def _failed_outcome(checklist: Checklist, error: str) -> evaluator.EvalOutcome:
     )
 
 
+def record_failure(session: Session, conversation_pk: int, checklist_version_id: int, error: str, *,
+                   provider_name: str, model: str, strategy: str, run_id: int | None = None) -> int:
+    """Неожиданная ошибка конвейера: пишем failed-оценку с причиной, чтобы она была видна в UI и в сдаче."""
+    ver = session.get(ChecklistVersion, checklist_version_id)
+    outcome = _failed_outcome(Checklist.model_validate(ver.body), error)
+    return persist(session, conversation_pk, checklist_version_id, outcome, provider_name=provider_name, model=model,
+                   strategy=strategy, run_id=run_id)
+
+
 def evaluate_one(
     session: Session,
     conversation_pk: int,
@@ -121,14 +137,16 @@ def evaluate_one(
         raise ValueError("диалог или версия чек-листа не найдены")
     conv = NormalizedConversation.model_validate(conv_row.normalized)
     checklist = Checklist.model_validate(ver.body)
+    facts, context = evaluator.prepare(conv, checklist)
     plan = reuse_mod.ReusePlan()
     if reuse == "auto":
         plan = reuse_mod.plan(session, conversation_pk, checklist.enabled_criteria(), model=model,
-                              prompt_version=prompt_builder.prompt_version())
+                              prompt_version=prompt_builder.prompt_version(), context=context)
     try:
         provider = get_provider(provider_name)
         outcome = evaluator.evaluate_conversation(conv, checklist, provider, model=model, strategy=strategy,
-                                                  reused=plan.reused, reused_overview=plan.overview)
+                                                  facts_override=facts, reused=plan.reused,
+                                                  reused_overview=plan.overview)
     except ProviderError as e:
         outcome = _failed_outcome(checklist, str(e))
         plan = reuse_mod.ReusePlan()

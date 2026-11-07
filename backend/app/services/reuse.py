@@ -1,7 +1,7 @@
 """Инкрементальная переоценка (FR-CHK-10, evaluation-pipeline.md §10).
 
 Ответ критерия переиспользуется, если в одной из прошлых оценок диалога есть строка с тем же
-`criterion_hash` (поля промпта + версия промпта + модель). Вес, секция и порядок в хеш не входят,
+`criterion_hash` (поля промпта, справка, версия промпта, модель, отпечаток транскрипта, фактов и настроек). Вес, секция и порядок в хеш не входят,
 поэтому их смена не требует вызовов LLM. Страховки применяются заново, их старые пометки снимаются.
 """
 
@@ -43,7 +43,7 @@ def _output(c: Criterion, row: CriterionResult) -> CriterionOutput | None:
 
 
 def plan(session: Session, conversation_pk: int, criteria: list[Criterion], *, model: str,
-         prompt_version: str) -> ReusePlan:
+         prompt_version: str, context: str = "") -> ReusePlan:
     """Что взять из прошлых оценок диалога, а что оценить вызовами."""
     evs = session.exec(
         select(Evaluation).where(Evaluation.conversation_pk == conversation_pk, Evaluation.status != "failed")
@@ -52,7 +52,7 @@ def plan(session: Session, conversation_pk: int, criteria: list[Criterion], *, m
     out = ReusePlan()
     if not evs:
         return out
-    want = {c.key: criterion_hash(c, prompt_version, model) for c in criteria}
+    want = {c.key: criterion_hash(c, prompt_version, model, context) for c in criteria}
     by_key = {c.key: c for c in criteria}
     for ev in evs:  # от новых к старым: берём самый свежий совпавший ответ
         rows = session.exec(select(CriterionResult).where(CriterionResult.evaluation_id == ev.id)).all()

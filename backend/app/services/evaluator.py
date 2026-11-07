@@ -39,10 +39,13 @@ _PROMPT_FIELDS = ("key", "title", "type", "definition", "yes_when", "no_when", "
                   "guidance", "context_refs")
 
 
-def criterion_hash(c: Criterion, prompt_version: str, model: str) -> str:
+def criterion_hash(c: Criterion, prompt_version: str, model: str, context: str = "") -> str:
+    """Хеш входа модели по критерию: поля критерия, содержимое справки, версия промпта, модель и
+    `context` — отпечаток транскрипта, фактов и настроек (`prompt_builder.context_digest`)."""
     payload = {f: getattr(c, f) for f in _PROMPT_FIELDS}
     payload["scale"] = [s.model_dump() for s in c.scale] if c.scale else None
-    payload |= {"prompt_version": prompt_version, "model": model}
+    payload |= {"prompt_version": prompt_version, "model": model, "context": context,
+                "refs": prompt_builder.context_refs_digest(c) if c.context_refs else ""}
     return hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:16]
 
 
@@ -89,6 +92,13 @@ class EvalOutcome:
         return max(per_group.values(), default=0)
 
 
+def prepare(conv: NormalizedConversation, checklist: Checklist) -> tuple[tuple[dict, str, dict], str]:
+    """Факты и отпечаток контекста до вызовов: нужны плану переиспользования (services/reuse.py)."""
+    f = _facts(conv, checklist)
+    sections = {s.id: s.title for s in checklist.sections}
+    return f, prompt_builder.context_digest(conv, f[1], checklist.settings, sections)
+
+
 def _facts(conv: NormalizedConversation, checklist: Checklist):
     from . import facts as facts_mod  # слой фактов; импорт здесь, чтобы ядро не зависело от него при тестах
 
@@ -122,6 +132,7 @@ def evaluate_conversation(
     facts_json, facts_block, booleans = facts_override or _facts(conv, checklist)
     sections = {s.id: s.title for s in checklist.sections}
     pv = prompt_builder.prompt_version()
+    context = prompt_builder.context_digest(conv, facts_block, checklist.settings, sections)
     model_name = model or getattr(provider, "default_model", "") or ""
 
     batches = partition([c for c in criteria if c.key not in reused], strategy)
@@ -159,5 +170,5 @@ def evaluate_conversation(
     status = "done" if answered == len(criteria) else ("partial" if answered else "failed")
     return EvalOutcome(
         results=results, score=score, facts=facts_json, overview=overview, calls=calls, issues=issues, status=status,
-        prompt_version=pv, hashes={c.key: criterion_hash(c, pv, model_name) for c in criteria},
+        prompt_version=pv, hashes={c.key: criterion_hash(c, pv, model_name, context) for c in criteria},
     )

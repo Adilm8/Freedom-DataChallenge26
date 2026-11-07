@@ -77,10 +77,15 @@ def run(
         return JudgeOutput(results, issues + [validator.Issue("V0", str(e))], _overview(first.parsed), calls)
 
     results2, issues2 = validator.validate(second.parsed, criteria, conv, settings, final=True)
-    if not results2 and results:  # повтор хуже первого — берём первый
-        results, issues = validator.validate(first.parsed, criteria, conv, settings, final=True)
-        return JudgeOutput(results, issues, _overview(first.parsed), calls)
-    return JudgeOutput(results2, issues2, _overview(second.parsed) or _overview(first.parsed), calls)
+    results1, issues1 = validator.validate(first.parsed, criteria, conv, settings, final=True)
+    # Сливаем по критериям: повтор не должен терять ответ, который был в первом ответе.
+    merged, taken = dict(results2), set()
+    for k, r in results1.items():
+        if r.answer is not None and (k not in merged or merged[k].answer is None):
+            merged[k] = r
+            taken.add(k)
+    issues = [i for i in issues2 if i.criterion not in taken] + [i for i in issues1 if i.criterion in taken]
+    return JudgeOutput(merged, issues, _overview(second.parsed) or _overview(first.parsed), calls)
 
 
 def _overview(parsed: dict | None) -> dict | None:

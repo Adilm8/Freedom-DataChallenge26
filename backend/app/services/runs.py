@@ -1,20 +1,22 @@
 """Фоновые прогоны оценки (ADR-008): поток + пул по диалогам, у каждой задачи своя сессия."""
 from __future__ import annotations
 
+import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from .. import db
-from ..models import ChecklistVersion, Evaluation, EvaluationRun, utcnow
-from . import evaluations
+from ..models import Evaluation, EvaluationRun, utcnow
+from . import checklists, evaluations
 
 MAX_WORKERS = 4
+log = logging.getLogger(__name__)
 
 
 def active_version_id(session: Session) -> int | None:
-    v = session.exec(select(ChecklistVersion).where(ChecklistVersion.is_active == True)).first()  # noqa: E712
+    v = checklists.get_active(session)
     return v.id if v else None
 
 
@@ -35,8 +37,15 @@ def _execute(run_id: int, conv_pks: list[int], version_id: int, provider: str, m
                                                strategy=strategy, run_id=run_id, reuse=reuse)
                 ev = s.get(Evaluation, eid)
                 ok, cost = ev.status != "failed", ev.cost_usd or 0.0
-        except Exception:  # noqa: BLE001  один диалог не валит прогон
+        except Exception as e:  # noqa: BLE001  один диалог не валит прогон, но причина остаётся в БД
+            log.exception("оценка диалога %s в прогоне %s упала", pk, run_id)
             ok = False
+            try:
+                with Session(db.engine) as s:
+                    evaluations.record_failure(s, pk, version_id, f"{type(e).__name__}: {e}", provider_name=provider,
+                                               model=model, strategy=strategy, run_id=run_id)
+            except Exception:  # noqa: BLE001
+                log.exception("не удалось записать ошибку оценки %s", pk)
         with lock, Session(db.engine) as s:
             run = s.get(EvaluationRun, run_id)
             run.done += 1 if ok else 0

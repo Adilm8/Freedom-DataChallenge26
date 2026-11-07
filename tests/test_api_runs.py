@@ -92,7 +92,7 @@ def test_run_group_end_to_end(env):
     ev = c.get(f"/api/evaluations/{eid}").json()
     assert ev["status"] == "done"
     assert ev["ai_score"]["total"] is not None and ev["final_score"] == ev["ai_score"]
-    assert ev["params"] == {"temperature": 0, "seed": 7, "reuse": "none"}
+    assert ev["params"] == {"temperature": None, "seed": None, "reuse": "none"}  # фейк не сообщает параметры запроса
     assert ev["overview"]["topic"] == "t"
     assert len(ev["criteria"]) == 8
     first = ev["criteria"][0]

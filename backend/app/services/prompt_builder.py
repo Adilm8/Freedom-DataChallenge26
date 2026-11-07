@@ -7,6 +7,8 @@ system (+ правила канала) → факты → транскрипт �
 
 from __future__ import annotations
 
+import hashlib
+import json
 from functools import lru_cache
 from pathlib import Path
 from string import Template
@@ -27,8 +29,32 @@ def _template(name: str) -> str:
     return (PROMPTS_DIR / name).read_text(encoding="utf-8").strip()
 
 
+@lru_cache(maxsize=1)
 def prompt_version() -> str:
-    return _template("VERSION")
+    """Ручная метка из VERSION + отпечаток всех шаблонов: правка шаблона без подъёма метки тоже меняет версию."""
+    h = hashlib.sha256()
+    for f in sorted(PROMPTS_DIR.glob("*.md")):
+        h.update(f.name.encode() + b"\0" + f.read_bytes())
+    return f"{_template('VERSION')}-{h.hexdigest()[:6]}"
+
+
+# Настройки, которые не попадают в промпт и не влияют на ответы модели (только на расчёт баллов).
+_SCORING_ONLY_SETTINGS = {"rounding", "critical_policy"}
+
+
+def context_digest(conv: NormalizedConversation, facts_block: str, settings: ChecklistSettings,
+                   section_titles: dict[str, str]) -> str:
+    """Отпечаток всего, кроме критерия, от чего зависит ответ: транскрипт, факты, настройки, секции.
+    Входит в `criterion_hash`, чтобы `reuse: auto` не вернул ответ, посчитанный на других входных данных."""
+    payload = json.dumps({
+        "transcript": render_transcript(conv), "facts": facts_block,
+        "settings": settings.model_dump(mode="json", exclude=_SCORING_ONLY_SETTINGS), "sections": section_titles,
+    }, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(payload.encode()).hexdigest()[:16]
+
+
+def context_refs_digest(c: Criterion) -> str:
+    return hashlib.sha256("\0".join(f"{r}\0{_context_ref(r) or ''}" for r in c.context_refs).encode()).hexdigest()[:12]
 
 
 @lru_cache(maxsize=None)

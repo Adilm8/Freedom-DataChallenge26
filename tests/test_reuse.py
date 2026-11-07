@@ -57,3 +57,17 @@ def test_reuse_auto(env, monkeypatch):
     wait(c, start(c).json()["run_id"])
     assert len(p.keys) == 8
     assert start(c, reuse="maybe").status_code == 400
+
+
+def test_settings_change_invalidates_reuse(env, monkeypatch):
+    c, p = env, Counting()
+    monkeypatch.setattr(evaluations, "get_provider", lambda name=None: p)
+    upload(c, payload())
+    wait(c, start(c).json()["run_id"])
+
+    def lang(b):
+        b["settings"]["output_language"] = "en"         # меняет промпт → старые ответы не годятся
+    new_version(lang)
+    p.keys.clear()
+    wait(c, start(c, reuse="auto").json()["run_id"])
+    assert len(p.keys) == 8

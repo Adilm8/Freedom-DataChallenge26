@@ -87,7 +87,9 @@ def activate_version(session: Session, version_id: int) -> ChecklistVersion:
     ver = session.get(ChecklistVersion, version_id)
     if not ver:
         raise LookupError(version_id)
-    for other in session.exec(select(ChecklistVersion).where(ChecklistVersion.checklist_key == ver.checklist_key)):
+    # активная версия одна на всю систему: её оценивают прогоны и по ней собирается файл сдачи
+    for other in session.exec(select(ChecklistVersion).where(
+            (ChecklistVersion.is_active == True) | (ChecklistVersion.id == ver.id))):  # noqa: E712
         other.is_active = other.id == ver.id
         session.add(other)
     session.commit()
@@ -99,7 +101,8 @@ def activate_version(session: Session, version_id: int) -> ChecklistVersion:
 activate = activate_version
 
 
-def get_active(session: Session, key: str = "default") -> ChecklistVersion | None:
-    return session.exec(
-        select(ChecklistVersion).where(ChecklistVersion.checklist_key == key, ChecklistVersion.is_active == True)  # noqa: E712
-    ).first()
+def get_active(session: Session, key: str | None = None) -> ChecklistVersion | None:
+    q = select(ChecklistVersion).where(ChecklistVersion.is_active == True)  # noqa: E712
+    if key:
+        q = q.where(ChecklistVersion.checklist_key == key)
+    return session.exec(q.order_by(ChecklistVersion.id.desc())).first()
