@@ -53,7 +53,7 @@ def criteria_meta(cl: Checklist) -> dict[str, dict]:
     return {c.key: {"type": c.type, "scale": [s.value for s in c.scale] if c.scale else None} for c in cl.enabled_criteria()}
 
 
-def run_once(records, cl, provider, model, strategy) -> tuple[dict, dict]:
+def run_once(records, cl, provider, model, strategy, checkpoint=None) -> tuple[dict, dict]:
     pred, details = {}, {}
     for rec in records:
         conv = normalize(rec)
@@ -77,6 +77,8 @@ def run_once(records, cl, provider, model, strategy) -> tuple[dict, dict]:
         }
         print(f"  {conv.conversation_id}: итог {out.score.total} · {out.status} · ${out.cost_usd:.4f} · "
               f"{details[conv.conversation_id]['seconds']} с")
+        if checkpoint:
+            checkpoint(pred, details)
     return pred, details
 
 
@@ -136,11 +138,22 @@ def main() -> None:
     model = args.model or provider.default_model
     print(f"Прогон: {provider.name} / {model} / {args.strategy} · диалогов: {len(todo)} · повторов: {args.repeat}")
 
+    RUNS_DIR.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    out = RUNS_DIR / f"{stamp}_{provider.name}_{(model or 'model').replace('/', '-')}_{args.strategy}_{args.split}.json"
+    partial = out.with_suffix(".partial.json")
+
     preds, details_all = [], []
+
+    def checkpoint(p, d):  # падение посреди платного прогона не теряет уже оплаченные ответы
+        partial.write_text(json.dumps({"model": model, "strategy": args.strategy, "approved": args.approved,
+                                       "meta": meta, "pred": preds + [p], "details": details_all + [d]},
+                                      ensure_ascii=False, default=str), encoding="utf-8")
+
     for i in range(args.repeat):
         if args.repeat > 1:
             print(f"Повтор {i + 1}")
-        p, d = run_once(todo, cl, provider, model, args.strategy)
+        p, d = run_once(todo, cl, provider, model, args.strategy, checkpoint)
         preds.append(p)
         details_all.append(d)
 
@@ -157,14 +170,12 @@ def main() -> None:
     print_report(metrics)
     print(f"Стоимость: ${metrics['cost']['total_usd']} (≈ ${metrics['cost']['per_dialog_usd']} на диалог)")
 
-    RUNS_DIR.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    out = RUNS_DIR / f"{stamp}_{provider.name}_{(model or 'model').replace('/', '-')}_{args.strategy}_{args.split}.json"
     out.write_text(json.dumps({
         "created_at": stamp, "provider": provider.name, "model": model, "strategy": args.strategy, "split": args.split,
         "approved": args.approved, "prompt_version": prompt_version(),
         "metrics": metrics, "meta": meta, "pred": preds, "details": details_all,
     }, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+    partial.unlink(missing_ok=True)
     print(f"Сохранено: {out.relative_to(ROOT)}")
 
 
