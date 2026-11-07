@@ -5,6 +5,7 @@ from sqlmodel import Session
 from backend.app import db
 from backend.app.main import app
 from backend.app.services import checklists
+from tests.stage4_helpers import s4  # noqa: F401  (фикстура тестов этапа 4: апелляции, экспорт, аналитика, вставка)
 
 
 @pytest.fixture()

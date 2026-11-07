@@ -1,0 +1,146 @@
+{
+ "name": "20261107-091000_demo_demo-model-free_grouped_all",
+ "file": "20261107-091000_demo_demo-model-free_grouped_all.json",
+ "complete": true,
+ "created_at": "2026-11-07T09:10:00Z",
+ "provider": "demo",
+ "model": "demo/model-free",
+ "strategy": "grouped",
+ "split": "all",
+ "approved": "демо-данные",
+ "prompt_version": "p-2026-11-07a",
+ "gold_source": [
+  "draft"
+ ],
+ "repeat": 1,
+ "dialogs": 22,
+ "mean_agreement": 0.7532,
+ "mae": 10.59,
+ "max_abs": 42.31,
+ "within_5": 0.4091,
+ "within_10": 0.5909,
+ "flag_key": "08",
+ "flag_recall": 0.875,
+ "flag_precision": 1.0,
+ "stability": null,
+ "cost_total_usd": 0.0,
+ "cost_per_dialog_usd": 0.0,
+ "mean_seconds": 6.3,
+ "checks": {
+  "dialogs": 22,
+  "needs_review_share": 0.5909,
+  "not_done": 0,
+  "calls": 88,
+  "retry_share": 0.0227,
+  "critical_dialogs": 7
+ },
+ "criteria": [
+  {
+   "key": "01",
+   "title": "Установление контакта",
+   "n": 22,
+   "exact": 0.7273
+  },
+  {
+   "key": "02",
+   "title": "Выявление потребности",
+   "n": 22,
+   "exact": 0.7273
+  },
+  {
+   "key": "03",
+   "title": "Идентификация",
+   "n": 22,
+   "exact": 0.8636
+  },
+  {
+   "key": "04",
+   "title": "Корректная и полная консультация",
+   "n": 22,
+   "exact": 0.7273,
+   "within_1_step": 1.0
+  },
+  {
+   "key": "05",
+   "title": "Эмпатия и клиентоориентированность",
+   "n": 22,
+   "exact": 0.7727
+  },
+  {
+   "key": "06",
+   "title": "Управление диалогом, скорость и грамотность",
+   "n": 22,
+   "exact": 0.6818,
+   "within_1_step": 1.0
+  },
+  {
+   "key": "07",
+   "title": "Завершение",
+   "n": 22,
+   "exact": 0.7727
+  },
+  {
+   "key": "08",
+   "title": "Грубые ошибки",
+   "n": 22,
+   "exact": 0.9545,
+   "recall": 0.875,
+   "precision": 1.0
+  }
+ ],
+ "total": {
+  "n": 22,
+  "mae": 10.59,
+  "max_abs": 42.31,
+  "within_5": 0.4091,
+  "within_10": 0.5909
+ },
+ "by_language": {
+  "EN": {
+   "n": 6,
+   "agreement": 0.7917,
+   "mae": 8.09
+  },
+  "KZ": {
+   "n": 6,
+   "agreement": 0.6667,
+   "mae": 15.96
+  },
+  "RU": {
+   "n": 10,
+   "agreement": 0.8375,
+   "mae": 8.86
+  }
+ },
+ "by_channel": {
+  "agent chat": {
+   "n": 22,
+   "agreement": 0.7784,
+   "mae": 10.59
+  }
+ },
+ "calibration": {
+  "low": {
+   "n": 22,
+   "error_rate": 0.7273
+  },
+  "high": {
+   "n": 107,
+   "error_rate": 0.0841
+  },
+  "medium": {
+   "n": 47,
+   "error_rate": 0.2979
+  }
+ },
+ "cost": {
+  "total_usd": 0.0,
+  "per_dialog_usd": 0.0,
+  "mean_seconds": 6.3
+ },
+ "languages": [
+  "EN",
+  "KZ",
+  "RU"
+ ]
+}

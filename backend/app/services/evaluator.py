@@ -36,7 +36,7 @@ def partition(criteria: list[Criterion], strategy: str) -> list[list[Criterion]]
 
 # Поля критерия, которые попадают в промпт: от них зависит ответ модели (FR-CHK-10).
 _PROMPT_FIELDS = ("key", "title", "type", "definition", "yes_when", "no_when", "na_allowed", "na_when", "scale",
-                  "guidance", "context_refs")
+                  "guidance", "voice_guidance", "context_refs")
 
 
 def criterion_hash(c: Criterion, prompt_version: str, model: str, context: str = "") -> str:

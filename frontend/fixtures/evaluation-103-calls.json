@@ -1,0 +1,166 @@
+[
+ {
+  "id": 1031,
+  "criteria_keys": [
+   "01",
+   "02",
+   "03",
+   "05",
+   "07"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 3400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"01\": {\"reasoning\": \"Greeting in English and the operator introduced himself in the first reply.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m4\", \"quote\": \"Hello, this is Marat from Freedom Broker\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}, \"02\": {\"reasoning\": \"Оператор не уточнил цели, срок и отношение клиента к риску, а сразу перешёл к личному предложению.\", \"answer\": \"no\", \"confidence\": \"high\", \"evidence\": [], \"checked_range\": {\"from\": \"m4\", \"to\": \"m7\"}, \"na_reason\": null, \"advice\": null}, \"03\": {\"reasoning\": \"Идентификация не требовалась: клиент спрашивал общий совет.\", \"answer\": \"na\", \"confidence\": \"high\", \"evidence\": [], \"checked_range\": {\"from\": \"m4\", \"to\": \"m7\"}, \"na_reason\": \"Запрос не требовал идентификации.\", \"advice\": null}, \"05\": {\"reasoning\": \"Оператор не отреагировал на запрос клиента по существу и давил на него вместо помощи.\", \"answer\": \"no\", \"confidence\": \"medium\", \"evidence\": [{\"msg_id\": \"m7\", \"quote\": \"keep it between us\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": \"Реагировать на конкретную потребность клиента: сначала спросить цель инвестиций.\"}, \"07\": {\"reasoning\": \"Клиент ушёл из чата сам.\", \"answer\": \"na\", \"confidence\": \"high\", \"evidence\": [], \"checked_range\": {\"from\": \"m8\", \"to\": \"m9\"}, \"na_reason\": \"Чат оборвался до возможности его завершить.\", \"advice\": null}}, \"overview\": {\"summary\": \"Клиент попросил совет по долгосрочным инвестициям. Оператор предложил перевести деньги ему лично и гарантировал доходность. Клиент отказался и ушёл.\", \"topic\": \"Инвестиционная консультация\", \"resolved\": \"no\"}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 4300,
+  "tokens_out": 536,
+  "cached_tokens": 0,
+  "cost_usd": 0.02094,
+  "latency_ms": 3550,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1032,
+  "criteria_keys": [
+   "04"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"04\": {\"reasoning\": \"Ключевая рекомендация ошибочна: гарантированная доходность 15% в месяц невозможна, а перевод на личную карту — нарушение.\", \"answer\": \"0\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m5\", \"quote\": \"15% a month guaranteed\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": \"Объяснить, что персональных рекомендаций оператор не даёт, и предложить официальные материалы или консультацию аналитика компании.\"}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 149,
+  "cached_tokens": 0,
+  "cost_usd": 0.010575,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1033,
+  "criteria_keys": [
+   "06"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"06\": {\"reasoning\": \"Клиенту пришлось переспросить, допустимо ли предложение; ответ оператора ушёл от темы.\", \"answer\": \"4\", \"confidence\": \"medium\", \"evidence\": [{\"msg_id\": \"m6\", \"quote\": \"Is that even allowed?\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": \"Отвечать прямо на вопросы клиента.\"}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 106,
+  "cached_tokens": 0,
+  "cost_usd": 0.00993,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ },
+ {
+  "id": 1034,
+  "criteria_keys": [
+   "08"
+  ],
+  "attempt": 1,
+  "provider": "openrouter",
+  "model": "demo/fixture-model",
+  "request": {
+   "model": "demo/fixture-model",
+   "max_tokens": 1400,
+   "temperature": 0,
+   "seed": 7,
+   "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+     "name": "cqa_result",
+     "strict": true,
+     "schema": {
+      "type": "object",
+      "required": [
+       "results"
+      ],
+      "properties": {
+       "results": "…"
+      }
+     }
+    }
+   }
+  },
+  "response_raw": "{\"results\": {\"08\": {\"reasoning\": \"Оператор предлагает перевести деньги на личную карту и просит личный номер клиента для частной услуги. Достаточно самого предложения.\", \"answer\": \"yes\", \"confidence\": \"high\", \"evidence\": [{\"msg_id\": \"m5\", \"quote\": \"transfer $2,000 directly to my personal card\"}, {\"msg_id\": \"m7\", \"quote\": \"Send me your personal number\"}], \"checked_range\": null, \"na_reason\": null, \"advice\": null}}}",
+  "finish_reason": "stop",
+  "error": null,
+  "tokens_in": 2780,
+  "tokens_out": 138,
+  "cached_tokens": 0,
+  "cost_usd": 0.01041,
+  "latency_ms": 2150,
+  "created_at": "2026-11-07T14:20:00Z"
+ }
+]

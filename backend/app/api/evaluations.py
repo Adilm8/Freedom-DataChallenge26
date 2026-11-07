@@ -19,6 +19,17 @@ def get_evaluation(eid: int, session: Session = Depends(get_session)) -> dict:
     return svc.to_api(session, ev)
 
 
+@router.get("/evaluations/{eid}/compare")
+def compare_evaluation(eid: int, other: int | None = None, session: Session = Depends(get_session)) -> dict:
+    """Что изменилось относительно `other` (по умолчанию — предыдущей неупавшей оценки диалога)."""
+    from ..services import compare
+
+    try:
+        return compare.compare(session, eid, other)
+    except compare.CompareError as e:
+        raise HTTPException(e.status, e.detail) from None
+
+
 @router.get("/evaluations/{eid}/calls")
 def get_calls(eid: int, session: Session = Depends(get_session)) -> list[dict]:
     if not session.get(Evaluation, eid):
@@ -30,6 +41,14 @@ def get_calls(eid: int, session: Session = Depends(get_session)) -> list[dict]:
         "tokens_in": c.tokens_in, "tokens_out": c.tokens_out, "cached_tokens": c.cached_tokens,
         "cost_usd": c.cost_usd, "latency_ms": c.latency_ms, "created_at": c.created_at.isoformat(),
     } for c in rows]
+
+
+@router.get("/meta/facts")
+def meta_facts() -> dict:
+    """Русские подписи фактов для интерфейса (источник — реестр `services/facts`)."""
+    from ..services import facts
+
+    return {"labels": dict(facts.LABELS)}
 
 
 @router.get("/meta/models")

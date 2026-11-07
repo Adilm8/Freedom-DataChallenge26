@@ -12,11 +12,15 @@
   <script type="module">
     import { mount } from '../js/components/conversation-card.js';
     import { paramsFromQuery } from '../js/ui.js';
+    import { openRunDialog } from '../js/components/run-dialog.js';
     const q = paramsFromQuery();
     const el = document.getElementById('cqa-host');
     if (q.demo === '1') el.classList.add('cqa-demo');
     // Навигация между экранами: в автономной странице переходим в оболочку.
     el.addEventListener('cqa:navigate', (e) => { location.href = '../index.html' + location.search + e.detail.to; });
+    // Запуск оценки: то же окно, что в оболочке; по завершении компонент перечитывает данные.
+    el.addEventListener('cqa:run-request', (e) => openRunDialog(el, { group: q.group || 'DEV', ...e.detail,
+      onFinished: () => el.dispatchEvent(new CustomEvent('cqa:refresh')) }));
     mount(el, { group: q.group || 'DEV', id: q.id, eval: q.eval, mode: q.mode });
   </script>
 </body>

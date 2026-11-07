@@ -80,7 +80,8 @@ def build(session: Session, group_id: str, *, team_name: str, mode: str = "exter
     if version_id is None:
         active = get_active(session)
         version_id = active.id if active else None
-    convs = session.exec(select(Conversation).where(Conversation.group_id == group_id)
+    convs = session.exec(select(Conversation).where(Conversation.group_id == group_id,
+                                                    Conversation.source != "manual")  # ручные — не часть набора
                          .order_by(Conversation.conversation_id)).all()
     models: list[str] = []
     results = []

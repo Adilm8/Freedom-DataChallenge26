@@ -11,8 +11,11 @@
    "final_total": 100,
    "critical": false,
    "needs_review": false,
-   "open_appeals": 0
-  }
+   "open_appeals": 0,
+   "status": "done",
+   "appeals": 1
+  },
+  "source": "api"
  },
  {
   "id": 2,
@@ -26,8 +29,11 @@
    "final_total": 91.82,
    "critical": false,
    "needs_review": false,
-   "open_appeals": 0
-  }
+   "open_appeals": 0,
+   "status": "done",
+   "appeals": 0
+  },
+  "source": "api"
  },
  {
   "id": 3,
@@ -41,8 +47,11 @@
    "final_total": 21.33,
    "critical": true,
    "needs_review": false,
-   "open_appeals": 0
-  }
+   "open_appeals": 0,
+   "status": "done",
+   "appeals": 1
+  },
+  "source": "api"
  },
  {
   "id": 4,
@@ -56,8 +65,11 @@
    "final_total": 85.5,
    "critical": false,
    "needs_review": true,
-   "open_appeals": 1
-  }
+   "open_appeals": 1,
+   "status": "done",
+   "appeals": 1
+  },
+  "source": "api"
  },
  {
   "id": 5,
@@ -66,13 +78,16 @@
   "channel": "voice call",
   "language": "RU",
   "latest": {
-   "evaluation_id": 105,
-   "ai_total": 90.5,
-   "final_total": 90.5,
+   "evaluation_id": 106,
+   "ai_total": 85.5,
+   "final_total": 85.5,
    "critical": false,
-   "needs_review": false,
-   "open_appeals": 0
-  }
+   "needs_review": true,
+   "open_appeals": 0,
+   "status": "done",
+   "appeals": 0
+  },
+  "source": "api"
  },
  {
   "id": 6,
@@ -80,6 +95,7 @@
   "group_id": "DEV",
   "channel": "agent chat",
   "language": "RU",
-  "latest": null
+  "latest": null,
+  "source": "api"
  }
 ]

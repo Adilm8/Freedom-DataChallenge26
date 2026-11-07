@@ -110,6 +110,7 @@ class Criterion(BaseModel):
     no_when: str | None = None
     scale: list[ScaleStep] | None = None
     guidance: str | None = None
+    voice_guidance: str | None = None  # подсказка только для звонков: адаптация критерия к устной речи
     group: str | None = None
     context_refs: list[str] = Field(default_factory=list)
     guards: list[Guard] = Field(default_factory=list)

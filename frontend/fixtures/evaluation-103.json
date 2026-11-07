@@ -8,11 +8,262 @@
  "prompt_version": "p1-draft",
  "status": "done",
  "facts": {
-  "first_response_delay_sec": 32,
-  "risk_terms": [
-   "personal card",
-   "guaranteed"
-  ]
+  "has_operator": {
+   "value": true,
+   "msg_ids": [],
+   "note": null
+  },
+  "is_voice": {
+   "value": false,
+   "msg_ids": [],
+   "note": null
+  },
+  "operator_turns": {
+   "value": 3,
+   "msg_ids": [],
+   "note": null
+  },
+  "client_turns": {
+   "value": 3,
+   "msg_ids": [],
+   "note": null
+  },
+  "internal_turns": {
+   "value": 0,
+   "msg_ids": [],
+   "note": null
+  },
+  "bot_turns": {
+   "value": 2,
+   "msg_ids": [],
+   "note": null
+  },
+  "system_events": {
+   "value": [
+    {
+     "type": "escalation",
+     "msg_id": "m3",
+     "t_sec": 18.0
+    },
+    {
+     "type": "client_left",
+     "msg_id": "m9",
+     "t_sec": 133.0
+    }
+   ],
+   "msg_ids": [
+    "m3",
+    "m9"
+   ],
+   "note": null
+  },
+  "identity_verified_at": {
+   "value": null,
+   "msg_ids": [],
+   "note": "системного подтверждения личности нет"
+  },
+  "identity_verified": {
+   "value": false,
+   "msg_ids": [],
+   "note": null
+  },
+  "escalation_at": {
+   "value": {
+    "msg_id": "m3",
+    "t_sec": 18.0,
+    "timestamp": "00:18",
+    "source": "escalation_event"
+   },
+   "msg_ids": [
+    "m3"
+   ],
+   "note": "по системному событию эскалации"
+  },
+  "first_operator_msg": {
+   "value": {
+    "msg_id": "m4",
+    "t_sec": 50.0,
+    "timestamp": "00:50",
+    "text": "Hello, this is Marat from Freedom Broker. How can I help?"
+   },
+   "msg_ids": [
+    "m4"
+   ],
+   "note": null
+  },
+  "first_response_delay_sec": {
+   "value": 32.0,
+   "msg_ids": [
+    "m3",
+    "m4"
+   ],
+   "note": "от m3; порог 180 с"
+  },
+  "first_response_slow": {
+   "value": false,
+   "msg_ids": [
+    "m3",
+    "m4"
+   ],
+   "note": "порог 180 с"
+  },
+  "long_gaps": {
+   "value": [],
+   "msg_ids": [],
+   "note": "порог 120 с"
+  },
+  "long_gap_without_warning": {
+   "value": false,
+   "msg_ids": [],
+   "note": "порог 120 с"
+  },
+  "client_language": {
+   "value": "en",
+   "msg_ids": [],
+   "note": null
+  },
+  "operator_first_msg_language": {
+   "value": "en",
+   "msg_ids": [
+    "m4"
+   ],
+   "note": null
+  },
+  "first_msg_language_matches_client": {
+   "value": true,
+   "msg_ids": [
+    "m4"
+   ],
+   "note": null
+  },
+  "greeting_in_first_msg": {
+   "value": true,
+   "msg_ids": [
+    "m4"
+   ],
+   "note": "«Hello» (en)"
+  },
+  "intro_in_first_msg": {
+   "value": true,
+   "msg_ids": [
+    "m4"
+   ],
+   "note": "«this is Marat» (en)"
+  },
+  "first_greeting_msg": {
+   "value": {
+    "msg_id": "m4",
+    "t_sec": 50.0,
+    "phrase": "Hello",
+    "lang": "en"
+   },
+   "msg_ids": [
+    "m4"
+   ],
+   "note": null
+  },
+  "first_intro_msg": {
+   "value": {
+    "msg_id": "m4",
+    "t_sec": 50.0,
+    "phrase": "this is Marat",
+    "lang": "en"
+   },
+   "msg_ids": [
+    "m4"
+   ],
+   "note": null
+  },
+  "last_operator_msg": {
+   "value": {
+    "msg_id": "m7",
+    "t_sec": 105.0,
+    "timestamp": "01:45",
+    "text": "Don't worry, just keep it between us. Send me your personal number and I will message you my card details."
+   },
+   "msg_ids": [
+    "m7"
+   ],
+   "note": null
+  },
+  "farewell_in_last_msg": {
+   "value": false,
+   "msg_ids": [
+    "m7"
+   ],
+   "note": null
+  },
+  "help_offer_in_closing": {
+   "value": false,
+   "msg_ids": [
+    "m5",
+    "m7"
+   ],
+   "note": "в последних 2 репликах оператора (без первого ответа) не найдено"
+  },
+  "ended_by": {
+   "value": "client_left",
+   "msg_ids": [
+    "m9"
+   ],
+   "note": "клиент покинул чат"
+  },
+  "ended_abruptly": {
+   "value": true,
+   "msg_ids": [
+    "m9"
+   ],
+   "note": "клиент покинул чат (m9) до прощания оператора; перед уходом клиент поблагодарил или попрощался (m8)"
+  },
+  "risk_terms": {
+   "value": [
+    {
+     "category": "risk_paid_bypass",
+     "phrase": "my personal card",
+     "msg_id": "m5",
+     "lang": "en",
+     "internal": false
+    },
+    {
+     "category": "risk_paid_bypass",
+     "phrase": "I will invest it for you",
+     "msg_id": "m5",
+     "lang": "en",
+     "internal": false
+    },
+    {
+     "category": "risk_paid_bypass",
+     "phrase": "personal number",
+     "msg_id": "m7",
+     "lang": "en",
+     "internal": false
+    },
+    {
+     "category": "risk_paid_bypass",
+     "phrase": "my card",
+     "msg_id": "m7",
+     "lang": "en",
+     "internal": false
+    },
+    {
+     "category": "risk_confidential",
+     "phrase": "between us",
+     "msg_id": "m7",
+     "lang": "en",
+     "internal": false
+    }
+   ],
+   "msg_ids": [
+    "m5",
+    "m7"
+   ],
+   "note": "подсказка по словарю; решай по смыслу реплики"
+  },
+  "empathy_phrases": {
+   "value": [],
+   "msg_ids": [],
+   "note": "по словарю не найдено; вежливость и реакцию на проблему оценивай по репликам"
+  }
  },
  "overview": {
   "summary": "Клиент попросил совет по долгосрочным инвестициям. Оператор предложил перевести деньги ему лично и гарантировал доходность. Клиент отказался и ушёл.",
@@ -21,7 +272,7 @@
  },
  "params": {
   "temperature": 0,
-  "seed": null,
+  "seed": 7,
   "reuse": "none"
  },
  "ai_score": {
@@ -157,7 +408,12 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no"
+   ],
+   "appeal_history": []
   },
   {
    "key": "02",
@@ -182,7 +438,13 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no",
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "03",
@@ -207,7 +469,13 @@
    "na_reason": "Запрос не требовал идентификации.",
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no",
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "04",
@@ -235,7 +503,16 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    20,
+    15,
+    10,
+    5,
+    0,
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "05",
@@ -263,7 +540,36 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": {
+    "id": 3,
+    "evaluation_id": 103,
+    "criterion_key": "05",
+    "comment": "Оператор поздоровался вежливо и без грубости — эмпатия есть.",
+    "status": "confirmed",
+    "ai_answer_snapshot": "no",
+    "decision_answer": "no",
+    "decision_reason": "Вежливое приветствие не отменяет давления на клиента и просьбы перевести деньги лично: ответ AI верный.",
+    "created_at": "2026-11-07T15:40:00Z",
+    "decided_at": "2026-11-07T15:52:00Z"
+   },
+   "allowed_answers": [
+    "yes",
+    "no"
+   ],
+   "appeal_history": [
+    {
+     "id": 3,
+     "evaluation_id": 103,
+     "criterion_key": "05",
+     "comment": "Оператор поздоровался вежливо и без грубости — эмпатия есть.",
+     "status": "confirmed",
+     "ai_answer_snapshot": "no",
+     "decision_answer": "no",
+     "decision_reason": "Вежливое приветствие не отменяет давления на клиента и просьбы перевести деньги лично: ответ AI верный.",
+     "created_at": "2026-11-07T15:40:00Z",
+     "decided_at": "2026-11-07T15:52:00Z"
+    }
+   ]
   },
   {
    "key": "06",
@@ -291,7 +597,14 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    10,
+    7,
+    4,
+    0
+   ],
+   "appeal_history": []
   },
   {
    "key": "07",
@@ -316,7 +629,13 @@
    "na_reason": "Чат оборвался до возможности его завершить.",
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no",
+    "na"
+   ],
+   "appeal_history": []
   },
   {
    "key": "08",
@@ -349,13 +668,19 @@
    "na_reason": null,
    "issues": [],
    "reused_from_evaluation_id": null,
-   "appeal": null
+   "appeal": null,
+   "allowed_answers": [
+    "yes",
+    "no"
+   ],
+   "appeal_history": []
   }
  ],
- "tokens_in": 4010,
- "tokens_out": 890,
- "cost_usd": 0.0142,
- "latency_ms": 6900,
+ "tokens_in": 12640,
+ "tokens_out": 929,
+ "cost_usd": 0.051855,
+ "latency_ms": 3550,
  "created_at": "2026-11-07T14:20:00Z",
- "needs_review": false
+ "needs_review": false,
+ "open_appeals": 0
 }

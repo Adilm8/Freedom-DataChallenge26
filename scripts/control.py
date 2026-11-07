@@ -82,7 +82,7 @@ def main() -> None:
         else:
             payload = json.loads(raw.read_text(encoding="utf-8")) if raw.exists() else None
         expected = ingest.payload_ids(payload) if payload else None
-        pks = list(s.exec(select(Conversation.id).where(Conversation.group_id == args.group)))
+        pks = list(s.exec(select(Conversation.id).where(Conversation.group_id == args.group, Conversation.source != "manual")))
         if not pks:
             sys.exit("в группе нет диалогов")
         print(f"оценка: {len(pks)} диалогов · {args.provider} / {model} / {args.strategy} · чек-лист v{ver.id}")
@@ -101,7 +101,8 @@ def main() -> None:
         s.expire_all()
         doc = results_export.build(s, args.group, team_name=args.team, mode=args.mode, checklist_version_id=ver.id,
                                    expected_ids=expected, skipped=skipped)
-        ids = expected or list(s.exec(select(Conversation.conversation_id).where(Conversation.group_id == args.group)))
+        ids = expected or list(s.exec(select(Conversation.conversation_id).where(Conversation.group_id == args.group,
+                                                                 Conversation.source != "manual")))
         errs = results_export.validate(doc, expected_ids=ids, expected_count=args.expect_count)
 
     out = ROOT / "results" / args.target / "results.json"

@@ -91,7 +91,7 @@ def answer_strings(c: Criterion) -> list[str]:
     return [str(a) for a in c.allowed_answers()]
 
 
-def render_criterion(c: Criterion, section_title: str) -> str:
+def render_criterion(c: Criterion, section_title: str, *, voice: bool = False) -> str:
     out = [f"### Критерий {c.key} — {c.title}", f"Секция: {section_title}. Тип ответа: {TYPE_NAMES[c.type]}."]
     out.append(f"Что оценивается: {c.definition}")
     if c.yes_when:
@@ -108,6 +108,8 @@ def render_criterion(c: Criterion, section_title: str) -> str:
         out.append("N/A для этого критерия не разрешён.")
     if c.guidance:
         out.append(f"Подсказка оценщику: {c.guidance}")
+    if voice and c.voice_guidance:
+        out.append(f"Для звонка: {c.voice_guidance}")
     allowed = ", ".join(f'"{a}"' for a in answer_strings(c))
     out.append(f"Разрешённые значения answer: {allowed}.")
     for ref in c.context_refs:
@@ -176,7 +178,8 @@ def build(
         system += "\n\n" + _template("channel_voice.md")
 
     header = f"Диалог {conv.conversation_id}. Канал: {conv.channel}. Язык клиента по данным: {conv.language}."
-    criteria_block = "\n\n".join(render_criterion(c, section_titles.get(c.section, c.section)) for c in criteria)
+    criteria_block = "\n\n".join(render_criterion(c, section_titles.get(c.section, c.section), voice=conv.is_voice)
+                                 for c in criteria)
 
     advice_rule = ", `advice`" if settings.advice else ""
     overview_rule = ""

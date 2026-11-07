@@ -157,3 +157,12 @@ def test_judge_retry_does_not_lose_criteria_from_first_answer():
     msgs, schema = prompt_builder.build(CHAT, "", A_GROUP, CL.settings, SECTIONS)
     out = judge.run(p, msgs, schema, A_GROUP, CHAT, CL.settings)
     assert out.results["01"].evidence[0]["quote_ok"] and out.results["05"].answer == "yes"
+
+
+def test_voice_guidance_only_for_calls():
+    c06 = CL.criterion("06")
+    assert c06.voice_guidance and "Норматива по длительности удержания нет" in c06.voice_guidance
+    chat_user = prompt_builder.build(CHAT, "", [c06], CL.settings, SECTIONS)[0][1]["content"]
+    call = CHAT.model_copy(update={"channel": "voice call"})
+    call_user = prompt_builder.build(call, "", [c06], CL.settings, SECTIONS)[0][1]["content"]
+    assert "Для звонка:" not in chat_user and "Для звонка: Оценивай логичность" in call_user
