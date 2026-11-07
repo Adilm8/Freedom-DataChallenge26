@@ -1,0 +1,157 @@
+/* Фирменный слой Freedom Broker: оболочка с боковым меню, спокойная корпоративная типографика и плотность.
+   Подключается последним. Цвета логотипа: тёмно-зелёный #03532E (фон знака), светло-зелёный #51BA5D (акцент знака),
+   глубокий зелёный #164A34, почти чёрный тёплый #1E0E00 (текст логотипа). */
+.cqa-root {
+  --fb-green-900: #003825;
+  --fb-green-800: #03532e;
+  --fb-green-700: #164a34;
+  --fb-green-500: #51ba5d;
+  --fb-green-50: #eef6f0;
+  --cqa-side-w: 248px;
+  --cqa-bg: #f3f5f4;
+  --cqa-text: #18201b;
+  --cqa-shadow-sm: none;
+  --cqa-shadow-md: 0 2px 8px rgba(16, 32, 24, .08);
+}
+.cqa-root[data-theme="dark"] { --cqa-bg: #0e1311; }
+
+/* ---------- Оболочка ---------- */
+.cqa-shell { flex-direction: row; min-height: 100vh; }
+.cqa-workspace { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cqa-side {
+  position: sticky; top: 0; height: 100vh; width: var(--cqa-side-w); flex: none; z-index: 25;
+  display: flex; flex-direction: column; gap: 4px; padding: 18px 12px 14px;
+  background: var(--fb-green-800); color: #fff;
+}
+.cqa-root .cqa-brand { display: grid; gap: 10px; padding: 2px 8px 18px; margin-bottom: 6px; border-bottom: 1px solid rgba(255, 255, 255, .14);
+  color: #fff; text-decoration: none; font-size: inherit; font-weight: 400; letter-spacing: 0; }
+.cqa-brand__logo { display: block; width: 168px; height: auto; }
+.cqa-brand__product { font-size: 12.5px; line-height: 1.35; color: rgba(255, 255, 255, .78); font-weight: 500; }
+.cqa-root .cqa-nav { display: grid; gap: 2px; margin: 6px 0 0; overflow: visible; }
+.cqa-root .cqa-nav__link { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 6px;
+  color: rgba(255, 255, 255, .86); font-size: 14px; font-weight: 500; }
+.cqa-root .cqa-nav__link:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+.cqa-root .cqa-nav__link[aria-current="page"] { background: rgba(255, 255, 255, .14); color: #fff; font-weight: 600; box-shadow: inset 3px 0 0 var(--fb-green-500); }
+.cqa-nav__icon { flex: none; opacity: .9; }
+.cqa-nav__label { flex: 1; min-width: 0; }
+.cqa-root .cqa-nav__count { margin-left: auto; background: rgba(255, 255, 255, .18); color: #fff; border-radius: 10px; min-width: 22px; height: 20px;
+  padding: 0 6px; font-size: 11.5px; font-weight: 700; display: inline-grid; place-items: center; }
+.cqa-root .cqa-nav__link[data-nav="review"] .cqa-nav__count { background: #f1c560; color: #2a1d00; }
+.cqa-side__foot { margin-top: auto; display: grid; gap: 12px; padding: 14px 8px 2px; border-top: 1px solid rgba(255, 255, 255, .14); }
+.cqa-side__field { display: grid; gap: 6px; }
+.cqa-side__label { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: rgba(255, 255, 255, .62); }
+.cqa-root .cqa-side__select { width: 100%; background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .22); color: #fff; }
+.cqa-root .cqa-side__select option { color: #18201b; background: #fff; }
+.cqa-root .cqa-side__seg { display: flex; background: rgba(0, 0, 0, .18); }
+.cqa-root .cqa-side__seg .cqa-seg__btn { flex: 1; color: rgba(255, 255, 255, .8); }
+.cqa-root .cqa-side__seg .cqa-seg__btn[aria-pressed="true"] { background: #fff; color: var(--fb-green-800); }
+
+.cqa-root .cqa-header { position: sticky; top: 0; z-index: 20; height: 56px; padding: 0 24px; gap: 16px;
+  background: var(--cqa-surface); border-bottom: 1px solid var(--cqa-border); box-shadow: none; backdrop-filter: none; }
+.cqa-root .cqa-search-btn { flex: 0 1 460px; min-width: 0; height: 36px; border-radius: 6px; background: var(--cqa-surface-2); }
+.cqa-root .cqa-search-btn__text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cqa-root .cqa-search-btn:hover { box-shadow: none; border-color: var(--cqa-border-strong); }
+.cqa-root .cqa-header__tools { gap: 16px; }
+
+/* ---------- Типографика и поверхности ---------- */
+.cqa-root .cqa-page { padding: 28px 32px; max-width: 1480px; }
+.cqa-root .cqa-h1 { font-size: 24px; font-weight: 600; letter-spacing: -.01em; }
+.cqa-root .cqa-panel { border-radius: 8px; box-shadow: none; }
+.cqa-root .cqa-badge { border-radius: 4px; font-weight: 600; }
+.cqa-root .cqa-btn { border-radius: 6px; font-weight: 600; }
+.cqa-root .cqa-btn--primary { background: var(--fb-green-800); border-color: var(--fb-green-800); }
+.cqa-root .cqa-btn--primary:hover:not(:disabled) { background: var(--fb-green-700); border-color: var(--fb-green-700); }
+.cqa-root[data-theme="dark"] .cqa-btn--primary { background: #2e8b4a; border-color: #2e8b4a; }
+.cqa-root .cqa-kpi { border-radius: 8px; box-shadow: none; }
+.cqa-root .cqa-table th { font-weight: 600; letter-spacing: .02em; }
+.cqa-root .cqa-tour__spot { border-radius: 8px; }
+
+/* ---------- Узкие экраны: меню становится верхней полосой ---------- */
+@media (max-width: 1100px) {
+  .cqa-root { --cqa-side-w: 216px; }
+  .cqa-root .cqa-page { padding: 24px; }
+}
+@media (max-width: 900px) {
+  .cqa-shell { flex-direction: column; }
+  .cqa-side { position: static; height: auto; width: auto; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; }
+  .cqa-root .cqa-brand { border: 0; padding: 0 8px 0 0; margin: 0; gap: 0; }
+  .cqa-brand__logo { width: 120px; }
+  .cqa-brand__product { display: none; }
+  .cqa-root .cqa-nav { order: 3; width: 100%; display: flex; overflow-x: auto; scrollbar-width: none; margin: 0; }
+  .cqa-root .cqa-nav__link { padding: 8px 10px; white-space: nowrap; }
+  .cqa-side__foot { margin: 0 0 0 auto; border: 0; padding: 0; display: flex; gap: 8px; align-items: center; }
+  .cqa-side__label { display: none; }
+  .cqa-root .cqa-side__select { width: auto; }
+  .cqa-root .cqa-header { position: static; height: auto; padding: 8px 12px; flex-wrap: nowrap; }
+}
+@media (max-width: 560px) {
+  .cqa-side__foot .cqa-side__field:last-child { display: none; }
+  .cqa-root .cqa-page { padding: 16px 12px; }
+  .cqa-root .cqa-header .cqa-toggle { display: none; }
+}
+
+/* ---------- Сводка оценки в карточке (кольцо + баллы по критериям) ---------- */
+.cqa-sum__title { margin: 0 0 14px; font-size: 18px; font-weight: 600; }
+.cqa-sum__grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 24px; align-items: start; }
+.cqa-sum__score { display: grid; justify-items: center; gap: 10px; }
+.cqa-ringbox { position: relative; display: grid; place-items: center; }
+.cqa-ringbox > .cqa-ring { position: absolute; inset: 0; }
+.cqa-ringbox__val { position: relative; display: grid; justify-items: center; line-height: 1.05; }
+.cqa-ringbox__val b { font-size: 30px; font-weight: 700; letter-spacing: -.02em; color: var(--cqa-text); font-variant-numeric: tabular-nums; }
+.cqa-ringbox__val span { font-size: 12px; color: var(--cqa-faint); margin-top: 2px; }
+.cqa-sum__note { display: grid; justify-items: center; gap: 2px; font-size: 12px; color: var(--cqa-muted); text-align: center; }
+.cqa-sumrows { display: grid; }
+.cqa-sumrow { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 4px;
+  border: 0; border-bottom: 1px solid var(--cqa-border); background: none; text-align: left; cursor: pointer; font: inherit; color: var(--cqa-text); }
+.cqa-sumrow:last-child { border-bottom: 0; }
+.cqa-sumrow:hover { background: var(--cqa-surface-2); }
+.cqa-sumrow__mark { width: 22px; height: 22px; border-radius: 4px; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+.cqa-sumrow--ok .cqa-sumrow__mark { background: var(--cqa-yes-bg); color: var(--cqa-yes); }
+.cqa-sumrow--part .cqa-sumrow__mark { background: var(--cqa-warn-bg); color: var(--cqa-warn); }
+.cqa-sumrow--bad .cqa-sumrow__mark { background: var(--cqa-no-bg); color: var(--cqa-no); }
+.cqa-sumrow--na .cqa-sumrow__mark { background: var(--cqa-na-bg); color: var(--cqa-na); }
+.cqa-sumrow__title { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cqa-sumrow__pts { font-size: 13px; color: var(--cqa-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cqa-sumrow__pts b { color: var(--cqa-text); font-size: 14px; }
+.cqa-sumrow--bad .cqa-sumrow__pts b { color: var(--cqa-no); }
+.cqa-sumrow--part .cqa-sumrow__pts b { color: var(--cqa-warn); }
+.cqa-root .cqa-sum__ov { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--cqa-border); }
+@media (max-width: 560px) { .cqa-sum__grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Разгрузка: меньше цвета и пояснительного текста ---------- */
+.cqa-root .cqa-vpanel__sub { display: none; }
+.cqa-root .cqa-kpi--flag, .cqa-root .cqa-kpi { border-left-width: 1px; }
+.cqa-root .cqa-kpi__hero { color: var(--cqa-text); }
+.cqa-root .cqa-code { background: var(--cqa-surface-2); color: var(--cqa-muted); border-color: var(--cqa-border); }
+.cqa-root {
+  --cqa-viz-1: #2e7d4f; --cqa-viz-2: #c9772a; --cqa-viz-3: #7a9a86;
+  --cqa-step: #2d5f8a; --cqa-step-bg: #e8f0f6; --cqa-step-bd: #c4d6e6;
+}
+.cqa-root[data-theme="dark"] { --cqa-viz-1: #4fae6b; --cqa-viz-2: #d98a3a; --cqa-viz-3: #7fa38d; }
+.cqa-root .cqa-why__item { background: var(--cqa-surface); }
+.cqa-root .cqa-why__item--flag { background: var(--cqa-surface); }
+.cqa-shell { background: linear-gradient(to right, var(--fb-green-800) var(--cqa-side-w), transparent var(--cqa-side-w)); }
+.cqa-root .cqa-kpi--hero .cqa-ringbox__val b { font-size: 24px; }
+.cqa-root .cqa-insight { border-left-width: 1px; }
+@media (max-width: 900px) { .cqa-shell { background: none; } }
+
+/* ---------- Выпадающее меню (экспорт) ---------- */
+.cqa-menu { position: relative; }
+.cqa-menu > summary { list-style: none; }
+.cqa-menu > summary::-webkit-details-marker { display: none; }
+.cqa-menu__caret { font-size: 11px; color: var(--cqa-faint); }
+.cqa-menu__list { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; min-width: 240px; display: grid; padding: 4px;
+  background: var(--cqa-surface); border: 1px solid var(--cqa-border); border-radius: 6px; box-shadow: var(--cqa-shadow-md); }
+.cqa-menu__list .cqa-btn { justify-content: flex-start; border: 0; background: none; font-weight: 500; padding: 8px 10px; }
+.cqa-menu__list .cqa-btn:hover:not(:disabled) { background: var(--cqa-surface-2); }
+.cqa-root .cqa-export { display: flex; align-items: center; gap: 8px; }
+
+/* Список: язык и канал в одной ячейке, тема ужимается раньше колонок справа. */
+.cqa-root .cqa-list__lc { display: inline-flex; gap: 6px; align-items: center; }
+.cqa-root .cqa-list__topictext { max-width: 220px; }
+@media (max-width: 1500px) {
+  .cqa-root .cqa-list__topictext { max-width: 150px; }
+}
+@media (max-width: 1280px) {
+  .cqa-root .cqa-list-table .cqa-list__topic { display: none; }
+}

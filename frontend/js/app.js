@@ -55,29 +55,52 @@ function parseHash() {
   return { name: seg[0] || 'dashboard', arg: seg[1], q };
 }
 
+// Иконки меню: тонкие линейные SVG одного стиля (как в корпоративных системах), без эмодзи.
+const NAV_ICON = {
+  dashboard: ['M4 20V10', 'M10 20V4', 'M16 20v-7', 'M22 20H2'],
+  conversations: ['M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z'],
+  review: ['M12 3l9 16H3z', 'M12 10v4', 'M12 17h.01'],
+  appeals: ['M12 3v18', 'M5 7h14', 'M5 7l-3 7a3.5 3.5 0 0 0 6 0z', 'M19 7l-3 7a3.5 3.5 0 0 0 6 0z', 'M8 21h8'],
+  checklist: ['M9 6h11', 'M9 12h11', 'M9 18h11', 'M4 5.5l1 1 2-2', 'M4 11.5l1 1 2-2', 'M4 17.5l1 1 2-2'],
+};
+function navIcon(id) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  for (const [k, v] of Object.entries({ viewBox: '0 0 24 24', width: '18', height: '18', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true', class: 'cqa-nav__icon' })) svg.setAttribute(k, v);
+  for (const d of NAV_ICON[id] || []) { const el = document.createElementNS('http://www.w3.org/2000/svg', 'path'); el.setAttribute('d', d); svg.append(el); }
+  return svg;
+}
+
+// Оболочка: слева — фирменное меню (логотип, разделы, группа данных, роль), сверху — поиск и служебные переключатели.
 function buildHeader() {
   const nav = h('nav', { class: 'cqa-nav', 'aria-label': 'Разделы' },
-    NAV.map(([id, label]) => h('a', { class: 'cqa-nav__link', href: `#/${id}`, dataset: { nav: id } }, label,
+    NAV.map(([id, label]) => h('a', { class: 'cqa-nav__link', href: `#/${id}`, dataset: { nav: id } }, navIcon(id), h('span', { class: 'cqa-nav__label' }, label),
       COUNTED[id] ? h('span', { class: 'cqa-nav__count', hidden: true, title: COUNTED[id] }) : null)));
   // Группы — из реальных данных (loadGroups); до ответа сервера — только текущая.
-  groupSel = h('select', { class: 'cqa-select', 'aria-label': 'Группа данных',
+  groupSel = h('select', { class: 'cqa-select cqa-side__select', 'aria-label': 'Группа данных',
     onchange: (e) => { settings.group = e.target.value; store.set('group', settings.group); syncHeader(); route(); refreshCounts(); } },
     h('option', { value: settings.group, selected: true }, settings.group));
-  const modeSeg = h('div', { class: 'cqa-seg', role: 'group', 'aria-label': 'Режим' },
+  const modeSeg = h('div', { class: 'cqa-seg cqa-side__seg', role: 'group', 'aria-label': 'Роль' },
     [['analyst', 'Аналитик'], ['reviewer', 'Проверяющий']].map(([id, label]) =>
       h('button', { type: 'button', class: 'cqa-seg__btn', dataset: { mode: id }, 'aria-pressed': String(settings.mode === id),
         onclick: () => { settings.mode = id; store.set('mode', id); syncHeader(); route(); } }, label)));
-  const demo = h('label', { class: 'cqa-toggle', title: 'Крупнее шрифт и бейджи для проектора' },
-    h('input', { type: 'checkbox', checked: settings.demo, onchange: (e) => { settings.demo = e.target.checked; store.set('demo', settings.demo ? '1' : '0'); syncHeader(); } }), 'Демо');
+  const demo = h('label', { class: 'cqa-toggle', title: 'Крупнее шрифт для проектора' },
+    h('input', { type: 'checkbox', checked: settings.demo, onchange: (e) => { settings.demo = e.target.checked; store.set('demo', settings.demo ? '1' : '0'); syncHeader(); } }), 'Крупный шрифт');
   const themeBtn = h('button', { type: 'button', class: 'cqa-btn cqa-btn--ghost cqa-btn--sm cqa-themebtn', id: 'cqa-theme',
     onclick: () => { settings.theme = isDark() ? 'light' : 'dark'; store.set('theme', settings.theme); syncHeader(); } });
-  const searchBtn = h('button', { type: 'button', class: 'cqa-search-btn', title: 'Палитра команд: диалог, экран или действие', onclick: () => openPalette() },
-    h('span', { class: 'cqa-search-btn__ico', 'aria-hidden': 'true' }, '⌕'), h('span', { class: 'cqa-search-btn__text' }, 'Поиск'),
+  const searchBtn = h('button', { type: 'button', class: 'cqa-search-btn', title: 'Поиск диалога, раздела или действия', onclick: () => openPalette() },
+    h('span', { class: 'cqa-search-btn__ico', 'aria-hidden': 'true' }, '⌕'), h('span', { class: 'cqa-search-btn__text' }, 'Поиск диалога, раздела или действия'),
     h('kbd', null, /Mac|iPhone|iPad/.test(navigator.platform || '') ? '⌘K' : 'Ctrl K'));
   healthEl = h('span', { class: 'cqa-health' }, h('span', { class: 'cqa-health__dot' }), h('span', { class: 'cqa-health__text' }, 'проверка…'));
-  return h('header', { class: 'cqa-header' },
-    h('a', { class: 'cqa-brand', href: '#/dashboard' }, h('span', { class: 'cqa-brand__mark' }, 'C'), 'CQA', h('small', null, '· Freedom Broker')),
-    nav, h('div', { class: 'cqa-header__tools' }, searchBtn, healthEl, groupSel, modeSeg, demo, themeBtn));
+  const side = h('aside', { class: 'cqa-side', 'aria-label': 'Навигация' },
+    h('a', { class: 'cqa-brand', href: '#/dashboard', 'aria-label': 'Freedom Broker · Контроль качества' },
+      h('img', { class: 'cqa-brand__logo', src: 'img/freedom-broker-white.png', alt: 'Freedom Broker', width: 176, height: 55 }),
+      h('span', { class: 'cqa-brand__product' }, 'Контроль качества обслуживания')),
+    nav,
+    h('div', { class: 'cqa-side__foot' },
+      h('label', { class: 'cqa-side__field' }, h('span', { class: 'cqa-side__label' }, 'Группа данных'), groupSel),
+      h('div', { class: 'cqa-side__field' }, h('span', { class: 'cqa-side__label' }, 'Роль'), modeSeg)));
+  const top = h('header', { class: 'cqa-header' }, searchBtn, h('div', { class: 'cqa-header__tools' }, healthEl, demo, themeBtn));
+  return { side, top };
 }
 
 // Иконки темы — inline SVG (юникод ☾/☀ в разных шрифтах обрезается и прыгает по базовой линии).
@@ -204,13 +227,10 @@ function onAppEvent(e) {
 }
 
 function init() {
-  appEl.append(buildHeader());
+  const { side, top } = buildHeader();
   mainEl = h('main', { class: 'cqa-main', id: 'cqa-main' });
-  const shell = h('div', { class: 'cqa-shell' });
-  const header = appEl.querySelector('.cqa-header');
-  shell.append(header, mainEl);
-  appEl.append(shell);
-  appEl.style.setProperty('--cqa-header-h', '60px');
+  appEl.append(h('div', { class: 'cqa-shell' }, side, h('div', { class: 'cqa-workspace' }, top, mainEl)));
+  appEl.style.setProperty('--cqa-header-h', '56px');
   for (const t of ['cqa:navigate', 'cqa:location', 'cqa:run-request', 'cqa:import-request', 'cqa:counts-changed', 'cqa:groups-changed', 'cqa:mode']) appEl.addEventListener(t, onAppEvent);
   syncHeader();
   window.addEventListener('hashchange', () => { route(); refreshCounts(); });
