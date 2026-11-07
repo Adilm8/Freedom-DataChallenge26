@@ -17,6 +17,18 @@ APPEAL_FILTERS = ("open", "any", "none")
 MAX_OFFSET_FIX_SEC = 3600
 
 
+def _strip(score: dict | None) -> list[dict]:
+    """Полоска критериев для списка: код, финальный ответ, доля балла (None — N/A, флаг или нет ответа)."""
+    out = []
+    for key, c in ((score or {}).get("criteria") or {}).items():
+        if not isinstance(c, dict):
+            continue
+        pts, w = c.get("points"), c.get("weight")
+        pct = round(100 * pts / w) if pts is not None and w else None
+        out.append({"key": key, "answer": c.get("answer"), "pct": pct})
+    return out
+
+
 def _latest(ev: Evaluation | None, appeals: tuple[int, int] = (0, 0)) -> dict | None:
     if not ev:
         return None
@@ -24,6 +36,7 @@ def _latest(ev: Evaluation | None, appeals: tuple[int, int] = (0, 0)) -> dict | 
         "evaluation_id": ev.id, "ai_total": ev.ai_total, "final_total": ev.final_total,
         "critical": ev.critical, "needs_review": ev.needs_review, "status": ev.status,
         "open_appeals": appeals[0], "appeals": appeals[1],
+        "criteria": _strip(ev.final_score),
     }
 
 

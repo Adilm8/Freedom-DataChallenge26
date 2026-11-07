@@ -13,7 +13,17 @@
    "needs_review": false,
    "open_appeals": 0,
    "status": "done",
-   "appeals": 1
+   "appeals": 1,
+   "criteria": [
+    {"key": "01", "answer": "yes", "pct": 100},
+    {"key": "02", "answer": "yes", "pct": 100},
+    {"key": "03", "answer": "yes", "pct": 100},
+    {"key": "04", "answer": 20, "pct": 100},
+    {"key": "05", "answer": "yes", "pct": 100},
+    {"key": "06", "answer": 10, "pct": 100},
+    {"key": "07", "answer": "yes", "pct": 100},
+    {"key": "08", "answer": "no", "pct": null}
+   ]
   },
   "source": "api"
  },
@@ -31,7 +41,17 @@
    "needs_review": false,
    "open_appeals": 0,
    "status": "done",
-   "appeals": 0
+   "appeals": 0,
+   "criteria": [
+    {"key": "01", "answer": "yes", "pct": 100},
+    {"key": "02", "answer": "yes", "pct": 100},
+    {"key": "03", "answer": "na", "pct": null},
+    {"key": "04", "answer": "na", "pct": null},
+    {"key": "05", "answer": "yes", "pct": 100},
+    {"key": "06", "answer": 7, "pct": 70},
+    {"key": "07", "answer": "na", "pct": null},
+    {"key": "08", "answer": "no", "pct": null}
+   ]
   },
   "source": "api"
  },
@@ -49,7 +69,17 @@
    "needs_review": false,
    "open_appeals": 0,
    "status": "done",
-   "appeals": 1
+   "appeals": 1,
+   "criteria": [
+    {"key": "01", "answer": "yes", "pct": 100},
+    {"key": "02", "answer": "no", "pct": 0},
+    {"key": "03", "answer": "na", "pct": null},
+    {"key": "04", "answer": 0, "pct": 0},
+    {"key": "05", "answer": "no", "pct": 0},
+    {"key": "06", "answer": 4, "pct": 40},
+    {"key": "07", "answer": "na", "pct": null},
+    {"key": "08", "answer": "yes", "pct": null}
+   ]
   },
   "source": "api"
  },
@@ -67,7 +97,17 @@
    "needs_review": true,
    "open_appeals": 1,
    "status": "done",
-   "appeals": 1
+   "appeals": 1,
+   "criteria": [
+    {"key": "01", "answer": "yes", "pct": 100},
+    {"key": "02", "answer": "yes", "pct": 100},
+    {"key": "03", "answer": "yes", "pct": 100},
+    {"key": "04", "answer": 15, "pct": 75},
+    {"key": "05", "answer": "yes", "pct": 100},
+    {"key": "06", "answer": 7, "pct": 70},
+    {"key": "07", "answer": "no", "pct": 0},
+    {"key": "08", "answer": "no", "pct": null}
+   ]
   },
   "source": "api"
  },
@@ -85,7 +125,17 @@
    "needs_review": true,
    "open_appeals": 0,
    "status": "done",
-   "appeals": 0
+   "appeals": 0,
+   "criteria": [
+    {"key": "01", "answer": "yes", "pct": 100},
+    {"key": "02", "answer": "yes", "pct": 100},
+    {"key": "03", "answer": "yes", "pct": 100},
+    {"key": "04", "answer": 10, "pct": 50},
+    {"key": "05", "answer": "yes", "pct": 100},
+    {"key": "06", "answer": 7, "pct": 70},
+    {"key": "07", "answer": "yes", "pct": 100},
+    {"key": "08", "answer": "no", "pct": null}
+   ]
   },
   "source": "api"
  },
