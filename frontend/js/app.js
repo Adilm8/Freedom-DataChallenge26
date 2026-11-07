@@ -57,6 +57,8 @@ function parseHash() {
   return { name: seg[0] || 'dashboard', arg: seg[1], q };
 }
 
+const MODE_HINT = { analyst: 'Смотрит оценки и подаёт апелляции', reviewer: 'Решает апелляции и меняет оценки' };
+
 function navIcon(id) { return icon(id, 20, 'cqa-nav__icon'); }
 
 // Оболочка: слева — фирменное меню (логотип, разделы, группа данных, роль), сверху — поиск и служебные переключатели.
@@ -65,9 +67,11 @@ function buildHeader() {
     NAV.map(([id, label]) => h('a', { class: 'cqa-nav__link', href: `#/${id}`, dataset: { nav: id } }, navIcon(id), h('span', { class: 'cqa-nav__label' }, label),
       COUNTED[id] ? h('span', { class: 'cqa-nav__count', hidden: true, title: COUNTED[id] }) : null)));
   // Группы — из реальных данных (loadGroups); до ответа сервера — только текущая.
-  groupSel = h('select', { class: 'cqa-select cqa-side__select', 'aria-label': 'Группа данных',
+  groupSel = h('select', { class: 'cqa-select cqa-side__select', 'aria-label': 'Набор диалогов',
     onchange: (e) => { settings.group = e.target.value; store.set('group', settings.group); syncHeader(); route(); refreshCounts(); } },
     h('option', { value: settings.group, selected: true }, settings.group));
+  // Роль — без входа в систему (по ТЗ авторизация не нужна): аналитик подаёт апелляцию, проверяющий её решает.
+  // Подсказка под переключателем говорит, что умеет выбранная роль.
   const modeSeg = h('div', { class: 'cqa-seg cqa-side__seg', role: 'group', 'aria-label': 'Роль' },
     [['analyst', 'Аналитик'], ['reviewer', 'Проверяющий']].map(([id, label]) =>
       h('button', { type: 'button', class: 'cqa-seg__btn', dataset: { mode: id }, 'aria-pressed': String(settings.mode === id),
@@ -91,8 +95,10 @@ function buildHeader() {
       h('span', { class: 'cqa-brand__product' }, 'Контроль качества обслуживания')),
     nav,
     h('div', { class: 'cqa-side__foot' },
-      h('label', { class: 'cqa-side__field' }, h('span', { class: 'cqa-side__label' }, 'Группа данных'), groupSel),
-      h('div', { class: 'cqa-side__field' }, h('span', { class: 'cqa-side__label' }, 'Роль'), modeSeg),
+      h('label', { class: 'cqa-side__field', title: 'DEV — выданные 65 диалогов; контрольный набор появится здесь после импорта' },
+        h('span', { class: 'cqa-side__label' }, 'Набор диалогов'), groupSel),
+      h('div', { class: 'cqa-side__field' }, h('span', { class: 'cqa-side__label' }, 'Роль'), modeSeg,
+        h('span', { class: 'cqa-side__hint', id: 'cqa-mode-hint' }, MODE_HINT[settings.mode] || MODE_HINT.analyst)),
       h('div', { class: 'cqa-side__field' }, h('span', { class: 'cqa-side__label' }, 'Язык интерфейса'), langSeg)));
   const top = h('header', { class: 'cqa-header' }, searchBtn, h('div', { class: 'cqa-header__tools' }, healthEl, demo, themeBtn));
   return { side, top };
@@ -107,6 +113,8 @@ function syncHeader() {
   const tb = appEl.querySelector('#cqa-theme');
   if (tb) { tb.replaceChildren(themeIcon(isDark())); tb.title = isDark() ? 'Светлая тема' : 'Тёмная тема'; tb.setAttribute('aria-label', tb.title); }
   appEl.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === settings.mode)));
+  const hint = appEl.querySelector('#cqa-mode-hint');
+  if (hint) hint.textContent = MODE_HINT[settings.mode] || MODE_HINT.analyst;
 }
 function markNav(name) {
   const nav = (ROUTES[name] || {}).nav || name;
@@ -138,7 +146,7 @@ async function loadGroups(select) {
   else if (groups.length && !groups.some((g) => g.group_id === settings.group)) settings.group = (groups.find((g) => g.default) || groups[0]).group_id;
   if (!groups.some((g) => g.group_id === settings.group)) groups.push({ group_id: settings.group, count: 0 });
   store.set('group', settings.group);
-  groupSel.replaceChildren(...groups.map((g) => h('option', { value: g.group_id, selected: g.group_id === settings.group, title: `диалогов: ${g.count}` }, g.group_id)));
+  groupSel.replaceChildren(...groups.map((g) => h('option', { value: g.group_id, selected: g.group_id === settings.group, title: `диалогов: ${g.count}` }, `${g.group_id} · ${g.count}`)));
   groupSel.title = groups.map((g) => `${g.group_id}: ${g.count}`).join(' · ');
   syncHeader();
   return settings.group !== before;
