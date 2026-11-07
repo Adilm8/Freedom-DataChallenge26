@@ -80,7 +80,7 @@ export function mount(el, params = {}) {
   const host = () => el.closest('.cqa-root') || el;
   const st = {
     loading: true, error: null, versions: [], cur: null, draft: null, note: '', importedFrom: null, importError: null,
-    serverErrors: [], saveError: null, saving: false, saved: null, tab: 'criteria', flash: null, cmpId: null,
+    serverErrors: [], saveError: null, saving: false, saved: null, tab: 'criteria', flash: null, cmpId: null, tech: false,
     bodies: new Map(), rows: null,
   };
   let alive = true, editor = null, factNames = [];
@@ -426,18 +426,21 @@ export function mount(el, params = {}) {
     const sections = d.sections || [];
     const known = new Set(sections.map((s) => s.id));
     const orphans = d.criteria.filter((c) => !known.has(c.section));
-    const panel = h('div', { class: 'cqa-panel cqa-chk-list' },
+    // «Технические поля» (код в файле сдачи, группа вызова, id секций) нужны команде, а не тому, кто правит критерии: по умолчанию скрыты.
+    const panel = h('div', { class: `cqa-panel cqa-chk-list ${st.tech ? 'cqa-chk-list--tech' : ''}` },
       h('div', { class: 'cqa-panel__head cqa-chk-list__head' },
         h('div', null, h('h2', { class: 'cqa-h2' }, 'Критерии по секциям'),
           h('div', { class: 'cqa-chk-hint' }, h('b', null, 'Заменить'), ' — новый критерий на месте старого: та же секция, вес и код в файле сдачи; старый выключится и останется в истории.')),
+        h('label', { class: 'cqa-toggle cqa-chk-techtoggle', title: 'Код в файле сдачи, группа вызова модели, id секций' },
+          h('input', { type: 'checkbox', id: 'cqa-chk-tech', checked: st.tech, onchange: (e) => { st.tech = e.target.checked; panel.classList.toggle('cqa-chk-list--tech', st.tech); } }), 'Технические поля'),
         h('button', { type: 'button', class: 'cqa-btn', id: 'cqa-chk-add', onclick: () => openEditor('new', -1, { section: sections[0]?.id }) }, '+ Критерий')),
       h('div', { class: 'cqa-chk-row cqa-chk-row--head', 'aria-hidden': 'true' },
         h('span', null), h('span', null, 'Код'), h('span', null, 'Критерий'), h('span', null, 'Тип'), h('span', { class: 'cqa-chk-num' }, 'Вес'),
-        h('span', null, 'N/A'), h('span', null, 'В файле сдачи'), h('span', null, 'Группа'), h('span', null, 'Вкл.'), h('span', null)));
+        h('span', null, 'N/A'), h('span', { class: 'cqa-chk-tech' }, 'В файле сдачи'), h('span', { class: 'cqa-chk-tech' }, 'Группа'), h('span', null, 'Вкл.'), h('span', null)));
     const secBlock = (title, id, list) => {
       const sum = list.filter((c) => c.enabled !== false && c.type !== 'flag').reduce((s, c) => s + (Number(c.weight) || 0), 0);
       return h('section', { class: 'cqa-chk-sec', dataset: { section: id } },
-        h('div', { class: 'cqa-chk-sec__head' }, h('span', { class: 'cqa-chk-sec__title' }, title), h('span', { class: 'cqa-chk-sec__id cqa-mono' }, id),
+        h('div', { class: 'cqa-chk-sec__head' }, h('span', { class: 'cqa-chk-sec__title' }, title), h('span', { class: 'cqa-chk-sec__id cqa-chk-tech cqa-mono' }, id),
           h('span', { class: 'cqa-chk-sec__sum' }, list.length ? `Σ вес ${fmtNum(sum)}` : 'пусто')),
         list.map((c) => critRow(c, d.criteria.indexOf(c), base, [...(clientErr.get(d.criteria.indexOf(c)) || []), ...serverErr(c)])),
         known.has(id) ? h('button', { type: 'button', class: 'cqa-linkbtn cqa-chk-sec__add', onclick: () => openEditor('new', -1, { section: id }) }, `+ Добавить критерий в «${title}»`) : null);
@@ -472,8 +475,8 @@ export function mount(el, params = {}) {
     cell('type', 'Тип', typeBadge(c)),
     cell('weight', 'Вес', c.type === 'flag' ? h('span', { class: 'cqa-faint', title: 'Флаг без баллов' }, '—') : h('b', { class: 'cqa-chk-num' }, fmtNum(Number(c.weight)))),
     cell('na', 'N/A', n.na_allowed && c.type !== 'flag' ? h('span', { class: 'cqa-chk-na', title: n.na_when || '' }, 'да') : h('span', { class: 'cqa-faint' }, '—')),
-    cell('export', 'В файле', n.export_id ? h('span', { class: 'cqa-chip cqa-mono' }, n.export_id) : h('span', { class: 'cqa-faint' }, '—')),
-    cell('group', 'Группа', n.group ? h('span', { class: 'cqa-chip cqa-mono', title: 'Критерии одной группы оцениваются одним вызовом' }, n.group) : h('span', { class: 'cqa-faint', title: 'Свой вызов' }, '—')),
+    cell('export cqa-chk-tech', 'В файле', n.export_id ? h('span', { class: 'cqa-chip cqa-mono' }, n.export_id) : h('span', { class: 'cqa-faint' }, '—')),
+    cell('group cqa-chk-tech', 'Группа', n.group ? h('span', { class: 'cqa-chip cqa-mono', title: 'Критерии одной группы оцениваются одним вызовом' }, n.group) : h('span', { class: 'cqa-faint', title: 'Свой вызов' }, '—')),
     cell('on', null, h('label', { class: 'cqa-chk-switch', title: n.enabled ? 'Включён: участвует в оценке' : 'Выключен: не оценивается' },
       h('input', { type: 'checkbox', checked: n.enabled, 'aria-label': `Включён ${c.key}`,
         onchange: (e) => { const on = e.target.checked; commit((d) => { d.criteria[idx] = { ...d.criteria[idx], enabled: on }; }); } }),

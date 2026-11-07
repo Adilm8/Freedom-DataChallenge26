@@ -194,7 +194,7 @@ export function mount(el, params = {}) {
       ['Стратегия', (s) => STRATEGY_LABEL[s.strategy] || s.strategy || '—', diff.has('strategy') ? 'strong' : null],
       ['Версия промпта', (s) => h('span', { class: 'cqa-mono' }, s.prompt_version || '—'), diff.has('prompt_version') ? 'strong' : null],
       ['Версия чек-листа', (s) => `v${s.checklist_version_id}`, diff.has('checklist_version_id') ? 'strong' : null],
-      ['temperature · seed', params, params(A) !== params(B) ? 'soft' : null],
+      ['Параметры генерации', params, params(A) !== params(B) ? 'soft' : null],
       ['Прошлые ответы', reuse, A.reuse !== B.reuse ? 'soft' : null],
       ['Статус', status, A.status !== B.status ? 'soft' : null],
       ['Стоимость', (s) => fmtMoney(s.cost_usd), null],

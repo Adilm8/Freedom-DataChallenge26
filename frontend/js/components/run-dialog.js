@@ -122,7 +122,11 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
       onchange: (e) => { st.provider = e.target.value; st.model = modelInfo(st.provider)?.model || ''; st.error = null; renderForm(); } },
     meta.models.map((m) => h('option', { value: m.provider, selected: m.provider === st.provider, disabled: !m.model },
       `${PROVIDER[m.provider] || m.provider}${m.paid ? ' · платный' : m.paid === false ? ' · бесплатный' : ''}${m.model ? '' : ' · модель не задана'}`)));
-    const modelIn = h('input', { class: 'cqa-input cqa-mono', id: 'cqa-run-model', 'aria-label': 'Модель', value: st.model, spellcheck: 'false', autocomplete: 'off',
+    // Подсказки модели: из настроек сервера (по всем провайдерам) и из прошлой оценки — без выдуманных имён.
+    const known = [...new Set([modelInfo(st.provider)?.model, opts.preset?.provider === st.provider ? opts.preset?.model : null,
+      ...(meta.models || []).map((m) => m.model)].filter(Boolean))];
+    const modelList = h('datalist', { id: 'cqa-run-models' }, known.map((m) => h('option', { value: m })));
+    const modelIn = h('input', { class: 'cqa-input cqa-mono', id: 'cqa-run-model', 'aria-label': 'Модель', value: st.model, spellcheck: 'false', autocomplete: 'off', list: 'cqa-run-models',
       placeholder: 'например, anthropic/claude-sonnet-4.5', oninput: (e) => { st.model = e.target.value.trim(); syncSubmit(); scheduleEstimate(!st.model || allVoiceBlocked); } });
     const conf = info?.model;
     const pre = opts.preset;
@@ -184,7 +188,7 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
       scope,
       h('div', { class: 'cqa-field-row' },
         field('Провайдер', provSel),
-        field('Модель', modelIn, modelHint.length ? h('span', { class: 'cqa-field__hints' }, modelHint) : null)),
+        field('Модель', [modelIn, modelList], modelHint.length ? h('span', { class: 'cqa-field__hints' }, modelHint) : null)),
       versionField,
       activateBox,
       field('Стратегия', strat, STRATEGY[st.strategy]?.[1]),
@@ -344,6 +348,9 @@ function runPanel(box, opts, { onClose, onMinimize, inline }) {
       h('div', { class: 'cqa-modal__foot' },
         fin ? null : h('span', { class: 'cqa-faint cqa-run__note' }, 'Окно можно свернуть: прогон идёт на сервере.'),
         !fin && !inline ? h('button', { type: 'button', class: 'cqa-btn', onclick: onMinimize }, 'Свернуть') : null,
+        // После прогона нескольких диалогов — куда смотреть дальше (переход по ссылке закрывает окно, см. hashchange).
+        fin && !inline && total > 1 && run.done ? h('a', { class: 'cqa-btn', href: '#/dashboard', id: 'cqa-run-dash' }, 'Открыть дашборд') : null,
+        fin && !inline && total > 1 && run.done ? h('a', { class: 'cqa-btn', href: '#/review', id: 'cqa-run-review' }, 'Требует проверки') : null,
         fin && !inline ? h('button', { type: 'button', class: 'cqa-btn cqa-btn--primary', id: 'cqa-run-close', onclick: onClose }, 'Закрыть') : null,
         fin && inline ? h('button', { type: 'button', class: 'cqa-btn', onclick: () => { run = null; finishedFired = false; st.busy = false; st.est = { sig: null, data: null, error: null, loading: false }; renderForm(); } }, 'Новый запуск') : null));
   }
@@ -387,6 +394,8 @@ export function openRunDialog(host, opts = {}) {
   }, { onClose: close, onMinimize: minimize, inline: false });
 
   function dismiss() { if (panel.running()) minimize(); else close(); }
+  // Смена экрана: готовое окно закрывается, идущий прогон сворачивается в плашку (не висит поверх другой карточки).
+  function onHash() { if (overlay.isConnected) dismiss(); }
   function onKey(e) { if (e.key === 'Escape' && overlay.isConnected) { e.stopPropagation(); dismiss(); } }
   function minimize() {
     overlay.remove();
@@ -402,10 +411,12 @@ export function openRunDialog(host, opts = {}) {
     panel.destroy();
     overlay.remove(); chip?.remove(); chip = null;
     document.removeEventListener('keydown', onKey, true);
+    window.removeEventListener('hashchange', onHash);
     if (prevFocus && prevFocus.isConnected) prevFocus.focus?.({ preventScroll: true });
   }
 
   document.addEventListener('keydown', onKey, true);
+  window.addEventListener('hashchange', onHash);
   host.append(overlay);
   return { close };
 }
