@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- CQA project ---
+data/raw/
+data/*.db
+data/eval_runs/
+.claude/settings.local.json
