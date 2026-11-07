@@ -186,9 +186,9 @@ Copy-Item .env.example .env
   ```powershell
   python scripts/fetch_dataset.py
   ```
-- Либо загрузка из локального файла (без сети):
+- Либо из JSON-файла в формате API организаторов (без сети), снапшот сохранится в `data\raw\DEV.json`:
   ```powershell
-  python scripts/fetch_dataset.py --from-file data\raw\DEV.json
+  python scripts/fetch_dataset.py --from-file "Starting files\Data.txt"
   ```
 
 Создание БД и запуск сервера:
