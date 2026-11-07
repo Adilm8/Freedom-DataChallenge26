@@ -55,7 +55,7 @@ export function mount(el, params = {}) {
     return h('section', { class: 'cqa-ressec' },
       h('div', { class: 'cqa-sechead' },
         h('h3', { class: 'cqa-h3' }, sec.title),
-        sf?.applicable_weight ? h('span', { class: 'cqa-sechead__pts' }, `${sf.points} из ${sf.applicable_weight} · ${fmtScore(sf.pct)}%`) : null),
+        sf?.applicable_weight ? h('span', { class: 'cqa-sechead__pts', title: `${fmtScore(sf.pct)}% от применимого веса секции` }, `${+Number(sf.points).toFixed(2)} из ${+Number(sf.applicable_weight).toFixed(2)}`) : null),
       list.map(criterion));
   }
 
@@ -97,7 +97,7 @@ export function mount(el, params = {}) {
       body.push(h('div', { class: 'cqa-warnbox' }, h('b', null, 'Предупреждения проверки'),
         h('ul', null, c.issues.map((i) => h('li', null, i)))));
     }
-    if (c.advice) body.push(h('div', { class: 'cqa-advice' }, h('b', null, 'Что можно было сделать иначе'), c.advice));
+    if (c.advice) body.push(h('div', { class: 'cqa-advice' }, h('b', null, 'Рекомендация оператору'), c.advice));
 
 
     const foot = [confidence(c.confidence)];
@@ -177,15 +177,20 @@ export function mount(el, params = {}) {
     } });
   }
 
-  function overview() {
+  // Обзор — строкой внутри панели итога (тема, решён ли вопрос, резюме в две строки; клик — полностью).
+  // Отдельной панелью — только когда итога нет (оценка не выполнена).
+  function overview(inline) {
     const o = ev.overview;
     if (!o) return null;
     const [rt, rc] = RESOLVED[o.resolved] || RESOLVED.unclear;
+    const text = o.summary ? h('div', { class: 'cqa-ov__text cqa-sum__ovtext', title: inline ? 'Показать полностью' : null, tabindex: inline ? 0 : null,
+      onclick: inline ? (e) => e.currentTarget.classList.toggle('cqa-sum__ovtext--open') : null,
+      onkeydown: inline ? (e) => { if (e.key === 'Enter') e.currentTarget.classList.toggle('cqa-sum__ovtext--open'); } : null }, o.summary)
+      : h('div', { class: 'cqa-ov__text cqa-faint' }, 'Резюме не сформировано.');
+    const badges = [o.topic ? h('span', { class: 'cqa-badge cqa-badge--accent cqa-sum__topic' }, o.topic) : null, h('span', { class: `cqa-badge cqa-badge--${rc}` }, rt)];
+    if (inline) return h('div', { class: 'cqa-sum__ov', 'aria-label': 'Обзор диалога' }, h('div', { class: 'cqa-sum__ovhead' }, badges), text);
     return h('div', { class: 'cqa-panel cqa-ovpanel' },
-      h('div', { class: 'cqa-ovpanel__head' }, h('h3', { class: 'cqa-h3' }, 'Обзор'),
-        o.topic ? h('span', { class: 'cqa-badge cqa-badge--accent' }, o.topic) : null,
-        h('span', { class: `cqa-badge cqa-badge--${rc}` }, rt)),
-      h('div', { class: 'cqa-ov__text' }, o.summary || h('span', { class: 'cqa-faint' }, 'Резюме не сформировано.')));
+      h('div', { class: 'cqa-ovpanel__head' }, h('h3', { class: 'cqa-h3' }, 'Обзор'), badges), text);
   }
 
   function summary() {
@@ -204,6 +209,8 @@ export function mount(el, params = {}) {
       h('div', { class: 'cqa-sum__aw' },
         h('div', { class: 'cqa-sum__label' }, 'Применимый вес'),
         h('b', null, `${fin.applicable_weight ?? 0} из 100`))));
+    const ov = overview(true);
+    if (ov) parts.push(ov);
 
     const secs = (fin.sections || []).filter((s) => s.applicable_weight);
     if (secs.length) {
@@ -285,7 +292,9 @@ export function mount(el, params = {}) {
     token++;
     calls?.unmount(); calls = null;
     clear(root);
-    const out = [...banners(), overview(), ev.status === 'failed' && ev.ai_score?.total == null ? null : summary()];
+    // Итог — первым в колонке (обзор внутри него), предупреждения — под ним.
+    const noTotal = ev.status === 'failed' && ev.ai_score?.total == null;
+    const out = noTotal ? [...banners(), overview(false)] : [summary(), ...banners()];
     const defs = new Map();
     for (const c of ev.criteria) { if (!defs.has(c.section)) defs.set(c.section, []); defs.get(c.section).push(c); }
     for (const [id, list] of defs) {

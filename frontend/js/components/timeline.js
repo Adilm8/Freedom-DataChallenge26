@@ -157,7 +157,7 @@ export function mount(el, params = {}) {
   let p = { ...params };
   let model = null;
   let playingId = null;
-  const root = h('section', { class: 'cqa-panel cqa-tl', 'aria-label': 'Таймлайн диалога' });
+  const root = h('section', { class: 'cqa-panel cqa-tl', 'aria-label': 'Ход диалога' });
   el.append(root);
   const tip = createTip(root);
   let ro = null, lastW = 0;
@@ -196,12 +196,12 @@ export function mount(el, params = {}) {
     root.append(tip.el);
     tip.hide();
     const m = model;
-    if (!m || !m.msgs) { root.append(h('div', { class: 'cqa-tl__empty' }, 'Нет реплик — таймлайн не построить.')); return; }
+    if (!m || !m.msgs) { root.append(h('div', { class: 'cqa-tl__empty' }, 'Нет реплик — ход диалога не построить.')); return; }
     const width = Math.max(200, root.clientWidth - 32);
     lastW = root.clientWidth;
 
     root.append(h('div', { class: 'cqa-tl__head' },
-      h('h3', { class: 'cqa-h3' }, 'Таймлайн'),
+      h('h3', { class: 'cqa-h3' }, 'Ход диалога'),
       h('span', { class: 'cqa-tl__sum' }, summary(m)),
       m.byOrder ? h('span', { class: 'cqa-badge cqa-badge--muted', title: 'У реплик нет времени: шкала построена по порядку реплик' }, 'по порядку реплик') : null));
 

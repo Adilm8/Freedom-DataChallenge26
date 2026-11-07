@@ -165,6 +165,10 @@ button.cqa-chip:hover { border-color: var(--cqa-accent); color: var(--cqa-accent
   pointer-events: none; z-index: 50; box-shadow: var(--cqa-shadow-md); display: none; animation: cqa-fade .12s ease;
 }
 .cqa-chip.cqa-tip[data-tip]::after { left: 0; transform: none; }
+/* У правого края колонки (метки реплик, кнопки справа в подвале критерия) подсказка привязана справа и не режется прокруткой колонки;
+   у меток реплик — снизу, чтобы не уходить за верх колонки у первой реплики. */
+.cqa-msg__tag.cqa-tip[data-tip]::after { left: auto; right: 0; transform: none; bottom: auto; top: calc(100% + 6px); }
+.cqa-crit__foot .cqa-crit__appeal.cqa-tip[data-tip]::after, .cqa-crit__foot > :last-child.cqa-tip[data-tip]::after { left: auto; right: 0; transform: none; }
 /* Подсказка рисуется только при наведении или фокусе: скрытая, она не должна раздвигать страницу вбок. */
 .cqa-tip[data-tip]:hover::after, .cqa-tip[data-tip]:focus-visible::after { display: block; }
 @media (hover: none) { .cqa-tip[data-tip]:hover::after { display: none; } }
@@ -246,6 +250,19 @@ button.cqa-chip:hover { border-color: var(--cqa-accent); color: var(--cqa-accent
 
 /* ---------- Транскрипт ---------- */
 .cqa-tr { padding: var(--cqa-s-2); display: grid; gap: 6px; }
+/* Переписка с ботом до оператора — одной строкой; раскрывается кликом или переходом к доказательству внутри. */
+.cqa-tr__fold { display: grid; gap: 6px; }
+.cqa-tr__foldbtn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; font: inherit; color: var(--cqa-text); cursor: pointer;
+  padding: 8px 12px 8px 14px; border: 1px dashed var(--cqa-border-strong); border-left: 4px solid var(--cqa-role-bot); border-radius: var(--cqa-r-md); background: var(--cqa-surface-2); }
+.cqa-tr__foldbtn:hover, .cqa-tr__foldbtn:focus-visible { background: var(--cqa-hover); }
+.cqa-tr__foldicon { flex: none; width: 12px; color: var(--cqa-muted); }
+.cqa-tr__foldmain { flex: 1; min-width: 0; font-size: var(--cqa-text-sm); }
+.cqa-tr__foldprev { display: block; margin-top: 1px; color: var(--cqa-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cqa-tr__fold--open .cqa-tr__foldprev { display: none; }
+.cqa-tr__foldtags { display: flex; gap: 4px; flex: none; }
+.cqa-tr__foldtags .cqa-msg__tag { cursor: inherit; }
+.cqa-tr__foldbody { display: grid; gap: 6px; }
+.cqa-tr__foldbody[hidden] { display: none; }
 .cqa-msg {
   position: relative; padding: 9px 12px 10px 14px; border-radius: var(--cqa-r-md); background: var(--cqa-surface);
   border: 1px solid var(--cqa-border); border-left: 4px solid var(--cqa-role-bot); scroll-margin: 70px;
@@ -310,6 +327,11 @@ button.cqa-chip:hover { border-color: var(--cqa-accent); color: var(--cqa-accent
 .cqa-bar__fill--bad { background: var(--cqa-flag); }
 .cqa-sum__aw { margin-left: auto; text-align: right; }
 .cqa-ov__text { font-size: var(--cqa-text-sm); }
+.cqa-sum__ov { display: grid; gap: 6px; padding-top: var(--cqa-s-3); border-top: 1px solid var(--cqa-border); }
+.cqa-sum__ovhead { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cqa-sum__ovhead .cqa-badge { white-space: normal; text-align: left; }
+.cqa-sum__ovtext { color: var(--cqa-muted); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; cursor: pointer; }
+.cqa-sum__ovtext--open { display: block; -webkit-line-clamp: unset; }
 .cqa-ovpanel { padding: var(--cqa-s-3) var(--cqa-s-4) var(--cqa-s-4); display: grid; gap: 8px; border-left: 4px solid var(--cqa-accent); }
 .cqa-ovpanel__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .cqa-ovpanel__head .cqa-h3 { margin-right: 4px; }
