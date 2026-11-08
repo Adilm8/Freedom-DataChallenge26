@@ -65,6 +65,18 @@ uvicorn backend.app.main:app                         # http://localhost:8000
 - Проверка: `curl localhost:8000/api/health`, документация API — http://localhost:8000/docs, тесты — `pytest -q` (255 тестов, во внешние API не ходят).
 
 <details>
+<summary><b>Docker (необязательно)</b></summary>
+
+```bash
+cp .env.example .env          # ORGANIZER_API_URL и ключ OpenRouter
+docker compose up --build     # http://localhost:8000
+```
+
+При первом старте контейнер скачивает DEV из API организаторов и импортирует его; без `ORGANIZER_API_URL` сервер стартует без диалогов (экраны работают на `?mock=1`). БД и скачанные наборы лежат в томах `cqa-db` и `cqa-raw`, папка `results/` смонтирована с хоста. Контрольный прогон в контейнере: `docker compose exec cqa python scripts/control.py …` (аргументы — в разделе «Контрольный прогон»). Сбросить БД: `docker compose down -v`.
+
+</details>
+
+<details>
 <summary><b>Windows (PowerShell)</b></summary>
 
 ```powershell

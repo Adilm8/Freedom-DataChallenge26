@@ -1,0 +1,10 @@
+.git
+.env
+.venv
+**/__pycache__
+.pytest_cache
+data/*.db
+data/raw/
+data/audio/
+data/eval_runs/
+eval/runs/
