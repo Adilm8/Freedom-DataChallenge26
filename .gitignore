@@ -223,11 +223,8 @@ __marimo__/
 data/raw/
 data/*.db
 data/eval_runs/
-.claude/settings.local.json
 eval/runs/
 
-# рабочие копии подагентов
-.claude/worktrees/
 
 # локальные записи звонков (не публикуем)
 data/audio/
